@@ -1,18 +1,14 @@
-[project]
+[tool.poetry]
 name = "cobreeder-for-ghostwolves"
 version = "0.1.0"
 description = ""
-authors = [
-    {name = "SXNPYN",email = "payne.saxen@gmail.com"}
-]
+authors = ["Saxen Payne <payne.saxen@gmail.com>"]
 readme = "README.md"
-requires-python = ">=3.11"
-dependencies = [
-]
 
-[tool.poetry]
-packages = [{include = "cobreeder_for_ghostwolves", from = "src"}]
-
+[tool.poetry.dependencies]
+python = ">=3.11"
+ortools = "^9.11.4210"
+asv = "^0.6.4"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
