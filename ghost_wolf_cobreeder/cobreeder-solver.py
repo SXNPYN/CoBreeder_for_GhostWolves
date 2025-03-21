@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
-import time
-from typing import Sequence
 from absl import app
-from ortools.sat.python import cp_model
-import pandas as pd
 import argparse
 from enum import IntEnum
-#import resource
+from ortools.sat.python import cp_model
+import pandas as pd
 import sys
+import time
+from typing import Sequence
 
 
 class CobreederObjectiveFunction(IntEnum):
@@ -59,7 +58,8 @@ class CobreederPrinter(cp_model.CpSolverSolutionCallback):
                     print("  " + self.__names[g])
 
         for g in range(self.__num_individuals):
-            print("###COBREEDER-ALLOCATION,%d,%d,%d,%s" % (self.__solution_count, g, self.get_corral_number(g), self.__uniqueid))
+            print("###COBREEDER-ALLOCATION,%d,%d,%d,%s" % (self.__solution_count, g, self.get_corral_number(g),
+                                                           self.__uniqueid))
 
     def num_solutions(self):
         return self.__solution_count
@@ -70,6 +70,26 @@ class CobreederPrinter(cp_model.CpSolverSolutionCallback):
             if self.Value(self.__seats[(t, g)]):
                 val = t
         return -1 if val is None else val
+
+
+def calculate_priority(p, g, g_max, m, m_max, a):
+    """
+    Calculates priority of an individual.
+
+    Args:
+        p (int): 1 if proven, else 0.
+        g (int): Number of ghost alleles.
+        g_max(int): Maximum number of ghost alleles possible.
+        m (int): Number of potential mates.
+        m_max (int): Maximum number of potential mates.
+        a (float): Weighting placed on ghost alleles.
+
+    Returns:
+        int: number between 0 and 100 signifying priority of the individual.
+    """
+    b = 1.0 - a  # Weighting placed on number of mates.
+    priority = p * (((a * g) / g_max) + ((b * m) / m_max)) * 100
+    return int(priority)
 
 
 def build_data(args):
@@ -109,15 +129,17 @@ def build_data(args):
     if len(connections) != len(individuals):
         raise app.UsageError("There is a mismatch between the number of individuals and the size of the PR matrix.")
 
-    print("###COBREEDER_ARGS", args.pairwise_relatedness_file, args.corral_file, objective_function, args.subst, args.unique_run_id, sep=',')
+    print("###COBREEDER_ARGS", args.pairwise_relatedness_file, args.corral_file, objective_function, args.subst,
+          args.unique_run_id, sep=',')
 
-    return connections, corral_defs, names, males, females, allocate_first_corral, species, alleles, objective_function, unique_id
+    return (connections, corral_defs, names, males, females, allocate_first_corral, species, alleles,
+            objective_function, unique_id)
 
 
 def solve_with_discrete_model(args):
     """Discrete approach."""
-    connections, corral_defs, names, males, females, allocate_first_corral, species, alleles, objective_function, unique_id = build_data(
-        args)
+    (connections, corral_defs, names, males, females, allocate_first_corral, species, alleles, objective_function,
+     unique_id) = build_data(args)
 
     num_individuals = len(connections)
     num_corrals = len(corral_defs)
@@ -148,15 +170,13 @@ def solve_with_discrete_model(args):
     for t in all_corrals:
         for g in all_individuals:
             seats[(t, g)] = model.NewBoolVar("individual %i placed in corral %i" % (g, t))
-            print("%s %s %s %s" % (
-                t, g, species[g] == corral_defs['CompGroup'][t], species[g] == corral_defs['OptionalGroup'][t]))
+            print("%s %s %s %s" % (t, g, species[g] == corral_defs['CompGroup'][t],
+                                   species[g] == corral_defs['OptionalGroup'][t]))
             individual_corral_compatibility[(t, g)] = 1 if species[g] == corral_defs['CompGroup'][t] or \
                                                            species[g] == corral_defs['OptionalGroup'][t] else 0
             optional_group_allocation[(t, g)] = 1 if species[g] == corral_defs['OptionalGroup'][t] else 0
             compulsory_match_individual_corral_violated[(t, g)] = 1 if species[g] != corral_defs['CompGroup'][t] and \
                                                                        species[g] != "R" else 0
-
-
 
     colocated = {}
     for g1 in range(num_individuals - 1):
@@ -192,36 +212,34 @@ def solve_with_discrete_model(args):
         if connections[g1][g2] > 0
     )
     opposing_sex_pr = sum(
-        connections[g1][g2] * colocated[g1, g2] * opposing_sex[g1,g2]
+        connections[g1][g2] * colocated[g1, g2] * opposing_sex[g1, g2]
         for g1 in range(num_individuals - 1)
         for g2 in range(g1 + 1, num_individuals)
         if connections[g1][g2] > 0
     )
 
     all_pairs_pr_squared = sum(
-        connections[g1][g2] * connections[g1][g2] * colocated[g1, g2] #* colocated[g1, g2]
+        connections[g1][g2] * connections[g1][g2] * colocated[g1, g2]  # * colocated[g1, g2]
         for g1 in range(num_individuals - 1)
         for g2 in range(g1 + 1, num_individuals)
         if connections[g1][g2] > 0
     )
 
-
-
     swingerA = sum(
-        connections[g1][g2] * connections[g1][g2] * colocated[g1, g2] #* colocated[g1, g2]
+        connections[g1][g2] * connections[g1][g2] * colocated[g1, g2]  # * colocated[g1, g2]
         for g1 in range(num_individuals - 1)
         for g2 in range(g1 + 1, num_individuals)
         if connections[g1][g2] > 0
     )
     swingerB = sum(
-        -1*colocated[g1, g2] #* colocated[g1, g2]
+        -1 * colocated[g1, g2]  # * colocated[g1, g2]
         for g1 in range(num_individuals - 1)
         for g2 in range(g1 + 1, num_individuals)
         if connections[g1][g2] > 0
     )
 
     opposing_sex_pr_squared = sum(
-        connections[g1][g2] * connections[g1][g2] * colocated[g1, g2] * opposing_sex[g1,g2]
+        connections[g1][g2] * connections[g1][g2] * colocated[g1, g2] * opposing_sex[g1, g2]
         for g1 in range(num_individuals - 1)
         for g2 in range(g1 + 1, num_individuals)
         if connections[g1][g2] > 0
@@ -278,7 +296,7 @@ def solve_with_discrete_model(args):
         else:
             model.Add(sum(seats[(t, g)] for t in all_corrals) <= 1)
 
-       # model.Add(sum(seats[(t, g)] for t in all_corrals) == 1)
+        # model.Add(sum(seats[(t, g)] for t in all_corrals) == 1)
 
         # All individuals which are pre-allocated to a corral, are placed accordingly.
         if allocate_first_corral[g] != -1:
@@ -287,7 +305,8 @@ def solve_with_discrete_model(args):
     # Setting corral-centric constraints
     for t in all_corrals:
         print("Corral %s is of size %i to %i; compulsory %s and optional %s" % (
-            t, corral_defs['MinSize'][t], corral_defs['MaxSize'][t], corral_defs['CompGroup'][t], corral_defs['OptionalGroup'][t],))
+            t, corral_defs['MinSize'][t], corral_defs['MaxSize'][t], corral_defs['CompGroup'][t],
+            corral_defs['OptionalGroup'][t],))
 
         # Each corral is filled to the required capacity.
         model.Add(sum(seats[(t, g)] for g in all_individuals) >= corral_defs['MaxSize'][t])
@@ -348,7 +367,6 @@ def solve_with_discrete_model(args):
             model.Add(seats[(allocate_first_corral[g1], g1)] == 1)
     print("End of initial corral allocations.")
 
-
     paramstring = "%i,%i,%i" % (num_corrals, objective_function, num_individuals)
 
     # Solve model.
@@ -370,12 +388,12 @@ def solve_with_discrete_model(args):
     print("  - num solutions: %i" % solution_printer.num_solutions())
 
     print("###FLOREANA-COMPLETION,%i,%i,%i,%f,%i,%s,%s" % (status, solver.NumConflicts(),
-                                                        solver.NumBranches(),
-                                                        solver.WallTime(),
-                                                        solution_printer.num_solutions(),
-                                                        paramstring,
-                                                        args.unique_run_id
-                                                        ))
+                                                           solver.NumBranches(),
+                                                           solver.WallTime(),
+                                                           solution_printer.num_solutions(),
+                                                           paramstring,
+                                                           args.unique_run_id)
+          )
 
     # Print solution
     if status == cp_model.OPTIMAL:  # Found an optimal solution
@@ -392,6 +410,9 @@ def solve_with_discrete_model(args):
         print("  - num solutions: %i" % solution_printer.num_solutions())
     else:  # No solution found
         print("No solution found.")
+
+
+
 
 
 def main(argv: Sequence[str]) -> None:
@@ -426,8 +447,5 @@ def main(argv: Sequence[str]) -> None:
 
 
 if __name__ == "__main__":
-    # Will segfault without this line.
-    #resource.setrlimit(resource.RLIMIT_STACK, [0x10000000, resource.RLIM_INFINITY])
     sys.setrecursionlimit(0x100000)
-
     app.run(main)
