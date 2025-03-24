@@ -98,7 +98,16 @@ def build_data(args):
     objective_function = CobreederObjectiveFunction[args.obj_function]
     unique_id = args.unique_run_id
 
+    corral_defs = pd.read_csv(args.group_file, delimiter=',')
+    print(f"\nGROUP DEFINITIONS: \n{corral_defs}")
+
     individuals = pd.read_csv(args.individuals_file, delimiter=',')
+    print(f"\nSUMMARY OF INDIVIDUALS: \n{individuals}")
+
+    # TODO Good place to ask if they want to remove individuals or disallowed combinations
+    exclusions = input("Individuals to exclude (List of IDs e.g. 3, 5): ")
+    disallowed_pairings = input("Disallowed parings (List of ID pairs e.g. 3-5, 2-6, 1-4): ")
+    # Do something with this
 
     names = individuals["Name"].tolist()
     males = individuals["Male"].tolist()
@@ -107,16 +116,7 @@ def build_data(args):
     species = individuals["Species"].tolist()
     alleles = individuals["Alleles"].tolist()
 
-    # if allocate_first_corral.count(1) > args.corral_capacity:
-    #     raise app.UsageError("Your list of individuals to allocate to the first corral exceeds corral capacity.")
-
     pr = pd.read_csv(args.pairwise_relatedness_file, delimiter=',')  # , header=None)
-    corral_defs = pd.read_csv(args.group_file, delimiter=',')
-
-    print("Corral definition:")
-    print(corral_defs)
-
-    # Pairwise relatedness matrix
     connections = pr.values.tolist()
 
     # Check that no individuals in individuals.csv are being silently ignored for not being in the PR file.
