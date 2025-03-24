@@ -99,7 +99,7 @@ def build_data(args):
     unique_id = args.unique_run_id
     print(f"\nRUN ID: {args.unique_run_id} \nOBJECTIVE FUNCTION: {objective_function}")
 
-    pr = pd.read_csv(args.pairwise_relatedness_file, delimiter=',')  # , header=None)
+    pr = pd.read_csv(args.pairwise_relatedness_file, delimiter=',', header=None, skiprows=1)
     print(f"USING PAIRWISE RELATEDNESS FILE [{args.pairwise_relatedness_file}]")
 
     group_defs = pd.read_csv(args.group_file, delimiter=',')
@@ -109,10 +109,20 @@ def build_data(args):
     print(f"\nSUMMARY OF INDIVIDUALS [{args.individuals_file}]: \n{individuals}")
 
     exclusions = input("Individuals to exclude - list of IDs (e.g. 3, 5): ")
+    if exclusions:
+        # Remove excluded individuals from individuals data
+        exclusions = [int(x) for x in exclusions.strip().split(",")]
+        individuals.drop(exclusions, axis=0, inplace=True)
+        print(f"\n UPDATED SUMMARY OF INDIVIDUALS [{args.individuals_file}]: \n{individuals}")
+        # Update PR matrix to remove excluded individuals
+        pr.drop(exclusions, axis=0, inplace=True)
+        pr.drop(exclusions, axis=1, inplace=True)
+
     disallowed_pairings = input("Disallowed parings - list of ID pairs (e.g. 3-5, 2-6, 1-4): ")
-    if exclusions or disallowed_pairings:
-        # TODO Remove individuals from ind and pr file OR create a disallowed pairing
-        print("")
+
+    #tuple_list = [tuple(map(int, pair.split('-'))) for pair in string.split(', ')]
+
+    # TODO Create a disallowed pairing
 
     names = individuals["Name"].tolist()
     males = individuals["Male"].tolist()
