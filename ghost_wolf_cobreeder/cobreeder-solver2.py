@@ -93,7 +93,9 @@ def calculate_priority(p, g, g_max, m, m_max, a):
 
 
 def build_data(args):
-    """Build the data model."""
+    """
+    Build the data model using args from command line.
+    """
 
     objective_function = CobreederObjectiveFunction[args.obj_function]
     unique_id = args.unique_run_id
@@ -146,11 +148,11 @@ def build_data(args):
 
 def solve_with_discrete_model(args):
     """Discrete approach."""
-    (connections, corral_defs, names, males, females, allocate_first_corral, species, alleles, objective_function,
-     unique_id, proven) = build_data(args)
+    (connections, group_defs, names, males, females, allocate_first_group, species, alleles,
+     objective_function, unique_id, proven) = build_data(args)
 
     num_individuals = len(connections)
-    num_corrals = len(corral_defs)
+    num_corrals = len(group_defs)
     all_corrals = range(num_corrals)
     all_individuals = range(num_individuals)
 
@@ -178,12 +180,12 @@ def solve_with_discrete_model(args):
     for t in all_corrals:
         for g in all_individuals:
             seats[(t, g)] = model.NewBoolVar("individual %i placed in corral %i" % (g, t))
-            print("%s %s %s %s" % (t, g, species[g] == corral_defs['CompGroup'][t],
-                                   species[g] == corral_defs['OptionalGroup'][t]))
-            individual_corral_compatibility[(t, g)] = 1 if species[g] == corral_defs['CompGroup'][t] or \
-                                                           species[g] == corral_defs['OptionalGroup'][t] else 0
-            optional_group_allocation[(t, g)] = 1 if species[g] == corral_defs['OptionalGroup'][t] else 0
-            compulsory_match_individual_corral_violated[(t, g)] = 1 if species[g] != corral_defs['CompGroup'][t] and \
+            print("%s %s %s %s" % (t, g, species[g] == group_defs['CompGroup'][t],
+                                   species[g] == group_defs['OptionalGroup'][t]))
+            individual_corral_compatibility[(t, g)] = 1 if species[g] == group_defs['CompGroup'][t] or \
+                                                           species[g] == group_defs['OptionalGroup'][t] else 0
+            optional_group_allocation[(t, g)] = 1 if species[g] == group_defs['OptionalGroup'][t] else 0
+            compulsory_match_individual_corral_violated[(t, g)] = 1 if species[g] != group_defs['CompGroup'][t] and \
                                                                        species[g] != "R" else 0
 
     colocated = {}
@@ -304,42 +306,42 @@ def solve_with_discrete_model(args):
         # model.Add(sum(seats[(t, g)] for t in all_corrals) == 1)
 
         # All individuals which are pre-allocated to a corral, are placed accordingly.
-        if allocate_first_corral[g] != -1:
-            model.Add(seats[(allocate_first_corral[g], g)] == 1)
+        if allocate_first_group[g] != -1:
+            model.Add(seats[(allocate_first_group[g], g)] == 1)
 
     # Setting corral-centric constraints
     for t in all_corrals:
         print("Corral %s is of size %i to %i; compulsory %s and optional %s" % (
-            t, corral_defs['MinSize'][t], corral_defs['MaxSize'][t], corral_defs['CompGroup'][t],
-            corral_defs['OptionalGroup'][t],))
+            t, group_defs['MinSize'][t], group_defs['MaxSize'][t], group_defs['CompGroup'][t],
+            group_defs['OptionalGroup'][t],))
 
         # Each corral is filled to the required capacity.
-        model.Add(sum(seats[(t, g)] for g in all_individuals) >= corral_defs['MaxSize'][t])
-        model.Add(sum(seats[(t, g)] for g in all_individuals) <= corral_defs['MinSize'][t])
+        model.Add(sum(seats[(t, g)] for g in all_individuals) >= group_defs['MaxSize'][t])
+        model.Add(sum(seats[(t, g)] for g in all_individuals) <= group_defs['MinSize'][t])
 
         # Each corral is allocated a fixed number of male individuals.
-        model.Add(sum(males[g] * seats[(t, g)] for g in all_individuals) >= corral_defs['NumMale'][t])
+        model.Add(sum(males[g] * seats[(t, g)] for g in all_individuals) >= group_defs['NumMale'][t])
 
         # Each corral is allocated a fixed number of female individuals.
-        model.Add(sum(females[g] * seats[(t, g)] for g in all_individuals) >= corral_defs['NumFemale'][t])
+        model.Add(sum(females[g] * seats[(t, g)] for g in all_individuals) >= group_defs['NumFemale'][t])
 
         print(sum(individual_corral_compatibility[(t, g)] * seats[(t, g)] for g in all_individuals))
 
         # Cap the number of 'optional' group allocations
-        if corral_defs['MaxNumNonComp'][t] != -1:
+        if group_defs['MaxNumNonComp'][t] != -1:
             print("circulate")
             print(sum(optional_group_allocation[(t, g)] * seats[(t, g)] for g in all_individuals))
             # model.Add(sum(optional_group_allocation[(t, g)] * seats[(t, g)] for g in all_individuals) <=
-            #           corral_defs['MaxNumNonComp'][t])
+            #           group_defs['MaxNumNonComp'][t])
 
         # Add 'maximum pairwise relatedness' constraint for corrals whose MaxPR value != -1.
-        if corral_defs['MaxPR'][t] != -1:
+        if group_defs['MaxPR'][t] != -1:
             model.Add(
                 sum(
                     connections[g1][g2] * same_corral[(g1, g2, t)]
                     for g1 in range(num_individuals - 1)
                     for g2 in range(g1 + 1, num_individuals)
-                    if connections[g1][g2] > corral_defs['MaxPR'][t]
+                    if connections[g1][g2] > group_defs['MaxPR'][t]
                 ) < 1
             )
 
@@ -366,10 +368,10 @@ def solve_with_discrete_model(args):
     # Symmetry breaking. First tortoise is placed in the first corral.
     # https://en.wikipedia.org/wiki/Symmetry-breaking_constraints
     print("Start of initial corral allocations.")
-    for g1 in range(len(allocate_first_corral)):
-        if allocate_first_corral[g1] != -1:
-            print("    Individual %i is allocated to corral %i" % (g1, allocate_first_corral[g1]))
-            model.Add(seats[(allocate_first_corral[g1], g1)] == 1)
+    for g1 in range(len(allocate_first_group)):
+        if allocate_first_group[g1] != -1:
+            print("    Individual %i is allocated to corral %i" % (g1, allocate_first_group[g1]))
+            model.Add(seats[(allocate_first_group[g1], g1)] == 1)
     print("End of initial corral allocations.")
 
     paramstring = "%i,%i,%i" % (num_corrals, objective_function, num_individuals)
