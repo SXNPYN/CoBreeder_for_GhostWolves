@@ -111,7 +111,7 @@ def build_data(args):
     #     raise app.UsageError("Your list of individuals to allocate to the first corral exceeds corral capacity.")
 
     pr = pd.read_csv(args.pairwise_relatedness_file, delimiter=',')  # , header=None)
-    corral_defs = pd.read_csv(args.corral_file, delimiter=',')
+    corral_defs = pd.read_csv(args.group_file, delimiter=',')
 
     print("Corral definition:")
     print(corral_defs)
@@ -123,7 +123,7 @@ def build_data(args):
     if len(connections) != len(individuals):
         raise app.UsageError("There is a mismatch between the number of individuals and the size of the PR matrix.")
 
-    print("###COBREEDER_ARGS", args.pairwise_relatedness_file, args.corral_file, objective_function, args.subst,
+    print("###COBREEDER_ARGS", args.pairwise_relatedness_file, args.group_file, objective_function, args.subst,
           args.unique_run_id, sep=',')
 
     return (connections, corral_defs, names, males, females, allocate_first_corral, species, alleles,
@@ -411,9 +411,9 @@ def main(argv: Sequence[str]) -> None:
     run_parser.add_argument('individuals_file', type=str,
                             help='List of individuals')
     run_parser.add_argument('pairwise_relatedness_file', type=str,
-                            help='Pairwise relatedness matrix')
-    run_parser.add_argument('corral_file', type=str,
-                            help='Corral specification')
+                            help='Scaled pairwise relatedness matrix')
+    run_parser.add_argument('group_file', type=str,
+                            help='Group specification')
     run_parser.add_argument("obj_function", type=str,
                             choices=[e.name for e in CobreederObjectiveFunction],
                             help='String for objective function')
