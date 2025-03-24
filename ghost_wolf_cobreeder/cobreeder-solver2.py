@@ -108,23 +108,24 @@ def build_data(args):
     individuals = pd.read_csv(args.individuals_file, delimiter=',')
     print(f"\nSUMMARY OF INDIVIDUALS [{args.individuals_file}]: \n{individuals}")
 
-    exclusions = input("Individuals to exclude - list of IDs (e.g. 3, 5): ")
-    if exclusions:
-        # Remove excluded individuals from individuals data
-        exclusions = [int(x) for x in exclusions.strip().split(",")]
-        individuals.drop(exclusions, axis=0, inplace=True)
-        print(f"\n UPDATED SUMMARY OF INDIVIDUALS [{args.individuals_file}]: \n{individuals}")
-        # Update PR matrix to remove excluded individuals
-        pr.drop(exclusions, axis=0, inplace=True)
-        pr.drop(exclusions, axis=1, inplace=True)
+    if args.exclude_disallow == 1:
+        exclusions = input("Individuals to exclude - list of IDs (e.g. 3, 5): ")
+        if exclusions:
+            # Remove excluded individuals from individuals data
+            exclusions = list(set(int(x) for x in exclusions.strip().split(",")))
+            individuals.drop(exclusions, axis=0, inplace=True)
+            print(f"\n UPDATED SUMMARY OF INDIVIDUALS [{args.individuals_file}]: \n{individuals}")
+            # Update PR matrix to remove excluded individuals
+            pr.drop(exclusions, axis=0, inplace=True)
+            pr.drop(exclusions, axis=1, inplace=True)
 
-    disallowed_pairings = input("Disallowed parings - list of ID pairs (e.g. 3-5, 2-6, 1-4): ")
-    if disallowed_pairings:
-        disallowed_pairings = [tuple(map(int, x.split('-'))) for x in disallowed_pairings.strip().split(",")]
-        # Set PR for disallowed combinations to 0
-        for i, j in disallowed_pairings:
-            pr.iloc[i, j] = 0
-            pr.iloc[j, i] = 0
+        disallowed_pairings = input("Disallowed parings - list of ID pairs (e.g. 3-5, 2-6, 1-4): ")
+        if disallowed_pairings:
+            disallowed_pairings = [tuple(map(int, x.split('-'))) for x in disallowed_pairings.strip().split(",")]
+            # Set PR for disallowed combinations to 0
+            for i, j in disallowed_pairings:
+                pr.iloc[i, j] = 0
+                pr.iloc[j, i] = 0
 
     names = individuals["Name"].tolist()
     males = individuals["Male"].tolist()
@@ -438,6 +439,8 @@ def main(argv: Sequence[str]) -> None:
                             help='Weight for PR.')
     run_parser.add_argument("total_individuals", type=int,
                             help='The minimum number of individuals allocated to a solution.')
+    run_parser.add_argument("exclude_disallow", type=int,
+                            help='Exclude individuals or specify disallowed pairings.')
     run_parser.add_argument('subst', nargs='?', default=0, type=int)
 
     args = parser.parse_args()
