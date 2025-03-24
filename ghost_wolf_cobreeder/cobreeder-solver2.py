@@ -97,43 +97,44 @@ def build_data(args):
 
     objective_function = CobreederObjectiveFunction[args.obj_function]
     unique_id = args.unique_run_id
+    print(f"\nRUN ID: {args.unique_run_id} \nOBJECTIVE FUNCTION: {objective_function}")
 
-    corral_defs = pd.read_csv(args.group_file, delimiter=',')
-    print(f"\nGROUP DEFINITIONS: \n{corral_defs}")
+    pr = pd.read_csv(args.pairwise_relatedness_file, delimiter=',')  # , header=None)
+    print(f"USING PAIRWISE RELATEDNESS FILE [{args.pairwise_relatedness_file}]")
+
+    group_defs = pd.read_csv(args.group_file, delimiter=',')
+    print(f"\nGROUP DEFINITIONS [{args.group_file}]: \n{group_defs}")
 
     individuals = pd.read_csv(args.individuals_file, delimiter=',')
-    print(f"\nSUMMARY OF INDIVIDUALS: \n{individuals}")
+    print(f"\nSUMMARY OF INDIVIDUALS [{args.individuals_file}]: \n{individuals}")
 
-    # TODO Good place to ask if they want to remove individuals or disallowed combinations
-    exclusions = input("Individuals to exclude (List of IDs e.g. 3, 5): ")
-    disallowed_pairings = input("Disallowed parings (List of ID pairs e.g. 3-5, 2-6, 1-4): ")
-    # Do something with this
+    exclusions = input("Individuals to exclude - list of IDs (e.g. 3, 5): ")
+    disallowed_pairings = input("Disallowed parings - list of ID pairs (e.g. 3-5, 2-6, 1-4): ")
+    if exclusions or disallowed_pairings:
+        # TODO Remove individuals from ind and pr file OR create a disallowed pairing
+        print("")
 
     names = individuals["Name"].tolist()
     males = individuals["Male"].tolist()
     females = individuals["Female"].tolist()
-    allocate_first_corral = individuals["AssignToFirstCorral"].tolist()
+    allocate_first_group = individuals["AssignToFirstCorral"].tolist()
     species = individuals["Species"].tolist()
     alleles = individuals["Alleles"].tolist()
-
-    pr = pd.read_csv(args.pairwise_relatedness_file, delimiter=',')  # , header=None)
+    proven = individuals["Proven"].tolist()
     connections = pr.values.tolist()
 
     # Check that no individuals in individuals.csv are being silently ignored for not being in the PR file.
     if len(connections) != len(individuals):
         raise app.UsageError("There is a mismatch between the number of individuals and the size of the PR matrix.")
 
-    print("###COBREEDER_ARGS", args.pairwise_relatedness_file, args.group_file, objective_function, args.subst,
-          args.unique_run_id, sep=',')
-
-    return (connections, corral_defs, names, males, females, allocate_first_corral, species, alleles,
-            objective_function, unique_id)
+    return (connections, group_defs, names, males, females, allocate_first_group, species, alleles,
+            objective_function, unique_id, proven)
 
 
 def solve_with_discrete_model(args):
     """Discrete approach."""
     (connections, corral_defs, names, males, females, allocate_first_corral, species, alleles, objective_function,
-     unique_id) = build_data(args)
+     unique_id, proven) = build_data(args)
 
     num_individuals = len(connections)
     num_corrals = len(corral_defs)
