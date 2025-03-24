@@ -26,13 +26,13 @@ class CobreederObjectiveFunction(IntEnum):
 class CobreederPrinter(cp_model.CpSolverSolutionCallback):
     """Print intermediate solutions."""
 
-    def __init__(self, seats, names, num_corrals, num_individuals, paramstring, unique_id):
+    def __init__(self, seats, names, num_groups, num_individuals, paramstring, unique_id):
         cp_model.CpSolverSolutionCallback.__init__(self)
         self.__solution_count = 0
         self.__start_time = time.time()
         self.__seats = seats
         self.__names = names
-        self.__num_corrals = num_corrals
+        self.__num_groups = num_groups
         self.__num_individuals = num_individuals
         self.__paramstring = paramstring
         self.__uniqueid = unique_id
@@ -51,7 +51,7 @@ class CobreederPrinter(cp_model.CpSolverSolutionCallback):
                objective, self.__paramstring, self.__uniqueid)
         )
 
-        for t in range(self.__num_corrals):
+        for t in range(self.__num_groups):
             print("Corral %d: " % t)
             for g in range(self.__num_individuals):
                 if self.Value(self.__seats[(t, g)]):
@@ -66,7 +66,7 @@ class CobreederPrinter(cp_model.CpSolverSolutionCallback):
 
     def get_corral_number(self, g):
         val = None
-        for t in range(self.__num_corrals):
+        for t in range(self.__num_groups):
             if self.Value(self.__seats[(t, g)]):
                 val = t
         return -1 if val is None else val
@@ -129,6 +129,8 @@ def build_data(args):
                 pr.iloc[i, j] = 0
                 pr.iloc[j, i] = 0
 
+    # TODO Implement priority calculations
+
     names = individuals["Name"].tolist()
     males = individuals["Male"].tolist()
     females = individuals["Female"].tolist()
@@ -147,13 +149,13 @@ def build_data(args):
 
 
 def solve_with_discrete_model(args):
-    """Discrete approach."""
+    """Add description"""
     (connections, group_defs, names, males, females, allocate_first_group, species, alleles,
      objective_function, unique_id, proven) = build_data(args)
 
     num_individuals = len(connections)
-    num_corrals = len(group_defs)
-    all_corrals = range(num_corrals)
+    num_groups = len(group_defs)
+    all_corrals = range(num_groups)
     all_individuals = range(num_individuals)
 
     # Create the cp model.
@@ -213,7 +215,7 @@ def solve_with_discrete_model(args):
     alleles = sum(
         seats[(t, g)] * individual_allele_count[g]
         for g in range(num_individuals)
-        for t in range(num_corrals)
+        for t in range(num_groups)
     )
     all_pairs_pr = sum(
         connections[g1][g2] * colocated[g1, g2]
@@ -288,7 +290,7 @@ def solve_with_discrete_model(args):
     total_allocated = sum(
         seats[(t, g)]
         for g in range(num_individuals)
-        for t in range(num_corrals)
+        for t in range(num_groups)
     )
     model.Add(total_allocated >= args.total_individuals)
 
@@ -374,11 +376,11 @@ def solve_with_discrete_model(args):
             model.Add(seats[(allocate_first_group[g1], g1)] == 1)
     print("End of initial corral allocations.")
 
-    paramstring = "%i,%i,%i" % (num_corrals, objective_function, num_individuals)
+    paramstring = "%i,%i,%i" % (num_groups, objective_function, num_individuals)
 
     # Solve model.
     solver = cp_model.CpSolver()
-    solution_printer = CobreederPrinter(seats, names, num_corrals, num_individuals, paramstring, unique_id)
+    solution_printer = CobreederPrinter(seats, names, num_groups, num_individuals, paramstring, unique_id)
 
     # solver.parameters.max_time_in_seconds = 1.0
     solver.parameters.log_search_progress = True
@@ -443,6 +445,7 @@ def main(argv: Sequence[str]) -> None:
                             help='The minimum number of individuals allocated to a solution.')
     run_parser.add_argument('exclude', type=int,
                             help='Exclude individuals or specify disallowed pairings.')
+    # TODO Make arguments easier to understand using flags and add priority option
     run_parser.add_argument('subst', nargs='?', default=0, type=int)
 
     args = parser.parse_args()
