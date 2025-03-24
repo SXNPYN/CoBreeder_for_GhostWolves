@@ -119,10 +119,12 @@ def build_data(args):
         pr.drop(exclusions, axis=1, inplace=True)
 
     disallowed_pairings = input("Disallowed parings - list of ID pairs (e.g. 3-5, 2-6, 1-4): ")
-
-    #tuple_list = [tuple(map(int, pair.split('-'))) for pair in string.split(', ')]
-
-    # TODO Create a disallowed pairing
+    if disallowed_pairings:
+        disallowed_pairings = [tuple(map(int, x.split('-'))) for x in disallowed_pairings.strip().split(",")]
+        # Set PR for disallowed combinations to 0
+        for i, j in disallowed_pairings:
+            pr.iloc[i, j] = 0
+            pr.iloc[j, i] = 0
 
     names = individuals["Name"].tolist()
     males = individuals["Male"].tolist()
