@@ -108,7 +108,7 @@ def build_data(args):
     individuals = pd.read_csv(args.individuals_file, delimiter=',')
     print(f"\nSUMMARY OF INDIVIDUALS [{args.individuals_file}]: \n{individuals}")
 
-    if args.exclude_disallow == 1:
+    if args.exclude == 1:
         exclusions = input("Individuals to exclude - list of IDs (e.g. 3, 5): ")
         if exclusions:
             # Remove excluded individuals from individuals data
@@ -439,7 +439,7 @@ def main(argv: Sequence[str]) -> None:
                             help='Weight for PR.')
     run_parser.add_argument("total_individuals", type=int,
                             help='The minimum number of individuals allocated to a solution.')
-    run_parser.add_argument("exclude_disallow", type=int,
+    run_parser.add_argument('exclude', type=int,
                             help='Exclude individuals or specify disallowed pairings.')
     run_parser.add_argument('subst', nargs='?', default=0, type=int)
 
