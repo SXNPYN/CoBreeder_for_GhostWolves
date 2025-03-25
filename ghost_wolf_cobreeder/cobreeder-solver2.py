@@ -77,9 +77,9 @@ def calculate_priority(individuals, prio_threshold, pr):
 
     if prio_threshold == 0: # Use values from csv only
         priorities = individuals["Priority"].tolist()
-        priority_values = [100 * p for p in priorities]
+        individuals['PriorityValue'] = [100 * p for p in priorities] # All priority individuals are equal
 
-    else: # Dynamically calculate priority
+    else: # Dynamically calculate priority                            ... but some are more equal than others.
         a = float(input("Weight placed on ghost alleles, [0, 1.0]: "))
         b = 1.0 - a
         print(f"\nPlacing weight on ghost alleles and number of mates in a ratio of {int(10*a)}:{int(10*b)}.")
@@ -92,10 +92,17 @@ def calculate_priority(individuals, prio_threshold, pr):
         male_m_max = len(female_individuals) # Max number of potential mates that a male can have
 
         # Calculate number of potential mates each individual has from the PR matrix
-        print(pr)
+        pr_f = pr.loc[female_individuals.index]
+        pr_m = pr.loc[male_individuals.index]
 
-        a = float(input("stop"))
-        individuals["NumMates"] = 5  # TODO actually calculate this using pr
+        for i in female_individuals.index:
+            num_mates = (pr_m[i] != 0).sum() # TODO Replace 0 with min PR threshold
+            female_individuals.loc[i, "NumMates"] = num_mates
+            print(f'Female {i} has {num_mates} potential mates.')
+        for i in male_individuals.index:
+            num_mates = (pr_f[i] != 0).sum()
+            male_individuals.loc[i, "NumMates"] = num_mates
+            print(f'Male {i} has {num_mates} mates.')
 
         female_individuals['PriorityValue'] = (female_individuals['Proven'] *
                                           (((a * female_individuals['Alleles']) / female_g_max)
@@ -112,7 +119,9 @@ def calculate_priority(individuals, prio_threshold, pr):
         priority_values = pd.concat([male_individuals['PriorityValue'],
                                      female_individuals['PriorityValue']]).sort_index()
 
-    return priorities, priority_values
+        individuals = pd.concat([male_individuals, female_individuals]).sort_index()
+
+    return individuals
 
 
 def build_data(args):
@@ -150,14 +159,17 @@ def build_data(args):
                 pr.iloc[i, j] = 0
                 pr.iloc[j, i] = 0
 
+    individuals = calculate_priority(individuals, args.prio_calc_threshold, pr)
+    print(f"\nSUMMARY OF INDIVIDUALS WITH PRIORITY VALUES: \n{individuals}")
+
     names = individuals["Name"].tolist()
     males = individuals["Male"].tolist()
     females = individuals["Female"].tolist()
     allocate_first_group = individuals["AssignToFirstCorral"].tolist()
     species = individuals["Species"].tolist()
     alleles = individuals["Alleles"].tolist()
-
-    priorities, priority_values = calculate_priority(individuals, args.prio_calc_threshold, pr)
+    priorities = individuals["Priority"].tolist()
+    priority_values = individuals["PriorityValue"].tolist()
 
     # Check that no individuals in individuals.csv are being silently ignored for not being in the PR file.
     connections = pr.values.tolist()
