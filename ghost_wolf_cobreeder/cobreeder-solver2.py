@@ -72,7 +72,7 @@ class CobreederPrinter(cp_model.CpSolverSolutionCallback):
         return -1 if val is None else val
 
 
-def calculate_priority(individuals, prio_threshold):
+def calculate_priority(individuals, prio_threshold, pr):
     """Add description"""
 
     if prio_threshold == 0: # Use values from csv only
@@ -90,6 +90,12 @@ def calculate_priority(individuals, prio_threshold):
         male_g_max = max(male_individuals["Alleles"]) # Highest number of ghost alleles amongst males
         female_m_max = len(male_individuals) # Max number of potential mates that a female can have
         male_m_max = len(female_individuals) # Max number of potential mates that a male can have
+
+        # Calculate number of potential mates each individual has from the PR matrix
+        print(pr)
+
+        a = float(input("stop"))
+        individuals["NumMates"] = 5  # TODO actually calculate this using pr
 
         female_individuals['PriorityValue'] = (female_individuals['Proven'] *
                                           (((a * female_individuals['Alleles']) / female_g_max)
@@ -144,8 +150,6 @@ def build_data(args):
                 pr.iloc[i, j] = 0
                 pr.iloc[j, i] = 0
 
-    individuals["NumMates"] = 5  # TODO actually calculate this
-
     names = individuals["Name"].tolist()
     males = individuals["Male"].tolist()
     females = individuals["Female"].tolist()
@@ -153,7 +157,7 @@ def build_data(args):
     species = individuals["Species"].tolist()
     alleles = individuals["Alleles"].tolist()
 
-    priorities, priority_values = calculate_priority(individuals, args.prio_calc_threshold)
+    priorities, priority_values = calculate_priority(individuals, args.prio_calc_threshold, pr)
 
     # Check that no individuals in individuals.csv are being silently ignored for not being in the PR file.
     connections = pr.values.tolist()
