@@ -8,7 +8,7 @@ import sys
 import time
 from typing import Sequence
 
-
+#TODO
 class CobreederObjectiveFunction(IntEnum):
     ALL_PAIRS = 11
     MALE_FEMALE = 2
@@ -22,7 +22,7 @@ class CobreederObjectiveFunction(IntEnum):
     MALE_FEMALE_SQUARED = 10
     SWINGER = 11
 
-
+#TODO
 class CobreederPrinter(cp_model.CpSolverSolutionCallback):
     """Print intermediate solutions."""
 
@@ -71,29 +71,41 @@ class CobreederPrinter(cp_model.CpSolverSolutionCallback):
                 val = t
         return -1 if val is None else val
 
-# TODO Implement priority calculations
+
 def calculate_priority(individuals, prio_threshold):
     """Add description"""
 
     if prio_threshold == 0: # Use values from csv only
         priorities = individuals["Priority"].tolist()
         priority_values = [100 * p for p in priorities]
-    '''    
+
     else: # Dynamically calculate priority
-        a = input("Weight to place on ghost alleles (0, 1.0]")
-        b = 1.0 - a  # Weighting placed on number of mates.
+        a = float(input("Weight placed on ghost alleles, [0, 1.0]: "))
+        b = 1.0 - a
+        print(f"\nPlacing weight on ghost alleles and number of mates in a ratio of {int(10*a)}:{int(10*b)}.")
 
-        p = individuals["Proven"].tolist()
-        g = individuals["Alleles"].tolist()
-        # gmax is highest in g
+        female_individuals = individuals.query("Female == 1")
+        male_individuals = individuals.query("Male == 1")
+        female_g_max = max(female_individuals["Alleles"]) # Highest number of ghost alleles amongst females
+        male_g_max = max(male_individuals["Alleles"]) # Highest number of ghost alleles amongst males
+        female_m_max = len(male_individuals) # Max number of potential mates that a female can have
+        male_m_max = len(female_individuals) # Max number of potential mates that a male can have
 
-        #m is number of mates the individual has
-        #mmax is total number of individuals
+        female_individuals['PriorityValue'] = (female_individuals['Proven'] *
+                                          (((a * female_individuals['Alleles']) / female_g_max)
+                                           + ((b * female_individuals['NumMates']) / male_m_max)) * 100).astype(int)
+        female_individuals['Priority'] = (female_individuals['PriorityValue'] > prio_threshold).astype(int)
 
-        d = individuals["Name"].tolist()
-        #p, g, g_max, m, m_max
-        #priority = int(p * (((a * g) / g_max) + ((b * m) / m_max)) * 100)
-'''
+        male_individuals['PriorityValue'] = (male_individuals['Proven'] *
+                                               (((a * male_individuals['Alleles']) / male_g_max)
+                                                + ((b * male_individuals['NumMates']) / female_m_max)) * 100).astype(int)
+        male_individuals['Priority'] = (male_individuals['PriorityValue'] > prio_threshold).astype(int)
+
+        priorities = pd.concat([male_individuals['Priority'],
+                                female_individuals['Priority']]).sort_index()
+        priority_values = pd.concat([male_individuals['PriorityValue'],
+                                     female_individuals['PriorityValue']]).sort_index()
+
     return priorities, priority_values
 
 
@@ -132,6 +144,8 @@ def build_data(args):
                 pr.iloc[i, j] = 0
                 pr.iloc[j, i] = 0
 
+    individuals["NumMates"] = 5  # TODO actually calculate this
+
     names = individuals["Name"].tolist()
     males = individuals["Male"].tolist()
     females = individuals["Female"].tolist()
@@ -149,7 +163,7 @@ def build_data(args):
     return (connections, group_defs, names, males, females, allocate_first_group, species, alleles, priorities,
             priority_values, objective_function, unique_id)
 
-
+# TODO
 def solve_with_discrete_model(args):
     """Add description"""
     (connections, group_defs, names, males, females, allocate_first_group, species, alleles, priorities,
