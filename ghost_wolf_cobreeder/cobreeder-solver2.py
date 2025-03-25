@@ -189,7 +189,8 @@ def solve_with_discrete_model(args):
     num_groups = len(group_defs)
     all_corrals = range(num_groups)
     all_individuals = range(num_individuals)
-    # TODO priority calculations
+
+    # TODO priority ranking
 
     # Create the cp model.
     model = cp_model.CpModel()
