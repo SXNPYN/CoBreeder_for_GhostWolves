@@ -71,31 +71,34 @@ class CobreederPrinter(cp_model.CpSolverSolutionCallback):
                 val = t
         return -1 if val is None else val
 
+# TODO Implement priority calculations
+def calculate_priority(individuals, prio_threshold):
+    """Add description"""
 
-def calculate_priority(p, g, g_max, m, m_max, a):
-    """
-    Calculates priority of an individual.
+    if prio_threshold == 0: # Use values from csv only
+        priorities = individuals["Priority"].tolist()
+        priority_values = [100 * p for p in priorities]
+    '''    
+    else: # Dynamically calculate priority
+        a = input("Weight to place on ghost alleles (0, 1.0]")
+        b = 1.0 - a  # Weighting placed on number of mates.
 
-    Args:
-        p (int): 1 if proven, else 0.
-        g (int): Number of ghost alleles.
-        g_max(int): Maximum number of ghost alleles possible.
-        m (int): Number of potential mates.
-        m_max (int): Maximum number of potential mates.
-        a (float): Weighting placed on ghost alleles.
+        p = individuals["Proven"].tolist()
+        g = individuals["Alleles"].tolist()
+        # gmax is highest in g
 
-    Returns:
-        int: number between 0 and 100 signifying priority of the individual.
-    """
-    b = 1.0 - a  # Weighting placed on number of mates.
-    priority = p * (((a * g) / g_max) + ((b * m) / m_max)) * 100
-    return int(priority)
+        #m is number of mates the individual has
+        #mmax is total number of individuals
+
+        d = individuals["Name"].tolist()
+        #p, g, g_max, m, m_max
+        #priority = int(p * (((a * g) / g_max) + ((b * m) / m_max)) * 100)
+'''
+    return priorities, priority_values
 
 
 def build_data(args):
-    """
-    Build the data model using args from command line.
-    """
+    """Add description"""
 
     objective_function = CobreederObjectiveFunction[args.obj_function]
     unique_id = args.unique_run_id
@@ -110,7 +113,7 @@ def build_data(args):
     individuals = pd.read_csv(args.individuals_file, delimiter=',')
     print(f"\nSUMMARY OF INDIVIDUALS [{args.individuals_file}]: \n{individuals}")
 
-    if args.exclude == 1:
+    if args.exclude_disallow == "EX":
         exclusions = input("Individuals to exclude - list of IDs (e.g. 3, 5): ")
         if exclusions:
             # Remove excluded individuals from individuals data
@@ -129,34 +132,34 @@ def build_data(args):
                 pr.iloc[i, j] = 0
                 pr.iloc[j, i] = 0
 
-    # TODO Implement priority calculations
-
     names = individuals["Name"].tolist()
     males = individuals["Male"].tolist()
     females = individuals["Female"].tolist()
     allocate_first_group = individuals["AssignToFirstCorral"].tolist()
     species = individuals["Species"].tolist()
     alleles = individuals["Alleles"].tolist()
-    proven = individuals["Proven"].tolist()
-    connections = pr.values.tolist()
+
+    priorities, priority_values = calculate_priority(individuals, args.prio_calc_threshold)
 
     # Check that no individuals in individuals.csv are being silently ignored for not being in the PR file.
+    connections = pr.values.tolist()
     if len(connections) != len(individuals):
         raise app.UsageError("There is a mismatch between the number of individuals and the size of the PR matrix.")
 
-    return (connections, group_defs, names, males, females, allocate_first_group, species, alleles,
-            objective_function, unique_id, proven)
+    return (connections, group_defs, names, males, females, allocate_first_group, species, alleles, priorities,
+            priority_values, objective_function, unique_id)
 
 
 def solve_with_discrete_model(args):
     """Add description"""
-    (connections, group_defs, names, males, females, allocate_first_group, species, alleles,
-     objective_function, unique_id, proven) = build_data(args)
+    (connections, group_defs, names, males, females, allocate_first_group, species, alleles, priorities,
+     priority_values, objective_function, unique_id) = build_data(args)
 
     num_individuals = len(connections)
     num_groups = len(group_defs)
     all_corrals = range(num_groups)
     all_individuals = range(num_individuals)
+    # TODO priority calculations
 
     # Create the cp model.
     model = cp_model.CpModel()
@@ -280,8 +283,8 @@ def solve_with_discrete_model(args):
         model.Minimize(swingerA + swingerB)
     elif objective_function == CobreederObjectiveFunction.WEIGHTED_ALLELES_PR_50_50:
         # Hard coded values to be abstracted for camera ready artifact for AAAI25
-        weighted_alleles = args.weight_a * ((alleles - 2721) * (2721 - 4069))
-        weighted_pr = args.weight_b * ((all_pairs_pr_squared - 7171) * (7171 - 640474))
+        weighted_alleles = args.weight_alleles * ((alleles - 2721) * (2721 - 4069))
+        weighted_pr = args.weight_pr * ((all_pairs_pr_squared - 7171) * (7171 - 640474))
         print("weighted_alleles = %s, weighted_pr = %s" % (weighted_alleles, weighted_pr))
         model.Maximize(weighted_pr + (-1 * weighted_alleles))
 
@@ -425,7 +428,7 @@ def main(argv: Sequence[str]) -> None:
     parser = argparse.ArgumentParser(prog='CoBreeder_for_GhostWolves',
                                      description='Group-Living Captive Breeding Solver.', add_help=True)
     subparsers = parser.add_subparsers(help='sub-command help')
-    run_parser = subparsers.add_parser('run', help='Load something somewhere')
+    run_parser = subparsers.add_parser('run')
     run_parser.add_argument('individuals_file', type=str,
                             help='List of individuals')
     run_parser.add_argument('pairwise_relatedness_file', type=str,
@@ -437,15 +440,17 @@ def main(argv: Sequence[str]) -> None:
                             help='String for objective function')
     run_parser.add_argument("unique_run_id", type=str,
                             help='Unique identifier for each solver run.')
-    run_parser.add_argument("weight_a", type=int,
+    run_parser.add_argument("weight_alleles", type=int,
                             help='Weight for alleles.')
-    run_parser.add_argument("weight_b", type=int,
+    run_parser.add_argument("weight_pr", type=int,
                             help='Weight for PR.')
     run_parser.add_argument("total_individuals", type=int,
                             help='The minimum number of individuals allocated to a solution.')
-    run_parser.add_argument('exclude', type=int,
-                            help='Exclude individuals or specify disallowed pairings.')
-    # TODO Make arguments easier to understand using flags and add priority option
+    run_parser.add_argument("exclude_disallow", type=str, choices=["EX", "ALL"],
+                            help='Exclude individuals or specify disallowed pairings with "EX".')
+    run_parser.add_argument("prio_calc_threshold", type=int, choices=range(0, 101),
+                            help='Threshold for priority calculation. 0 to disable priority calculation and use'
+                                 'manual priority assignments only.')
     run_parser.add_argument('subst', nargs='?', default=0, type=int)
 
     args = parser.parse_args()
