@@ -80,7 +80,14 @@ def calculate_priority(individuals, prio_threshold, pr):
         individuals['PriorityValue'] = [100 * p for p in priorities] # All priority individuals are equal
 
     else: # Dynamically calculate priority                            ... but some are more equal than others.
-        a = float(input("Weight placed on ghost alleles, [0, 1.0]: "))
+        while True:
+            a = input("Weight placed on ghost alleles, [0, 1.0]: ")
+            try:
+                a = float(a)
+                assert 0 <= a <= 1
+                break
+            except (ValueError, AssertionError):
+                print("Please enter a number between 0.0 and 1.0")
         b = 1.0 - a
         print(f"\nPlacing weight on ghost alleles and number of mates in a ratio of {int(10*a)}:{int(10*b)}.")
 
