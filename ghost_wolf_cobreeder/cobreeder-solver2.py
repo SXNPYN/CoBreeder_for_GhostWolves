@@ -8,6 +8,8 @@ import sys
 import time
 from typing import Sequence
 
+PR_THRESHOLD = 0 # TODO Set threshold for min pairwise relatedness permitted (value not included)
+
 #TODO
 class CobreederObjectiveFunction(IntEnum):
     ALL_PAIRS = 11
@@ -73,7 +75,9 @@ class CobreederPrinter(cp_model.CpSolverSolutionCallback):
 
 
 def calculate_priority(individuals, prio_threshold, pr):
-    """Add description"""
+    """
+    # TODO Add docstrings
+    """
 
     if prio_threshold == 0: # Use values from csv only
         priorities = individuals["Priority"].tolist()
@@ -81,18 +85,17 @@ def calculate_priority(individuals, prio_threshold, pr):
 
     else: # Dynamically calculate priority                            ... but some are more equal than others.
         while True:
-            a = input("Weight placed on ghost alleles, [0, 1.0]: ")
+            a = input("Weight to place on ghost alleles: ")
             try:
                 a = float(a)
-                assert 0 <= a <= 1
-                break
-            except (ValueError, AssertionError):
+                if 0 <= a <= 1: break
+            except ValueError:
                 print("Please enter a number between 0.0 and 1.0")
         b = 1.0 - a
         print(f"\nPlacing weight on ghost alleles and number of mates in a ratio of {int(10*a)}:{int(10*b)}.")
 
-        female_individuals = individuals.query("Female == 1")
-        male_individuals = individuals.query("Male == 1")
+        female_individuals = individuals.query("Female == 1").copy()
+        male_individuals = individuals.query("Male == 1").copy()
         female_g_max = max(female_individuals["Alleles"]) # Highest number of ghost alleles amongst females
         male_g_max = max(male_individuals["Alleles"]) # Highest number of ghost alleles amongst males
         female_m_max = len(male_individuals) # Max number of potential mates that a female can have
@@ -103,13 +106,13 @@ def calculate_priority(individuals, prio_threshold, pr):
         pr_m = pr.loc[male_individuals.index]
 
         for i in female_individuals.index:
-            num_mates = (pr_m[i] != 0).sum() # TODO Replace 0 with min PR threshold
+            num_mates = (pr_m[i] > PR_THRESHOLD).sum()
             female_individuals.loc[i, "NumMates"] = num_mates
-            print(f'Female {i} has {num_mates} potential mates.')
+            #print(f'Female {i} has {num_mates} potential mates.')
         for i in male_individuals.index:
-            num_mates = (pr_f[i] != 0).sum()
+            num_mates = (pr_f[i] > PR_THRESHOLD).sum()
             male_individuals.loc[i, "NumMates"] = num_mates
-            print(f'Male {i} has {num_mates} mates.')
+            #print(f'Male {i} has {num_mates} mates.')
 
         female_individuals['PriorityValue'] = (female_individuals['Proven'] *
                                           (((a * female_individuals['Alleles']) / female_g_max)
@@ -127,12 +130,15 @@ def calculate_priority(individuals, prio_threshold, pr):
                                      female_individuals['PriorityValue']]).sort_index()
 
         individuals = pd.concat([male_individuals, female_individuals]).sort_index()
+        individuals['NumMates'] = individuals['NumMates'].apply(lambda x: int(x))
 
     return individuals
 
 
 def build_data(args):
-    """Add description"""
+    """
+    # TODO Add docstrings
+    """
 
     objective_function = CobreederObjectiveFunction[args.obj_function]
     unique_id = args.unique_run_id
@@ -188,22 +194,26 @@ def build_data(args):
 
 # TODO
 def solve_with_discrete_model(args):
-    """Add description"""
+    """
+    # TODO Add docstrings
+    """
+
     (connections, group_defs, names, males, females, allocate_first_group, species, alleles, priorities,
      priority_values, objective_function, unique_id) = build_data(args)
 
     num_individuals = len(connections)
     num_groups = len(group_defs)
-    all_corrals = range(num_groups)
-    all_individuals = range(num_individuals)
+    all_groups = range(num_groups) # Indices of groups
+    all_individuals = range(num_individuals) # Indices of individuals
 
-    # TODO priority ranking
-
-    # Create the cp model.
+    # Create the CP model.
     model = cp_model.CpModel()
 
-    # TODO Instantiate a random UUID to include in all outputs to be able to group
-    # together the outputs from a single experimental run.
+
+
+    a = input("--------------------------------------------")
+
+    # TODO priority ranking
 
     #
     # Decision variables
@@ -220,7 +230,7 @@ def solve_with_discrete_model(args):
         individual_must_be_allocated[g] = 1 if species[g] != "R" else 0
         individual_allele_count[g] = alleles[g]
 
-    for t in all_corrals:
+    for t in all_groups:
         for g in all_individuals:
             seats[(t, g)] = model.NewBoolVar("individual %i placed in corral %i" % (g, t))
             print("%s %s %s %s" % (t, g, species[g] == group_defs['CompGroup'][t],
@@ -241,7 +251,7 @@ def solve_with_discrete_model(args):
     same_corral = {}
     for g1 in range(num_individuals - 1):
         for g2 in range(g1 + 1, num_individuals):
-            for t in all_corrals:
+            for t in all_groups:
                 same_corral[(g1, g2, t)] = model.NewBoolVar(
                     "guest %i seats with guest %i on corral %i" % (g1, g2, t)
                 )
@@ -342,18 +352,18 @@ def solve_with_discrete_model(args):
         # Else, each individual is placed in most one corral.
         if individual_must_be_allocated[g]:
             print("%s must be alloc" % g)
-            model.Add(sum(seats[(t, g)] for t in all_corrals) == 1)
+            model.Add(sum(seats[(t, g)] for t in all_groups) == 1)
         else:
-            model.Add(sum(seats[(t, g)] for t in all_corrals) <= 1)
+            model.Add(sum(seats[(t, g)] for t in all_groups) <= 1)
 
-        # model.Add(sum(seats[(t, g)] for t in all_corrals) == 1)
+        # model.Add(sum(seats[(t, g)] for t in all_groups) == 1)
 
         # All individuals which are pre-allocated to a corral, are placed accordingly.
         if allocate_first_group[g] != -1:
             model.Add(seats[(allocate_first_group[g], g)] == 1)
 
     # Setting corral-centric constraints
-    for t in all_corrals:
+    for t in all_groups:
         print("Corral %s is of size %i to %i; compulsory %s and optional %s" % (
             t, group_defs['MinSize'][t], group_defs['MaxSize'][t], group_defs['CompGroup'][t],
             group_defs['OptionalGroup'][t],))
@@ -391,7 +401,7 @@ def solve_with_discrete_model(args):
     # Link colocated with seats
     for g1 in range(num_individuals - 1):
         for g2 in range(g1 + 1, num_individuals):
-            for t in all_corrals:
+            for t in all_groups:
                 # Link same_corral and seats.
                 model.AddBoolOr(
                     [
@@ -405,11 +415,10 @@ def solve_with_discrete_model(args):
 
             # Link colocated and same_table.
             model.Add(
-                sum(same_corral[(g1, g2, t)] for t in all_corrals) == colocated[(g1, g2)]
+                sum(same_corral[(g1, g2, t)] for t in all_groups) == colocated[(g1, g2)]
             )
 
-    # Symmetry breaking. First tortoise is placed in the first corral.
-    # https://en.wikipedia.org/wiki/Symmetry-breaking_constraints
+    # Symmetry breaking. First individual is placed in the first group.
     print("Start of initial corral allocations.")
     for g1 in range(len(allocate_first_group)):
         if allocate_first_group[g1] != -1:
@@ -423,8 +432,8 @@ def solve_with_discrete_model(args):
     solver = cp_model.CpSolver()
     solution_printer = CobreederPrinter(seats, names, num_groups, num_individuals, paramstring, unique_id)
 
-    # solver.parameters.max_time_in_seconds = 1.0
-    solver.parameters.log_search_progress = True
+    #solver.parameters.max_time_in_seconds = 1.0
+    #solver.parameters.log_search_progress = True
     # solver.parameters.num_workers = 1
     # solver.parameters.fix_variables_to_their_hinted_value = True
 
@@ -493,6 +502,9 @@ def main(argv: Sequence[str]) -> None:
 
     args = parser.parse_args()
     solve_with_discrete_model(args)
+
+    # TODO Give summary of best solution
+    # TODO Add option to save to CSV
 
 
 if __name__ == "__main__":
