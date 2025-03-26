@@ -8,7 +8,7 @@ import sys
 import time
 from typing import Sequence
 
-PR_THRESHOLD = 0 # TODO Set threshold for min pairwise relatedness permitted (value not included)
+PR_THRESHOLD = 0 # TODO Threshold for min pairwise relatedness permitted (value not included)
 
 #TODO
 class CobreederObjectiveFunction(IntEnum):
@@ -46,7 +46,7 @@ class CobreederPrinter(cp_model.CpSolverSolutionCallback):
         self.__solution_count += 1
 
         print(
-            "###COBREEDER-SOLUTION,%i,%f,%f,%i,%s,%s"
+            "\n---> COBREEDER-SOLUTION #%i, current time:%f, time elapsed: %f, objective: %i, params: %s, experiment: %s"
             % (self.__solution_count,
                current_time,
                current_time - self.__start_time,
@@ -57,7 +57,7 @@ class CobreederPrinter(cp_model.CpSolverSolutionCallback):
             print("Corral %d: " % t)
             for g in range(self.__num_individuals):
                 if self.Value(self.__seats[(t, g)]):
-                    print("  " + self.__names[g])
+                    print(f"  {self.__names[g]}" )
 
         for g in range(self.__num_individuals):
             print("###COBREEDER-ALLOCATION,%d,%d,%d,%s" % (self.__solution_count, g, self.get_corral_number(g),
