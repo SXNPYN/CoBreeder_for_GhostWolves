@@ -169,11 +169,16 @@ def build_data(args):
             disallowed_pairings = [tuple(map(int, x.split('-'))) for x in disallowed_pairings.strip().split(",")]
             # Set PR for disallowed combinations to 0
             for i, j in disallowed_pairings:
-                pr.iloc[i, j] = 0
-                pr.iloc[j, i] = 0
+                print(i, j)
+                print(pr)
+                pr.loc[i, j] = 0
+                pr.loc[j, i] = 0
+                print(pr)
 
     individuals = calculate_priority(individuals, args.prio_calc_threshold, pr)
     print(f"\nSUMMARY OF INDIVIDUALS WITH PRIORITY VALUES: \n{individuals}")
+
+    print(f"\nPR MATRIX: \n{pr}")
 
     names = individuals["Name"].tolist()
     males = individuals["Male"].tolist()
@@ -203,8 +208,8 @@ def solve_with_discrete_model(args):
 
     num_individuals = len(connections)
     num_groups = len(group_defs)
-    all_groups = range(num_groups) # Indices of groups
-    all_individuals = range(num_individuals) # Indices of individuals
+    all_groups = range(num_groups)
+    all_individuals = range(num_individuals)
 
     # Create the CP model.
     model = cp_model.CpModel()
