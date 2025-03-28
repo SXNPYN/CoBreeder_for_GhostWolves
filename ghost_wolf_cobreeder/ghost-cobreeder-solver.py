@@ -73,6 +73,16 @@ class CobreederPrinter(cp_model.CpSolverSolutionCallback):
         return -1 if val is None else val"""
 
 
+def save_solution_csv(args):
+    """
+    # TODO Add docstrings
+    """
+
+    filename = f"best_allocation_{args.unique_run_id}.csv"
+    #group id, individual 1, individual 2 name, pr, ghost alleles 1, ghost alleles 2
+    print("Solution saved to %s" % filename)
+
+
 def calculate_priority(individuals, prio_threshold, pr):
     """
     # TODO Add docstrings
@@ -464,20 +474,18 @@ def solve_with_discrete_model(args):
                                                            args.unique_run_id)
           )
 
-    # Print solution
-    if status == cp_model.OPTIMAL:  # Found an optimal solution
-        print("Statistics - Optimal")
+    # Print solution statistics
+    if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+        print("Statistics - Optimal") if status == cp_model.OPTIMAL else print("Statistics - Feasible")
         print("\t- conflicts    : %i" % solver.NumConflicts())
         print("\t- branches     : %i" % solver.NumBranches())
         print("\t- wall time    : %f s" % solver.WallTime())
         print("\t- num solutions: %i" % solution_printer.num_solutions())
-    elif status == cp_model.FEASIBLE:  # Found a feasible solution
-        print("Statistics - Feasible")
-        print("\t- conflicts    : %i" % solver.NumConflicts())
-        print("\t- branches     : %i" % solver.NumBranches())
-        print("\t- wall time    : %f s" % solver.WallTime())
-        print("\t- num solutions: %i" % solution_printer.num_solutions())
-    else:  # No solution found
+        # Save best solution to CSV if desired
+        save = input("\nSave final solution to CSV? (Y/N): ")
+        if save.lower() == 'y':
+            save_solution_csv(args)
+    else:
         print("No solution found.")
 
 
@@ -512,11 +520,6 @@ def main(argv: Sequence[str]) -> None:
 
     args = parser.parse_args()
     solve_with_discrete_model(args)
-
-    # TODO Give summary of best solution
-    save = input("Save solution to CSV? (Y/N): ")
-    if save.lower() == 'y':
-        pass # TODO Add option to save to CSV
 
 
 if __name__ == "__main__":
