@@ -26,7 +26,9 @@ class CobreederObjectiveFunction(IntEnum):
 
 #TODO
 class CobreederPrinter(cp_model.CpSolverSolutionCallback):
-    """Print intermediate solutions."""
+    """
+    # TODO Add docstrings
+    """
 
     def __init__(self, seats, names, num_groups, num_individuals, paramstring, unique_id):
         cp_model.CpSolverSolutionCallback.__init__(self)
@@ -42,36 +44,33 @@ class CobreederPrinter(cp_model.CpSolverSolutionCallback):
     def on_solution_callback(self):
         current_time = time.time()
         objective = self.ObjectiveValue()
-
         self.__solution_count += 1
 
         print(
-            "\n---> COBREEDER-SOLUTION #%i, current time:%f, time elapsed: %f, objective: %i, params: %s, experiment: %s"
+            "\nCOBREEDER-SOLUTION #%i, time elapsed: %f, objective value: %i, paramstring: %s, experiment: %s"
             % (self.__solution_count,
-               current_time,
                current_time - self.__start_time,
                objective, self.__paramstring, self.__uniqueid)
         )
 
         for t in range(self.__num_groups):
-            print("Corral %d: " % t)
+            print("\tGroup %d: " % t)
             for g in range(self.__num_individuals):
                 if self.Value(self.__seats[(t, g)]):
-                    print(f"  {self.__names[g]}" )
+                    print(f"\t\t{self.__names[g]}" )
 
-        for g in range(self.__num_individuals):
-            print("###COBREEDER-ALLOCATION,%d,%d,%d,%s" % (self.__solution_count, g, self.get_corral_number(g),
-                                                           self.__uniqueid))
+        """for g in range(self.__num_individuals):
+            print("COBREEDER-ALLOCATION,%d,%d,%d,%s" % (self.__solution_count, g, self.get_corral_number(g), self.__uniqueid))"""
 
     def num_solutions(self):
         return self.__solution_count
 
-    def get_corral_number(self, g):
+    """def get_corral_number(self, g):
         val = None
         for t in range(self.__num_groups):
             if self.Value(self.__seats[(t, g)]):
                 val = t
-        return -1 if val is None else val
+        return -1 if val is None else val"""
 
 
 def calculate_priority(individuals, prio_threshold, pr):
@@ -92,7 +91,8 @@ def calculate_priority(individuals, prio_threshold, pr):
             except ValueError:
                 print("Please enter a number between 0.0 and 1.0")
         b = 1.0 - a
-        print(f"\nPlacing weight on ghost alleles and number of mates in a ratio of {int(10*a)}:{int(10*b)}.")
+        #print(f"\nPlacing weight on ghost alleles and number of mates in a ratio of {int(10*a)}:{int(10*b)}.")
+        print("\nPlacing weight on ghost alleles and number of mates in a ratio of %i:%i" % (10*a, 10*b))
 
         female_individuals = individuals.query("Female == 1").copy()
         male_individuals = individuals.query("Male == 1").copy()
@@ -142,18 +142,19 @@ def build_data(args):
 
     objective_function = CobreederObjectiveFunction[args.obj_function]
     unique_id = args.unique_run_id
-    print(f"\nRUN ID: {args.unique_run_id} \nOBJECTIVE FUNCTION: {objective_function}")
+    print("\nRUN ID: %s \nOBJECTIVE FUNCTION: %i" % (args.unique_run_id, objective_function))
 
     pr = pd.read_csv(args.pairwise_relatedness_file, delimiter=',', header=None, skiprows=1)
-    print(f"USING PAIRWISE RELATEDNESS FILE [{args.pairwise_relatedness_file}]")
+    print("USING PAIRWISE RELATEDNESS FILE [%s]" % args.pairwise_relatedness_file)
 
     group_defs = pd.read_csv(args.group_file, delimiter=',')
     print(f"\nGROUP DEFINITIONS [{args.group_file}]: \n{group_defs}")
 
     individuals = pd.read_csv(args.individuals_file, delimiter=',')
-    print(f"\nSUMMARY OF INDIVIDUALS [{args.individuals_file}]: \n{individuals}")
 
     if args.exclude_disallow == "EX":
+        # Show data to help practitioner know which indices to use
+        print(f"\nSUMMARY OF INDIVIDUALS [{args.individuals_file}]: \n{individuals}")
 
         while True:
             disallowed_pairings = input("Specify disallowed parings? (List of ID pairs e.g. 3-5, 2-6, 1-7): ")
@@ -187,7 +188,7 @@ def build_data(args):
             else: break
 
     individuals = calculate_priority(individuals, args.prio_calc_threshold, pr)
-    print(f"\nSUMMARY OF INDIVIDUALS WITH PRIORITY VALUES: \n{individuals}")
+    print(f"\nSUMMARY OF INDIVIDUALS AFTER PROCESSING: \n{individuals}")
     print(f"\nPR MATRIX: \n{pr}")
 
     names = individuals["Name"].tolist()
@@ -226,7 +227,7 @@ def solve_with_discrete_model(args):
 
 
 
-    a = input("--------------------------------------------")
+    x = input("\n\n=^..^=   =^..^=   =^..^=    =^..^=    =^..^=    =^..^=    =^..^=    =^..^=    =^..^=    =^..^=")
 
     # TODO priority ranking
 
@@ -437,7 +438,7 @@ def solve_with_discrete_model(args):
     print("Start of initial corral allocations.")
     for g1 in range(len(allocate_first_group)):
         if allocate_first_group[g1] != -1:
-            print("    Individual %i is allocated to corral %i" % (g1, allocate_first_group[g1]))
+            print("\t\tIndividual %i is allocated to corral %i" % (g1, allocate_first_group[g1]))
             model.Add(seats[(allocate_first_group[g1], g1)] == 1)
     print("End of initial corral allocations.")
 
@@ -455,13 +456,7 @@ def solve_with_discrete_model(args):
     # TODO check what solver.SearchForAllSolutions() is.
     status = solver.Solve(model, solution_printer)
 
-    print("Statistics")
-    print("  - conflicts    : %i" % solver.NumConflicts())
-    print("  - branches     : %i" % solver.NumBranches())
-    print("  - wall time    : %f s" % solver.WallTime())
-    print("  - num solutions: %i" % solution_printer.num_solutions())
-
-    print("###FLOREANA-COMPLETION,%i,%i,%i,%f,%i,%s,%s" % (status, solver.NumConflicts(),
+    print("\nCOBREEDER-COMPLETION,%i,%i,%i,%f,%i,%s,%s" % (status, solver.NumConflicts(),
                                                            solver.NumBranches(),
                                                            solver.WallTime(),
                                                            solution_printer.num_solutions(),
@@ -472,16 +467,16 @@ def solve_with_discrete_model(args):
     # Print solution
     if status == cp_model.OPTIMAL:  # Found an optimal solution
         print("Statistics - Optimal")
-        print("  - conflicts    : %i" % solver.NumConflicts())
-        print("  - branches     : %i" % solver.NumBranches())
-        print("  - wall time    : %f s" % solver.WallTime())
-        print("  - num solutions: %i" % solution_printer.num_solutions())
+        print("\t- conflicts    : %i" % solver.NumConflicts())
+        print("\t- branches     : %i" % solver.NumBranches())
+        print("\t- wall time    : %f s" % solver.WallTime())
+        print("\t- num solutions: %i" % solution_printer.num_solutions())
     elif status == cp_model.FEASIBLE:  # Found a feasible solution
         print("Statistics - Feasible")
-        print("  - conflicts    : %i" % solver.NumConflicts())
-        print("  - branches     : %i" % solver.NumBranches())
-        print("  - wall time    : %f s" % solver.WallTime())
-        print("  - num solutions: %i" % solution_printer.num_solutions())
+        print("\t- conflicts    : %i" % solver.NumConflicts())
+        print("\t- branches     : %i" % solver.NumBranches())
+        print("\t- wall time    : %f s" % solver.WallTime())
+        print("\t- num solutions: %i" % solution_printer.num_solutions())
     else:  # No solution found
         print("No solution found.")
 
@@ -519,7 +514,9 @@ def main(argv: Sequence[str]) -> None:
     solve_with_discrete_model(args)
 
     # TODO Give summary of best solution
-    # TODO Add option to save to CSV
+    save = input("Save solution to CSV? (Y/N): ")
+    if save.lower() == 'y':
+        pass # TODO Add option to save to CSV
 
 
 if __name__ == "__main__":
