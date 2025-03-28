@@ -9,6 +9,7 @@ import time
 from typing import Sequence
 
 PR_THRESHOLD = 0 # TODO Threshold for min pairwise relatedness permitted (value not included)
+MAX_TIME_SECONDS = -1
 
 #TODO
 class CobreederObjectiveFunction(IntEnum):
@@ -24,7 +25,7 @@ class CobreederObjectiveFunction(IntEnum):
     MALE_FEMALE_SQUARED = 10
     SWINGER = 11
 
-#TODO
+
 class CobreederPrinter(cp_model.CpSolverSolutionCallback):
     """
     # TODO Add docstrings
@@ -59,28 +60,21 @@ class CobreederPrinter(cp_model.CpSolverSolutionCallback):
                 if self.Value(self.__seats[(t, g)]):
                     print(f"\t\t{self.__names[g]}" )
 
-        """for g in range(self.__num_individuals):
-            print("COBREEDER-ALLOCATION,%d,%d,%d,%s" % (self.__solution_count, g, self.get_corral_number(g), self.__uniqueid))"""
-
     def num_solutions(self):
         return self.__solution_count
-
-    """def get_corral_number(self, g):
-        val = None
-        for t in range(self.__num_groups):
-            if self.Value(self.__seats[(t, g)]):
-                val = t
-        return -1 if val is None else val"""
 
 
 def save_solution_csv(args):
     """
     # TODO Add docstrings
     """
+    out_file = f"best_allocation_{args.unique_run_id}.csv"
 
-    filename = f"best_allocation_{args.unique_run_id}.csv"
-    #group id, individual 1, individual 2 name, pr, ghost alleles 1, ghost alleles 2
-    print("Solution saved to %s" % filename)
+    df = pd.DataFrame(columns=["Group", "Ind_M", "Ind_F","Alleles_M", "Alleles_F", "PairwiseRelatedness"])
+    # TODO Write data
+
+    df.to_csv(out_file, index=False)
+    print("Solution saved to %s" % out_file)
 
 
 def calculate_priority(individuals, prio_threshold, pr):
@@ -458,25 +452,19 @@ def solve_with_discrete_model(args):
     solver = cp_model.CpSolver()
     solution_printer = CobreederPrinter(seats, names, num_groups, num_individuals, paramstring, unique_id)
 
-    #solver.parameters.max_time_in_seconds = 1.0
-    #solver.parameters.log_search_progress = True
+    # solver.parameters.max_time_in_seconds = 1.0
+    # solver.parameters.log_search_progress = True
     # solver.parameters.num_workers = 1
     # solver.parameters.fix_variables_to_their_hinted_value = True
 
     # TODO check what solver.SearchForAllSolutions() is.
     status = solver.Solve(model, solution_printer)
 
-    print("\nCOBREEDER-COMPLETION,%i,%i,%i,%f,%i,%s,%s" % (status, solver.NumConflicts(),
-                                                           solver.NumBranches(),
-                                                           solver.WallTime(),
-                                                           solution_printer.num_solutions(),
-                                                           paramstring,
-                                                           args.unique_run_id)
-          )
+    print("\nCOBREEDER-COMPLETION [%s]" % args.unique_run_id)
 
     # Print solution statistics
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
-        print("Statistics - Optimal") if status == cp_model.OPTIMAL else print("Statistics - Feasible")
+        print("\tStatistics - Optimal") if status == cp_model.OPTIMAL else print("Statistics - Feasible")
         print("\t- conflicts    : %i" % solver.NumConflicts())
         print("\t- branches     : %i" % solver.NumBranches())
         print("\t- wall time    : %f s" % solver.WallTime())
