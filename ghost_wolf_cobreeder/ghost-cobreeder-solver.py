@@ -154,30 +154,40 @@ def build_data(args):
     print(f"\nSUMMARY OF INDIVIDUALS [{args.individuals_file}]: \n{individuals}")
 
     if args.exclude_disallow == "EX":
-        exclusions = input("Individuals to exclude - list IDs (e.g. 3, 5): ")
-        if exclusions:
-            # Remove excluded individuals from individuals data
-            exclusions = list(set(int(x) for x in exclusions.strip().split(",")))
-            individuals.drop(exclusions, axis=0, inplace=True)
-            print(f"\n UPDATED SUMMARY OF INDIVIDUALS [{args.individuals_file}]: \n{individuals}")
-            # Update PR matrix to remove excluded individuals
-            pr.drop(exclusions, axis=0, inplace=True)
-            pr.drop(exclusions, axis=1, inplace=True)
 
-        disallowed_pairings = input("Disallowed parings - list of ID pairs (e.g. 3-5, 2-6, 1-4): ")
-        if disallowed_pairings:
-            disallowed_pairings = [tuple(map(int, x.split('-'))) for x in disallowed_pairings.strip().split(",")]
-            # Set PR for disallowed combinations to 0
-            for i, j in disallowed_pairings:
-                print(i, j)
-                print(pr)
-                pr.loc[i, j] = 0
-                pr.loc[j, i] = 0
-                print(pr)
+        while True:
+            disallowed_pairings = input("Specify disallowed parings? (List of ID pairs e.g. 3-5, 2-6, 1-7): ")
+            if disallowed_pairings:
+                try:
+                    disallowed_pairings = [tuple(map(int, x.split('-'))) for x in disallowed_pairings.strip().split(",")]
+                    # Set PR for disallowed combinations to 0
+                    for i, j in disallowed_pairings:
+                        pr.iloc[i, j] = 0
+                        pr.iloc[j, i] = 0
+                    break
+                except (IndexError, ValueError):
+                    print("Invalid input. Please only include indices matching to the individuals above (e.g. 0-1, 4-2)")
+            else: break
+
+
+        while True:
+            exclusions = input("Exclude individuals? (List of IDs e.g. 0, 4, 6): ")
+            if exclusions:
+                try:
+                    # Remove excluded individuals from individuals data
+                    exclusions = list(set(int(x) for x in exclusions.strip().split(",")))
+                    individuals.drop(exclusions, axis=0, inplace=True)
+                    print(f"\n UPDATED SUMMARY OF INDIVIDUALS [{args.individuals_file}]: \n{individuals}")
+                    # Update PR matrix to remove excluded individuals
+                    pr.drop(exclusions, axis=0, inplace=True)
+                    pr.drop(exclusions, axis=1, inplace=True)
+                    break
+                except (KeyError, ValueError):
+                    print("Invalid input. Please enter the indices of the individuals to exclude (e.g. 0, 4, 2)")
+            else: break
 
     individuals = calculate_priority(individuals, args.prio_calc_threshold, pr)
     print(f"\nSUMMARY OF INDIVIDUALS WITH PRIORITY VALUES: \n{individuals}")
-
     print(f"\nPR MATRIX: \n{pr}")
 
     names = individuals["Name"].tolist()
