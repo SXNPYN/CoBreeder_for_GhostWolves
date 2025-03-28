@@ -154,7 +154,7 @@ def build_data(args):
     print(f"\nSUMMARY OF INDIVIDUALS [{args.individuals_file}]: \n{individuals}")
 
     if args.exclude_disallow == "EX":
-        exclusions = input("Individuals to exclude - list of IDs (e.g. 3, 5): ")
+        exclusions = input("Individuals to exclude - list IDs (e.g. 3, 5): ")
         if exclusions:
             # Remove excluded individuals from individuals data
             exclusions = list(set(int(x) for x in exclusions.strip().split(",")))
