@@ -10,9 +10,9 @@ from typing import Sequence
 
 PR_THRESHOLD = 0  # TODO Threshold for min pairwise relatedness permitted (value not included)
 MAX_TIME_SECONDS = -1
+best_solution = {}
 
 
-# TODO
 class CobreederObjectiveFunction(IntEnum):
     ALL_PAIRS = 11
     MALE_FEMALE = 2
@@ -57,22 +57,38 @@ class CobreederPrinter(cp_model.CpSolverSolutionCallback):
 
         for t in range(self.__num_groups):
             print("\tGroup %d: " % t)
+            individuals = []
             for g in range(self.__num_individuals):
                 if self.Value(self.__seats[(t, g)]):
                     print(f"\t\t{self.__names[g]}")
+                    individuals.append((g, self.__names[g]))
+            best_solution[t] = individuals
 
     def num_solutions(self):
         return self.__solution_count
 
 
-def save_solution_csv(args):
+def save_solution_csv(args, connections, alleles):
     """
     # TODO Add docstrings
     """
     out_file = f"best_allocation_{args.unique_run_id}.csv"
-    df = pd.DataFrame(columns=["Group", "Ind_M", "Ind_F", "Alleles_M", "Alleles_F", "PairwiseRelatedness"])
+    df = pd.DataFrame(columns=["Group", "Ind_1_Name", "Ind_2_Name", "Ind_1_ID", "Ind_2_ID", "Ind_1_Alleles",
+                               "Ind_2_Alleles", "Pairwise_Relatedness"])
 
-    # TODO Write data
+    i = 0
+    for group, individuals in best_solution.items():
+        df.loc[i, 'Group'] = group
+        df.loc[i, 'Pairwise_Relatedness'] = connections[individuals[0][0]][individuals[1][0]]
+        df.loc[i, 'Ind_1_ID'] = individuals[0][0]
+        df.loc[i, 'Ind_2_ID'] = individuals[1][0]
+        df.loc[i, 'Ind_1_Name'] = individuals[0][1]
+        df.loc[i, 'Ind_2_Name'] = individuals[1][1]
+        # df.loc[i, 'Ind_1_Alleles'] =
+        # df.loc[i, 'Ind_2_Alleles'] =
+        i += 1
+
+    print(df)
 
     df.to_csv(out_file, index=False)
     print("Solution saved to %s." % out_file)
@@ -200,6 +216,7 @@ def build_data(args):
 
     # Check that no individuals in individuals.csv are being silently ignored for not being in the PR file.
     connections = pr.values.tolist()
+
     if len(connections) != len(individuals):
         raise app.UsageError("There is a mismatch between the number of individuals and the size of the PR matrix.")
 
@@ -207,7 +224,6 @@ def build_data(args):
             priority_values, objective_function, unique_id)
 
 
-# TODO
 def solve_with_discrete_model(args):
     """
     # TODO Add docstrings
@@ -466,7 +482,7 @@ def solve_with_discrete_model(args):
         # Save best solution to CSV if desired
         save = input("\nSave final solution to CSV? (Y/N): ")
         if save.lower() == 'y':
-            save_solution_csv(args)
+            save_solution_csv(args, connections, alleles)
     else:
         print("No solution found.")
 
