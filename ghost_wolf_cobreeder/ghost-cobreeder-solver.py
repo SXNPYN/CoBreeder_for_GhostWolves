@@ -107,16 +107,14 @@ def calculate_priority(individuals, prio_threshold, pr):
         male_m_max = len(female_individuals)  # Max number of potential mates that a male can have
 
         # Calculate number of potential mates each individual has from the PR matrix
-        pr_f = pr.loc[female_individuals.index]
-        pr_m = pr.loc[male_individuals.index]
         for i in female_individuals.index:
-            num_mates = (pr_m[i] > PR_THRESHOLD).sum()
+            num_mates = (pr.loc[male_individuals.index][i] > PR_THRESHOLD).sum()
             female_individuals.loc[i, "NumMates"] = num_mates
-            # print(f'Female {i} has {num_mates} potential mates.')
+            print(f'Female {i} has {num_mates} potential mates.')
         for i in male_individuals.index:
-            num_mates = (pr_f[i] > PR_THRESHOLD).sum()
+            num_mates = (pr.loc[female_individuals.index][i] > PR_THRESHOLD).sum()
             male_individuals.loc[i, "NumMates"] = num_mates
-            # print(f'Male {i} has {num_mates} mates.')
+            print(f'Male {i} has {num_mates} mates.')
 
         female_individuals['PriorityValue'] = (female_individuals['Proven'] *
                                                (((a * female_individuals['Alleles']) / female_g_max) +
