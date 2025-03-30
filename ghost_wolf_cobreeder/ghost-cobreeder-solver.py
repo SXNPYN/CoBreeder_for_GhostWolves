@@ -68,7 +68,7 @@ class CobreederPrinter(cp_model.CpSolverSolutionCallback):
         return self.__solution_count
 
 
-def save_solution_csv(args, connections, alleles):
+def save_solution_csv(args, connections, individual_allele_count):
     """
     # TODO Add docstrings
     """
@@ -84,8 +84,8 @@ def save_solution_csv(args, connections, alleles):
         df.loc[i, 'Ind_2_ID'] = individuals[1][0]
         df.loc[i, 'Ind_1_Name'] = individuals[0][1]
         df.loc[i, 'Ind_2_Name'] = individuals[1][1]
-        # df.loc[i, 'Ind_1_Alleles'] =
-        # df.loc[i, 'Ind_2_Alleles'] =
+        df.loc[i, 'Ind_1_Alleles'] = individual_allele_count[individuals[0][0]]
+        df.loc[i, 'Ind_2_Alleles'] = individual_allele_count[individuals[1][0]]
         i += 1
 
     print(df)
@@ -482,7 +482,7 @@ def solve_with_discrete_model(args):
         # Save best solution to CSV if desired
         save = input("\nSave final solution to CSV? (Y/N): ")
         if save.lower() == 'y':
-            save_solution_csv(args, connections, alleles)
+            save_solution_csv(args, connections, individual_allele_count)
     else:
         print("No solution found.")
 
