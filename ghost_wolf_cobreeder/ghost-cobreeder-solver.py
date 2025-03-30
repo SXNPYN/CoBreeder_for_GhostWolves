@@ -8,10 +8,11 @@ import sys
 import time
 from typing import Sequence
 
-PR_THRESHOLD = 0 # TODO Threshold for min pairwise relatedness permitted (value not included)
+PR_THRESHOLD = 0  # TODO Threshold for min pairwise relatedness permitted (value not included)
 MAX_TIME_SECONDS = -1
 
-#TODO
+
+# TODO
 class CobreederObjectiveFunction(IntEnum):
     ALL_PAIRS = 11
     MALE_FEMALE = 2
@@ -58,7 +59,7 @@ class CobreederPrinter(cp_model.CpSolverSolutionCallback):
             print("\tGroup %d: " % t)
             for g in range(self.__num_individuals):
                 if self.Value(self.__seats[(t, g)]):
-                    print(f"\t\t{self.__names[g]}" )
+                    print(f"\t\t{self.__names[g]}")
 
     def num_solutions(self):
         return self.__solution_count
@@ -69,12 +70,12 @@ def save_solution_csv(args):
     # TODO Add docstrings
     """
     out_file = f"best_allocation_{args.unique_run_id}.csv"
+    df = pd.DataFrame(columns=["Group", "Ind_M", "Ind_F", "Alleles_M", "Alleles_F", "PairwiseRelatedness"])
 
-    df = pd.DataFrame(columns=["Group", "Ind_M", "Ind_F","Alleles_M", "Alleles_F", "PairwiseRelatedness"])
     # TODO Write data
 
     df.to_csv(out_file, index=False)
-    print("Solution saved to %s" % out_file)
+    print("Solution saved to %s." % out_file)
 
 
 def calculate_priority(individuals, prio_threshold, pr):
@@ -82,59 +83,52 @@ def calculate_priority(individuals, prio_threshold, pr):
     # TODO Add docstrings
     """
 
-    if prio_threshold == 0: # Use values from csv only
+    if prio_threshold == 0:  # Use values from csv only
         priorities = individuals["Priority"].tolist()
-        individuals['PriorityValue'] = [100 * p for p in priorities] # All priority individuals are equal
+        individuals['PriorityValue'] = [100 * p for p in priorities]  # All priority individuals are equal
 
-    else: # Dynamically calculate priority                            ... but some are more equal than others.
+    else:  # Dynamically calculate priority                            ... but some are more equal than others.
         while True:
             a = input("Weight to place on ghost alleles: ")
             try:
                 a = float(a)
-                if 0 <= a <= 1: break
+                if 0 <= a <= 1:
+                    break
             except ValueError:
                 print("Please enter a number between 0.0 and 1.0")
         b = 1.0 - a
-        #print(f"\nPlacing weight on ghost alleles and number of mates in a ratio of {int(10*a)}:{int(10*b)}.")
-        print("\nPlacing weight on ghost alleles and number of mates in a ratio of %i:%i" % (10*a, 10*b))
+        print("\nPlacing weight on ghost alleles and number of mates in a ratio of %i:%i" % (10 * a, 10 * b))
 
         female_individuals = individuals.query("Female == 1").copy()
         male_individuals = individuals.query("Male == 1").copy()
-        female_g_max = max(female_individuals["Alleles"]) # Highest number of ghost alleles amongst females
-        male_g_max = max(male_individuals["Alleles"]) # Highest number of ghost alleles amongst males
-        female_m_max = len(male_individuals) # Max number of potential mates that a female can have
-        male_m_max = len(female_individuals) # Max number of potential mates that a male can have
+        female_g_max = max(female_individuals["Alleles"])  # Highest/best number of ghost alleles amongst females
+        male_g_max = max(male_individuals["Alleles"])  # Highest/best number of ghost alleles amongst males
+        female_m_max = len(male_individuals)  # Max number of potential mates that a female can have
+        male_m_max = len(female_individuals)  # Max number of potential mates that a male can have
 
         # Calculate number of potential mates each individual has from the PR matrix
         pr_f = pr.loc[female_individuals.index]
         pr_m = pr.loc[male_individuals.index]
-
         for i in female_individuals.index:
             num_mates = (pr_m[i] > PR_THRESHOLD).sum()
             female_individuals.loc[i, "NumMates"] = num_mates
-            #print(f'Female {i} has {num_mates} potential mates.')
+            # print(f'Female {i} has {num_mates} potential mates.')
         for i in male_individuals.index:
             num_mates = (pr_f[i] > PR_THRESHOLD).sum()
             male_individuals.loc[i, "NumMates"] = num_mates
-            #print(f'Male {i} has {num_mates} mates.')
+            # print(f'Male {i} has {num_mates} mates.')
 
         female_individuals['PriorityValue'] = (female_individuals['Proven'] *
-                                          (((a * female_individuals['Alleles']) / female_g_max)
-                                           + ((b * female_individuals['NumMates']) / male_m_max)) * 100).astype(int)
-        female_individuals['Priority'] = (female_individuals['PriorityValue'] > prio_threshold).astype(int)
+                                               (((a * female_individuals['Alleles']) / female_g_max) +
+                                               ((b * female_individuals['NumMates']) / female_m_max)) * 100).astype(int)
 
         male_individuals['PriorityValue'] = (male_individuals['Proven'] *
-                                               (((a * male_individuals['Alleles']) / male_g_max)
-                                                + ((b * male_individuals['NumMates']) / female_m_max)) * 100).astype(int)
-        male_individuals['Priority'] = (male_individuals['PriorityValue'] > prio_threshold).astype(int)
-
-        priorities = pd.concat([male_individuals['Priority'],
-                                female_individuals['Priority']]).sort_index()
-        priority_values = pd.concat([male_individuals['PriorityValue'],
-                                     female_individuals['PriorityValue']]).sort_index()
+                                             (((a * male_individuals['Alleles']) / male_g_max) +
+                                              ((b * male_individuals['NumMates']) / male_m_max)) * 100).astype(int)
 
         individuals = pd.concat([male_individuals, female_individuals]).sort_index()
-        individuals['NumMates'] = individuals['NumMates'].apply(lambda x: int(x))
+        individuals['NumMates'] = individuals['NumMates'].astype(int)
+        individuals['Priority'] = [1 if p > prio_threshold else 0 for p in individuals['PriorityValue']]
 
     return individuals
 
@@ -164,16 +158,17 @@ def build_data(args):
             disallowed_pairings = input("Specify disallowed parings? (List of ID pairs e.g. 3-5, 2-6, 1-7): ")
             if disallowed_pairings:
                 try:
-                    disallowed_pairings = [tuple(map(int, x.split('-'))) for x in disallowed_pairings.strip().split(",")]
+                    disallowed_pairings = [tuple(map(int, x.split('-'))) for x in
+                                           disallowed_pairings.strip().split(",")]
                     # Set PR for disallowed combinations to 0
                     for i, j in disallowed_pairings:
                         pr.iloc[i, j] = 0
                         pr.iloc[j, i] = 0
                     break
                 except (IndexError, ValueError):
-                    print("Invalid input. Please only include indices matching to the individuals above (e.g. 0-1, 4-2)")
-            else: break
-
+                    print("Please ensure indices are valid (e.g. 0-1, 4-2).")
+            else:
+                break
 
         while True:
             exclusions = input("Exclude individuals? (List of IDs e.g. 0, 4, 6): ")
@@ -189,7 +184,8 @@ def build_data(args):
                     break
                 except (KeyError, ValueError):
                     print("Invalid input. Please enter the indices of the individuals to exclude (e.g. 0, 4, 2)")
-            else: break
+            else:
+                break
 
     individuals = calculate_priority(individuals, args.prio_calc_threshold, pr)
     print(f"\nSUMMARY OF INDIVIDUALS AFTER PROCESSING: \n{individuals}")
@@ -212,6 +208,7 @@ def build_data(args):
     return (connections, group_defs, names, males, females, allocate_first_group, species, alleles, priorities,
             priority_values, objective_function, unique_id)
 
+
 # TODO
 def solve_with_discrete_model(args):
     """
@@ -229,9 +226,7 @@ def solve_with_discrete_model(args):
     # Create the CP model.
     model = cp_model.CpModel()
 
-
-
-    x = input("\n\n=^..^=   =^..^=   =^..^=    =^..^=    =^..^=    =^..^=    =^..^=    =^..^=    =^..^=    =^..^=")
+    input("\n\n=^..^=   =^..^=   =^..^=    =^..^=    =^..^=    =^..^=    =^..^=    =^..^=    =^..^=    =^..^=")
 
     # TODO priority ranking
 
@@ -314,6 +309,7 @@ def solve_with_discrete_model(args):
         for g2 in range(g1 + 1, num_individuals)
         if connections[g1][g2] > 0
     )
+
     swingerB = sum(
         -1 * colocated[g1, g2]  # * colocated[g1, g2]
         for g1 in range(num_individuals - 1)
