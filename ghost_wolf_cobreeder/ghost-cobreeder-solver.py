@@ -9,8 +9,8 @@ import time
 from typing import Sequence
 
 PR_THRESHOLD = 0  # TODO Threshold for min pairwise relatedness permitted (value not included)
-MAX_TIME_SECONDS = -1
-best_solution = {}
+MAX_TIME_SECONDS = -1  # TODO Threshold for max time allowed
+best_solution = {}  # Record of the best solution (for save_solution_csv)
 
 
 class CobreederObjectiveFunction(IntEnum):
@@ -28,10 +28,6 @@ class CobreederObjectiveFunction(IntEnum):
 
 
 class CobreederPrinter(cp_model.CpSolverSolutionCallback):
-    """
-    # TODO Add docstrings
-    """
-
     def __init__(self, seats, names, num_groups, num_individuals, paramstring, unique_id):
         cp_model.CpSolverSolutionCallback.__init__(self)
         self.__solution_count = 0
@@ -87,8 +83,6 @@ def save_solution_csv(args, connections, individual_allele_count):
         df.loc[i, 'Ind_1_Alleles'] = individual_allele_count[individuals[0][0]]
         df.loc[i, 'Ind_2_Alleles'] = individual_allele_count[individuals[1][0]]
         i += 1
-
-    print(df)
 
     df.to_csv(out_file, index=False)
     print("Solution saved to %s." % out_file)
