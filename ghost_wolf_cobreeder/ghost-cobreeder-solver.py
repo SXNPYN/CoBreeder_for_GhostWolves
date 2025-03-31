@@ -8,8 +8,8 @@ import sys
 import time
 from typing import Sequence
 
-PR_THRESHOLD = 0  # TODO Threshold for min pairwise relatedness permitted (value not included)
-MAX_TIME_SECONDS = 0  # TODO Threshold for max time allowed
+MIN_PR = 0  # TODO Threshold for min pairwise relatedness permitted (value not included)
+MAX_TIME_SECONDS = 5.0  # TODO Threshold for max time allowed
 best_solution = {}  # Record best solution for save_solution_csv
 
 
@@ -118,11 +118,11 @@ def calculate_priority(individuals, prio_threshold, pr):
 
         # Calculate number of potential mates each individual has from the PR matrix
         for i in female_individuals.index:
-            num_mates = (pr.loc[male_individuals.index][i] > PR_THRESHOLD).sum()
+            num_mates = (pr.loc[male_individuals.index][i] > MIN_PR).sum()
             female_individuals.loc[i, "NumMates"] = num_mates
             print(f'Female {i} has {num_mates} potential mates.')
         for i in male_individuals.index:
-            num_mates = (pr.loc[female_individuals.index][i] > PR_THRESHOLD).sum()
+            num_mates = (pr.loc[female_individuals.index][i] > MIN_PR).sum()
             male_individuals.loc[i, "NumMates"] = num_mates
             print(f'Male {i} has {num_mates} mates.')
 
@@ -202,8 +202,7 @@ def build_data(args):
     names = individuals["Name"].tolist()
     males = individuals["Male"].tolist()
     females = individuals["Female"].tolist()
-    allocate_first_group = individuals["AssignToFirstCorral"].tolist()
-    species = individuals["Species"].tolist()
+    allocate_first_group = individuals["AssignToFirstGroup"].tolist()
     alleles = individuals["Alleles"].tolist()
     priorities = individuals["Priority"].tolist()
     priority_values = individuals["PriorityValue"].tolist()
@@ -213,8 +212,8 @@ def build_data(args):
     if len(connections) != len(individuals):
         raise app.UsageError("There is a mismatch between the number of individuals and the size of the PR matrix.")
 
-    return (connections, group_defs, names, males, females, allocate_first_group, species, alleles, priorities,
-            priority_values, objective_function, unique_id)
+    return (connections, group_defs, names, males, females, allocate_first_group, alleles, priorities, priority_values,
+            objective_function, unique_id)
 
 
 def solve_with_discrete_model(args):
@@ -222,8 +221,8 @@ def solve_with_discrete_model(args):
     # TODO Add docstrings
     """
 
-    connections, group_defs, names, males, females, allocate_first_group, species, alleles, priorities, \
-        priority_values, objective_function, unique_id = build_data(args)
+    (connections, group_defs, names, males, females, allocate_first_group, alleles, priorities, priority_values,
+     objective_function, unique_id) = build_data(args)
 
     num_individuals = len(connections)
     num_groups = len(group_defs)
@@ -233,12 +232,9 @@ def solve_with_discrete_model(args):
     # Create the CP model.
     model = cp_model.CpModel()
 
-    # --- DECISION VARIABLES ---
+    # ----- DECISION VARIABLES ----- #
 
     seats = {}
-    individual_group_compatibility = {}
-    optional_group_allocation = {}
-    compulsory_match_individual_group_violated = {}
     individual_must_be_allocated = {}
     individual_allele_count = {}
 
@@ -249,21 +245,12 @@ def solve_with_discrete_model(args):
     for t in all_groups:
         for g in all_individuals:
             seats[(t, g)] = model.NewBoolVar("individual %i placed in corral %i" % (g, t))
-            print("%s %s %s %s" % (t, g, species[g] == group_defs['CompGroup'][t],
-                                   species[g] == group_defs['OptionalGroup'][t]))
-            individual_group_compatibility[(t, g)] = 1 if species[g] == group_defs['CompGroup'][t] or \
-                                                           species[g] == group_defs['OptionalGroup'][t] else 0
-            optional_group_allocation[(t, g)] = 1 if species[g] == group_defs['OptionalGroup'][t] else 0
-            compulsory_match_individual_group_violated[(t, g)] = 1 if species[g] != group_defs['CompGroup'][t] and \
-                                                                       species[g] != "R" else 0
+            print("%s %s" % (t, g))
 
-    print(seats)
     colocated = {}
     for g1 in range(num_individuals - 1):
         for g2 in range(g1 + 1, num_individuals):
-            colocated[(g1, g2)] = model.NewBoolVar(
-                "individual %i colocated with individual %i" % (g1, g2)
-            )
+            colocated[(g1, g2)] = model.NewBoolVar("individual %i colocated with individual %i" % (g1, g2))
 
     same_corral = {}
     for g1 in range(num_individuals - 1):
@@ -280,7 +267,7 @@ def solve_with_discrete_model(args):
 
     input("\n\n-----------------------------------------------------------------------------------------------")
 
-    # --- OBJECTIVE FUNCTION ---
+    # ----- OBJECTIVE FUNCTIONS ----- #
 
     # TODO implement strategy pattern for CobreederObjectiveFunction
     alleles = sum(
@@ -357,56 +344,38 @@ def solve_with_discrete_model(args):
         print("weighted_alleles = %s, weighted_pr = %s" % (weighted_alleles, weighted_pr))
         model.Maximize(weighted_pr + (-1 * weighted_alleles))
 
-    # --- CONSTRAINTS ---
+    # ----- CONSTRAINTS ----- #
 
-    total_allocated = sum(
-        seats[(t, g)]
-        for g in range(num_individuals)
-        for t in range(num_groups)
-    )
+    # Allocate at least args.total_individuals individuals.
+    total_allocated = sum(seats[(t, g)] for g in range(num_individuals) for t in range(num_groups))
     model.Add(total_allocated >= args.total_individuals)
 
-    # Setting individual-centric constraints.
     for g in all_individuals:
-
-        # All individuals which must be placed are allocated to a corral.
-        # Else, each individual is placed in most one corral.
         if individual_must_be_allocated[g]:
-            print("%s must be alloc" % g)
+            # Priority individuals must be allocated to exactly one group.
+            print("Individual %s must be allocated." % g)
             model.Add(sum(seats[(t, g)] for t in all_groups) == 1)
         else:
+            # Non-priority individuals may or may not be allocated.
             model.Add(sum(seats[(t, g)] for t in all_groups) <= 1)
-
-        # model.Add(sum(seats[(t, g)] for t in all_groups) == 1)
-
-        # All individuals which are pre-allocated to a corral are placed accordingly.
         if allocate_first_group[g] != -1:
+            # Allocate first individual to the group specified.
             model.Add(seats[(allocate_first_group[g], g)] == 1)
 
-    # Setting corral-centric constraints
     for t in all_groups:
-        print("Corral %s is of size %i to %i; compulsory %s and optional %s" % (
-            t, group_defs['MinSize'][t], group_defs['MaxSize'][t], group_defs['CompGroup'][t],
-            group_defs['OptionalGroup'][t],))
 
-        # Each corral is filled to the required capacity.
-        model.Add(sum(seats[(t, g)] for g in all_individuals) >= group_defs['MaxSize'][t])
-        model.Add(sum(seats[(t, g)] for g in all_individuals) <= group_defs['MinSize'][t])
-
-        # Each corral is allocated a fixed number of male individuals.
-        model.Add(sum(males[g] * seats[(t, g)] for g in all_individuals) >= group_defs['NumMale'][t])
-
-        # Each corral is allocated a fixed number of female individuals.
-        model.Add(sum(females[g] * seats[(t, g)] for g in all_individuals) >= group_defs['NumFemale'][t])
-
-        print(sum(individual_group_compatibility[(t, g)] * seats[(t, g)] for g in all_individuals))
-
-        # Cap the number of 'optional' group allocations
-        if group_defs['MaxNumNonComp'][t] != -1:
-            print("circulate")
-            print(sum(optional_group_allocation[(t, g)] * seats[(t, g)] for g in all_individuals))
-            # model.Add(sum(optional_group_allocation[(t, g)] * seats[(t, g)] for g in all_individuals) <=
-            #           group_defs['MaxNumNonComp'][t])
+        # Each group is filled to the required capacity with a fixed number of males and females.
+        if group_defs['MinSize'][t] == group_defs['MaxSize'][t] == 2:  # Expected to be the default for coyotes
+            print("Group %s is a M-F pairing." % t)
+            model.Add(sum(seats[(t, g)] for g in all_individuals) == 2)
+            model.Add(sum(males[g] * seats[(t, g)] for g in all_individuals) == 1)
+            model.Add(sum(females[g] * seats[(t, g)] for g in all_individuals) == 1)
+        else:
+            print("Group %s has capacity of %i to %i." % (t, group_defs['MinSize'][t], group_defs['MaxSize'][t]))
+            model.Add(sum(seats[(t, g)] for g in all_individuals) >= group_defs['MaxSize'][t])
+            model.Add(sum(seats[(t, g)] for g in all_individuals) <= group_defs['MinSize'][t])
+            model.Add(sum(males[g] * seats[(t, g)] for g in all_individuals) >= group_defs['NumMale'][t])
+            model.Add(sum(females[g] * seats[(t, g)] for g in all_individuals) >= group_defs['NumFemale'][t])
 
         # Add 'maximum pairwise relatedness' constraint for corrals whose MaxPR value != -1.
         if group_defs['MaxPR'][t] != -1:
@@ -439,13 +408,12 @@ def solve_with_discrete_model(args):
                 sum(same_corral[(g1, g2, t)] for t in all_groups) == colocated[(g1, g2)]
             )
 
-    # Symmetry breaking. First individual is placed in the first group.
-    print("Start of initial corral allocations.")
+    # Breaking symmetry. First individual is placed in the first group.
+    print("\nInitial group allocations:")
     for g1 in range(len(allocate_first_group)):
         if allocate_first_group[g1] != -1:
-            print("\t\tIndividual %i is allocated to corral %i" % (g1, allocate_first_group[g1]))
+            print("\tIndividual %i is allocated to corral %i" % (g1, allocate_first_group[g1]))
             model.Add(seats[(allocate_first_group[g1], g1)] == 1)
-    print("End of initial corral allocations.")
 
     paramstring = "%i,%i,%i" % (num_groups, objective_function, num_individuals)
 
@@ -453,23 +421,21 @@ def solve_with_discrete_model(args):
     solver = cp_model.CpSolver()
     solution_printer = CobreederPrinter(seats, names, num_groups, num_individuals, paramstring, unique_id)
 
-    # solver.parameters.max_time_in_seconds = 1.0
+    solver.parameters.max_time_in_seconds = MAX_TIME_SECONDS
     # solver.parameters.log_search_progress = True
     # solver.parameters.num_workers = 1
     # solver.parameters.fix_variables_to_their_hinted_value = True
 
-    # TODO check what solver.SearchForAllSolutions() is.
     status = solver.Solve(model, solution_printer)
 
-    print("\nCOBREEDER-COMPLETION [%s]" % args.unique_run_id)
-
     # Print solution statistics
+    print("\nCOBREEDER-COMPLETION [%s]" % args.unique_run_id)
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
         print("\tStatistics - Optimal") if status == cp_model.OPTIMAL else print("Statistics - Feasible")
-        print("\t- conflicts    : %i" % solver.NumConflicts())
-        print("\t- branches     : %i" % solver.NumBranches())
-        print("\t- wall time    : %f s" % solver.WallTime())
-        print("\t- num solutions: %i" % solution_printer.num_solutions())
+        print("\t\t- conflicts    : %i" % solver.NumConflicts())
+        print("\t\t- branches     : %i" % solver.NumBranches())
+        print("\t\t- wall time    : %f s" % solver.WallTime())
+        print("\t\t- num solutions: %i" % solution_printer.num_solutions())
         # Save best solution to CSV if desired
         save = input("\nSave final solution to CSV? (Y/N): ")
         if save.lower() == 'y':
