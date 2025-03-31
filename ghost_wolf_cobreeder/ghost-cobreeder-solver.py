@@ -8,7 +8,7 @@ import sys
 import time
 from typing import Sequence
 
-MIN_PR = 0  # TODO Threshold for min pairwise relatedness permitted (value not included)
+PR_THRESHOLD = 0 # TODO
 MAX_TIME_SECONDS = 5.0  # TODO Threshold for max time allowed
 best_solution = {}  # Record best solution for save_solution_csv
 
@@ -118,11 +118,11 @@ def calculate_priority(individuals, prio_threshold, pr):
 
         # Calculate number of potential mates each individual has from the PR matrix
         for i in female_individuals.index:
-            num_mates = (pr.loc[male_individuals.index][i] > MIN_PR).sum()
+            num_mates = (pr.loc[male_individuals.index][i] > PR_THRESHOLD).sum()
             female_individuals.loc[i, "NumMates"] = num_mates
             print(f'Female {i} has {num_mates} potential mates.')
         for i in male_individuals.index:
-            num_mates = (pr.loc[female_individuals.index][i] > MIN_PR).sum()
+            num_mates = (pr.loc[female_individuals.index][i] > PR_THRESHOLD).sum()
             male_individuals.loc[i, "NumMates"] = num_mates
             print(f'Male {i} has {num_mates} mates.')
 
@@ -244,20 +244,19 @@ def solve_with_discrete_model(args):
 
     for t in all_groups:
         for g in all_individuals:
-            seats[(t, g)] = model.NewBoolVar("individual %i placed in corral %i" % (g, t))
-            print("%s %s" % (t, g))
+            seats[(t, g)] = model.NewBoolVar("individual %i placed in group %i" % (g, t))
 
     colocated = {}
     for g1 in range(num_individuals - 1):
         for g2 in range(g1 + 1, num_individuals):
             colocated[(g1, g2)] = model.NewBoolVar("individual %i colocated with individual %i" % (g1, g2))
 
-    same_corral = {}
+    same_group = {}
     for g1 in range(num_individuals - 1):
         for g2 in range(g1 + 1, num_individuals):
             for t in all_groups:
-                same_corral[(g1, g2, t)] = model.NewBoolVar(
-                    "guest %i seats with guest %i on corral %i" % (g1, g2, t)
+                same_group[(g1, g2, t)] = model.NewBoolVar(
+                    "guest %i seats with guest %i on group %i" % (g1, g2, t)
                 )
 
     opposing_sex = {}
@@ -366,25 +365,34 @@ def solve_with_discrete_model(args):
 
         # Each group is filled to the required capacity with a fixed number of males and females.
         if group_defs['MinSize'][t] == group_defs['MaxSize'][t] == 2:  # Expected to be the default for coyotes
-            print("Group %s is a M-F pairing." % t)
+            # print("Group %s is a M-F pairing." % t)
             model.Add(sum(seats[(t, g)] for g in all_individuals) == 2)
             model.Add(sum(males[g] * seats[(t, g)] for g in all_individuals) == 1)
             model.Add(sum(females[g] * seats[(t, g)] for g in all_individuals) == 1)
         else:
-            print("Group %s has capacity of %i to %i." % (t, group_defs['MinSize'][t], group_defs['MaxSize'][t]))
+            # print("Group %s has capacity of %i to %i." % (t, group_defs['MinSize'][t], group_defs['MaxSize'][t]))
             model.Add(sum(seats[(t, g)] for g in all_individuals) >= group_defs['MaxSize'][t])
             model.Add(sum(seats[(t, g)] for g in all_individuals) <= group_defs['MinSize'][t])
             model.Add(sum(males[g] * seats[(t, g)] for g in all_individuals) >= group_defs['NumMale'][t])
             model.Add(sum(females[g] * seats[(t, g)] for g in all_individuals) >= group_defs['NumFemale'][t])
 
-        # Add 'maximum pairwise relatedness' constraint for corrals whose MaxPR value != -1.
-        if group_defs['MaxPR'][t] != -1:
+        # Add PR constraint for groups whose PRThreshold value != -1.
+        if group_defs['PRThreshold'][t] != -1:
             model.Add(
                 sum(
-                    connections[g1][g2] * same_corral[(g1, g2, t)]
+                    connections[g1][g2] * same_group[(g1, g2, t)]
                     for g1 in range(num_individuals - 1)
                     for g2 in range(g1 + 1, num_individuals)
-                    if connections[g1][g2] > group_defs['MaxPR'][t]
+                    if connections[g1][g2] < group_defs['PRThreshold'][t]
+                ) < 1
+            )
+        else:  # Set to global value if not specified for the specific group.
+            model.Add(
+                sum(
+                    connections[g1][g2] * same_group[(g1, g2, t)]
+                    for g1 in range(num_individuals - 1)
+                    for g2 in range(g1 + 1, num_individuals)
+                    if connections[g1][g2] < PR_THRESHOLD
                 ) < 1
             )
 
@@ -392,27 +400,27 @@ def solve_with_discrete_model(args):
     for g1 in range(num_individuals - 1):
         for g2 in range(g1 + 1, num_individuals):
             for t in all_groups:
-                # Link same_corral and seats.
+                # Link same_group and seats.
                 model.AddBoolOr(
                     [
                         seats[(t, g1)].Not(),
                         seats[(t, g2)].Not(),
-                        same_corral[(g1, g2, t)],
+                        same_group[(g1, g2, t)],
                     ]
                 )
-                model.AddImplication(same_corral[(g1, g2, t)], seats[(t, g1)])
-                model.AddImplication(same_corral[(g1, g2, t)], seats[(t, g2)])
+                model.AddImplication(same_group[(g1, g2, t)], seats[(t, g1)])
+                model.AddImplication(same_group[(g1, g2, t)], seats[(t, g2)])
 
-            # Link colocated and same_table.
+            # Link colocated and same_group.
             model.Add(
-                sum(same_corral[(g1, g2, t)] for t in all_groups) == colocated[(g1, g2)]
+                sum(same_group[(g1, g2, t)] for t in all_groups) == colocated[(g1, g2)]
             )
 
     # Breaking symmetry. First individual is placed in the first group.
     print("\nInitial group allocations:")
     for g1 in range(len(allocate_first_group)):
         if allocate_first_group[g1] != -1:
-            print("\tIndividual %i is allocated to corral %i" % (g1, allocate_first_group[g1]))
+            print("\tIndividual %i is allocated to group %i" % (g1, allocate_first_group[g1]))
             model.Add(seats[(allocate_first_group[g1], g1)] == 1)
 
     paramstring = "%i,%i,%i" % (num_groups, objective_function, num_individuals)

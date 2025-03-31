@@ -10,6 +10,6 @@ Name,Male,Female,AssignToFirstGroup,Alleles,Proven,Priority
 "LA44F CL14239 (Cameron, Moore-Odom, Transient)",0,1,-1,247,1,1
 "LA46F CL14241 (Cameron, Moore-Odom, Transient)",0,1,-1,228,0,0
 "LA50M CL14245 (Cameron, Apache Corp, East Holly Beach)",1,0,-1,316,0,0
-"LA51M CL14246 (Cameron, Sabine NWR, Central Canal)",1,0,-1,224,1,1
+"LA51M CL14246 (Cameron, Sabine NWR, Central Canal)",1,0,1,224,1,1
 "LA52F CL14247 (Cameron, Apache Corp, West Holly Beach)",0,1,-1,610,0,0
-"LA53F CL14248 (Cameron, Apache Corp, West Holly Beach)",0,1,3,528,0,0
+"LA53F CL14248 (Cameron, Apache Corp, West Holly Beach)",0,1,-1,528,0,0
