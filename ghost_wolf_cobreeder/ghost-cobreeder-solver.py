@@ -266,18 +266,21 @@ def solve_with_discrete_model(args):
 
     # ----- OBJECTIVE FUNCTIONS ----- #
 
-    # TODO implement strategy pattern for CobreederObjectiveFunction
+    # TODO Maximise ghost while minimising pr whilst maximising priority?
+
     alleles = sum(
         seats[(t, g)] * individual_allele_count[g]
         for g in range(num_individuals)
         for t in range(num_groups)
     )
+
     all_pairs_pr = sum(
         connections[g1][g2] * colocated[g1, g2]
         for g1 in range(num_individuals - 1)
         for g2 in range(g1 + 1, num_individuals)
         if connections[g1][g2] > 0
     )
+
     opposing_sex_pr = sum(
         connections[g1][g2] * colocated[g1, g2] * opposing_sex[g1, g2]
         for g1 in range(num_individuals - 1)

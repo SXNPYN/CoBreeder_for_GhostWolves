@@ -1,6 +1,6 @@
 Group,Ind_1_Name,Ind_2_Name,Ind_1_ID,Ind_2_ID,Ind_1_Alleles,Ind_2_Alleles,Pairwise_Relatedness
-0,"LA41M CL14236 (Cameron, Moore-Odom, Transient)","LA44F CL14239 (Cameron, Moore-Odom, Transient)",5,8,221,247,307
+0,"LA36M CL14231 (Cameron, Moore-Odom, Garrison)","LA42F CL14237 (Cameron, Moore-Odom, North Oil Field)",2,6,227,268,136
 1,"LA35F CL14230 (Cameron, Moore-Odom, SE Odom)","LA51M CL14246 (Cameron, Sabine NWR, Central Canal)",1,11,525,224,85
 2,"LA37M CL14232 (Cameron, Moore-Odom, Black Bayou)","LA38F CL14233 (Cameron, Moore-Odom, Transient)",3,4,248,534,88
-3,"LA36M CL14231 (Cameron, Moore-Odom, Garrison)","LA42F CL14237 (Cameron, Moore-Odom, North Oil Field)",2,6,227,268,136
+3,"LA41M CL14236 (Cameron, Moore-Odom, Transient)","LA44F CL14239 (Cameron, Moore-Odom, Transient)",5,8,221,247,307
 4,"LA34M CL14229 (Cameron, Moore-Odom, Transient)","LA52F CL14247 (Cameron, Apache Corp, West Holly Beach)",0,12,589,610,707
