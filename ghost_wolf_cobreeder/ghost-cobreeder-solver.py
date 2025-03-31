@@ -8,8 +8,8 @@ import sys
 import time
 from typing import Sequence
 
-PR_THRESHOLD = 0 # TODO
-MAX_TIME_SECONDS = 5.0  # TODO Threshold for max time allowed
+PR_THRESHOLD = 0  # TODO
+MAX_TIME_SECONDS = 5  # TODO Threshold for max time allowed
 best_solution = {}  # Record best solution for save_solution_csv
 
 
@@ -237,6 +237,9 @@ def solve_with_discrete_model(args):
     seats = {}
     individual_must_be_allocated = {}
     individual_allele_count = {}
+    colocated = {}
+    same_group = {}
+    opposing_sex = {}
 
     for g in all_individuals:
         individual_must_be_allocated[g] = 1 if priorities[g] == 1 else 0
@@ -246,25 +249,20 @@ def solve_with_discrete_model(args):
         for g in all_individuals:
             seats[(t, g)] = model.NewBoolVar("individual %i placed in group %i" % (g, t))
 
-    colocated = {}
     for g1 in range(num_individuals - 1):
         for g2 in range(g1 + 1, num_individuals):
-            colocated[(g1, g2)] = model.NewBoolVar("individual %i colocated with individual %i" % (g1, g2))
+            colocated[(g1, g2)] = model.NewBoolVar("individual %i placed with individual %i" % (g1, g2))
 
-    same_group = {}
     for g1 in range(num_individuals - 1):
         for g2 in range(g1 + 1, num_individuals):
             for t in all_groups:
                 same_group[(g1, g2, t)] = model.NewBoolVar(
-                    "guest %i seats with guest %i on group %i" % (g1, g2, t)
+                    "Individual %i paired with individual %i in group %i" % (g1, g2, t)
                 )
 
-    opposing_sex = {}
     for g1 in range(num_individuals - 1):
         for g2 in range(g1 + 1, num_individuals):
             opposing_sex[(g1, g2)] = 0 if males[g1] == males[g2] else 1
-
-    input("\n\n-----------------------------------------------------------------------------------------------")
 
     # ----- OBJECTIVE FUNCTIONS ----- #
 
@@ -396,11 +394,9 @@ def solve_with_discrete_model(args):
                 ) < 1
             )
 
-    # Link colocated with seats
     for g1 in range(num_individuals - 1):
         for g2 in range(g1 + 1, num_individuals):
             for t in all_groups:
-                # Link same_group and seats.
                 model.AddBoolOr(
                     [
                         seats[(t, g1)].Not(),
@@ -411,10 +407,7 @@ def solve_with_discrete_model(args):
                 model.AddImplication(same_group[(g1, g2, t)], seats[(t, g1)])
                 model.AddImplication(same_group[(g1, g2, t)], seats[(t, g2)])
 
-            # Link colocated and same_group.
-            model.Add(
-                sum(same_group[(g1, g2, t)] for t in all_groups) == colocated[(g1, g2)]
-            )
+            model.Add(sum(same_group[(g1, g2, t)] for t in all_groups) == colocated[(g1, g2)])
 
     # Breaking symmetry. First individual is placed in the first group.
     print("\nInitial group allocations:")
@@ -431,7 +424,7 @@ def solve_with_discrete_model(args):
 
     solver.parameters.max_time_in_seconds = MAX_TIME_SECONDS
     # solver.parameters.log_search_progress = True
-    # solver.parameters.num_workers = 1
+    # solver.parameters.num_workers = 5
     # solver.parameters.fix_variables_to_their_hinted_value = True
 
     status = solver.Solve(model, solution_printer)
