@@ -16,9 +16,7 @@ best_solution = {}  # Record best solution for save_solution_csv
 class CobreederObjectiveFunction(IntEnum):
     ALL_PAIRS = 11
     MALE_FEMALE = 2
-    ALLELES_MIN = 3
     ALLELES_MAX = 4
-    ALL_PAIRS_PR_MIN = 5
     ALL_PAIRS_PR_MAX = 6
     WEIGHTED_ALLELES_PR_50_50 = 7
     ALL_PAIRS_PR_MIN_SQUARED = 8
@@ -295,14 +293,14 @@ def solve_with_discrete_model(args):
         if connections[g1][g2] > 0
     )
 
-    swingerA = sum(
+    swinger_a = sum(
         connections[g1][g2] * connections[g1][g2] * colocated[g1, g2]  # * colocated[g1, g2]
         for g1 in range(num_individuals - 1)
         for g2 in range(g1 + 1, num_individuals)
         if connections[g1][g2] > 0
     )
 
-    swingerB = sum(
+    swinger_b = sum(
         -1 * colocated[g1, g2]  # * colocated[g1, g2]
         for g1 in range(num_individuals - 1)
         for g2 in range(g1 + 1, num_individuals)
@@ -322,21 +320,18 @@ def solve_with_discrete_model(args):
         model.Minimize(opposing_sex_pr)
     elif objective_function == CobreederObjectiveFunction.MALE_FEMALE_SQUARED:
         model.Minimize(opposing_sex_pr_squared)
-    elif objective_function == CobreederObjectiveFunction.ALLELES_MIN:
-        model.Minimize(alleles)
-    elif objective_function == CobreederObjectiveFunction.ALLELES_MAX:
-        model.Maximize(alleles)
-    elif objective_function == CobreederObjectiveFunction.ALL_PAIRS_PR_MIN:
-        model.Minimize(all_pairs_pr)
     elif objective_function == CobreederObjectiveFunction.ALL_PAIRS_PR_MIN_SQUARED:
         model.Minimize(all_pairs_pr_squared)
     elif objective_function == CobreederObjectiveFunction.ALL_PAIRS_PR_MAX:
         model.Maximize(all_pairs_pr)
     elif objective_function == CobreederObjectiveFunction.ALL_PAIRS_PR_MAX_SQUARED:
         model.Maximize(all_pairs_pr_squared)
+
+    elif objective_function == CobreederObjectiveFunction.ALLELES_MAX:
+        model.Maximize(alleles)
     elif objective_function == CobreederObjectiveFunction.SWINGER:
         # model.Minimize(swingerA * (-1 * swingerB))
-        model.Minimize(swingerA + swingerB)
+        model.Minimize(swinger_a + swinger_b)
     elif objective_function == CobreederObjectiveFunction.WEIGHTED_ALLELES_PR_50_50:
         # Hard coded values to be abstracted for camera ready artifact for AAAI25
         weighted_alleles = args.weight_alleles * ((alleles - 2721) * (2721 - 4069))
