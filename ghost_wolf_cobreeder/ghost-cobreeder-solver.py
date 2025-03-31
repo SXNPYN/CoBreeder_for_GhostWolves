@@ -9,8 +9,8 @@ import time
 from typing import Sequence
 
 PR_THRESHOLD = 0  # TODO Threshold for min pairwise relatedness permitted (value not included)
-MAX_TIME_SECONDS = -1  # TODO Threshold for max time allowed
-best_solution = {}  # Record of the best solution (for save_solution_csv)
+MAX_TIME_SECONDS = 0  # TODO Threshold for max time allowed
+best_solution = {}  # Record best solution for save_solution_csv
 
 
 class CobreederObjectiveFunction(IntEnum):
@@ -68,23 +68,23 @@ def save_solution_csv(args, connections, individual_allele_count):
     """
     # TODO Add docstrings
     """
-    out_file = f"best_allocation_{args.unique_run_id}.csv"
-    df = pd.DataFrame(columns=["Group", "Ind_1_Name", "Ind_2_Name", "Ind_1_ID", "Ind_2_ID", "Ind_1_Alleles",
-                               "Ind_2_Alleles", "Pairwise_Relatedness"])
+    out_file = f"best_solution_{args.unique_run_id}.csv"
+    solution_data = pd.DataFrame(columns=["Group", "Ind_1_Name", "Ind_2_Name", "Ind_1_ID", "Ind_2_ID",
+                                          "Ind_1_Alleles", "Ind_2_Alleles", "Pairwise_Relatedness"])
 
-    i = 0
+    i = 0  # Index of current row
     for group, individuals in best_solution.items():
-        df.loc[i, 'Group'] = group
-        df.loc[i, 'Pairwise_Relatedness'] = connections[individuals[0][0]][individuals[1][0]]
-        df.loc[i, 'Ind_1_ID'] = individuals[0][0]
-        df.loc[i, 'Ind_2_ID'] = individuals[1][0]
-        df.loc[i, 'Ind_1_Name'] = individuals[0][1]
-        df.loc[i, 'Ind_2_Name'] = individuals[1][1]
-        df.loc[i, 'Ind_1_Alleles'] = individual_allele_count[individuals[0][0]]
-        df.loc[i, 'Ind_2_Alleles'] = individual_allele_count[individuals[1][0]]
+        solution_data.loc[i, 'Group'] = group
+        solution_data.loc[i, 'Pairwise_Relatedness'] = connections[individuals[0][0]][individuals[1][0]]
+        solution_data.loc[i, 'Ind_1_ID'] = individuals[0][0]
+        solution_data.loc[i, 'Ind_2_ID'] = individuals[1][0]
+        solution_data.loc[i, 'Ind_1_Name'] = individuals[0][1]
+        solution_data.loc[i, 'Ind_2_Name'] = individuals[1][1]
+        solution_data.loc[i, 'Ind_1_Alleles'] = individual_allele_count[individuals[0][0]]
+        solution_data.loc[i, 'Ind_2_Alleles'] = individual_allele_count[individuals[1][0]]
         i += 1
 
-    df.to_csv(out_file, index=False)
+    solution_data.to_csv(out_file, index=False)
     print("Solution saved to %s." % out_file)
 
 
@@ -97,7 +97,7 @@ def calculate_priority(individuals, prio_threshold, pr):
         priorities = individuals["Priority"].tolist()
         individuals['PriorityValue'] = [100 * p for p in priorities]  # All priority individuals are equal
 
-    else:  # Dynamically calculate priority                            ... but some are more equal than others.
+    else:  # Dynamically calculate priority                           ... but some are more equal than others.
         while True:
             a = input("Weight to place on ghost alleles: ")
             try:
@@ -132,7 +132,7 @@ def calculate_priority(individuals, prio_threshold, pr):
 
         male_individuals['PriorityValue'] = (male_individuals['Proven'] *
                                              (((a * male_individuals['Alleles']) / male_g_max) +
-                                              ((b * male_individuals['NumMates']) / male_m_max)) * 100).astype(int)
+                                             ((b * male_individuals['NumMates']) / male_m_max)) * 100).astype(int)
 
         individuals = pd.concat([male_individuals, female_individuals]).sort_index()
         individuals['NumMates'] = individuals['NumMates'].astype(int)
@@ -148,7 +148,7 @@ def build_data(args):
 
     objective_function = CobreederObjectiveFunction[args.obj_function]
     unique_id = args.unique_run_id
-    print("\nRUN ID: %s \nOBJECTIVE FUNCTION: %i" % (args.unique_run_id, objective_function))
+    print("\nRUN ID: %s \nOBJECTIVE FUNCTION: %i" % (unique_id, objective_function))
 
     pr = pd.read_csv(args.pairwise_relatedness_file, delimiter=',', header=None, skiprows=1)
     print("USING PAIRWISE RELATEDNESS FILE [%s]" % args.pairwise_relatedness_file)
@@ -207,10 +207,9 @@ def build_data(args):
     alleles = individuals["Alleles"].tolist()
     priorities = individuals["Priority"].tolist()
     priority_values = individuals["PriorityValue"].tolist()
-
-    # Check that no individuals in individuals.csv are being silently ignored for not being in the PR file.
     connections = pr.values.tolist()
 
+    # Check that no individuals in individuals.csv are being silently ignored for not being in the PR file.
     if len(connections) != len(individuals):
         raise app.UsageError("There is a mismatch between the number of individuals and the size of the PR matrix.")
 
@@ -223,8 +222,8 @@ def solve_with_discrete_model(args):
     # TODO Add docstrings
     """
 
-    (connections, group_defs, names, males, females, allocate_first_group, species, alleles, priorities,
-     priority_values, objective_function, unique_id) = build_data(args)
+    connections, group_defs, names, males, females, allocate_first_group, species, alleles, priorities, \
+        priority_values, objective_function, unique_id = build_data(args)
 
     num_individuals = len(connections)
     num_groups = len(group_defs)
@@ -234,23 +233,17 @@ def solve_with_discrete_model(args):
     # Create the CP model.
     model = cp_model.CpModel()
 
-    input("\n\n=^..^=   =^..^=   =^..^=    =^..^=    =^..^=    =^..^=    =^..^=    =^..^=    =^..^=    =^..^=")
+    # --- DECISION VARIABLES ---
 
-    # TODO priority ranking
-
-    #
-    # Decision variables
-    #
     seats = {}
-    individual_corral_compatibility = {}
+    individual_group_compatibility = {}
     optional_group_allocation = {}
-    compulsory_match_individual_corral_violated = {}
+    compulsory_match_individual_group_violated = {}
     individual_must_be_allocated = {}
     individual_allele_count = {}
-    print("Corral, Individual, CompGroup, OptionalGroup")
 
     for g in all_individuals:
-        individual_must_be_allocated[g] = 1 if species[g] != "R" else 0
+        individual_must_be_allocated[g] = 1 if priorities[g] == 1 else 0
         individual_allele_count[g] = alleles[g]
 
     for t in all_groups:
@@ -258,12 +251,13 @@ def solve_with_discrete_model(args):
             seats[(t, g)] = model.NewBoolVar("individual %i placed in corral %i" % (g, t))
             print("%s %s %s %s" % (t, g, species[g] == group_defs['CompGroup'][t],
                                    species[g] == group_defs['OptionalGroup'][t]))
-            individual_corral_compatibility[(t, g)] = 1 if species[g] == group_defs['CompGroup'][t] or \
+            individual_group_compatibility[(t, g)] = 1 if species[g] == group_defs['CompGroup'][t] or \
                                                            species[g] == group_defs['OptionalGroup'][t] else 0
             optional_group_allocation[(t, g)] = 1 if species[g] == group_defs['OptionalGroup'][t] else 0
-            compulsory_match_individual_corral_violated[(t, g)] = 1 if species[g] != group_defs['CompGroup'][t] and \
+            compulsory_match_individual_group_violated[(t, g)] = 1 if species[g] != group_defs['CompGroup'][t] and \
                                                                        species[g] != "R" else 0
 
+    print(seats)
     colocated = {}
     for g1 in range(num_individuals - 1):
         for g2 in range(g1 + 1, num_individuals):
@@ -284,8 +278,11 @@ def solve_with_discrete_model(args):
         for g2 in range(g1 + 1, num_individuals):
             opposing_sex[(g1, g2)] = 0 if males[g1] == males[g2] else 1
 
-    # TODO implement strategy pattern for CobreederObjectiveFunction
+    input("\n\n-----------------------------------------------------------------------------------------------")
 
+    # --- OBJECTIVE FUNCTION ---
+
+    # TODO implement strategy pattern for CobreederObjectiveFunction
     alleles = sum(
         seats[(t, g)] * individual_allele_count[g]
         for g in range(num_individuals)
@@ -360,7 +357,7 @@ def solve_with_discrete_model(args):
         print("weighted_alleles = %s, weighted_pr = %s" % (weighted_alleles, weighted_pr))
         model.Maximize(weighted_pr + (-1 * weighted_alleles))
 
-    # Constraints
+    # --- CONSTRAINTS ---
 
     total_allocated = sum(
         seats[(t, g)]
@@ -382,7 +379,7 @@ def solve_with_discrete_model(args):
 
         # model.Add(sum(seats[(t, g)] for t in all_groups) == 1)
 
-        # All individuals which are pre-allocated to a corral, are placed accordingly.
+        # All individuals which are pre-allocated to a corral are placed accordingly.
         if allocate_first_group[g] != -1:
             model.Add(seats[(allocate_first_group[g], g)] == 1)
 
@@ -402,7 +399,7 @@ def solve_with_discrete_model(args):
         # Each corral is allocated a fixed number of female individuals.
         model.Add(sum(females[g] * seats[(t, g)] for g in all_individuals) >= group_defs['NumFemale'][t])
 
-        print(sum(individual_corral_compatibility[(t, g)] * seats[(t, g)] for g in all_individuals))
+        print(sum(individual_group_compatibility[(t, g)] * seats[(t, g)] for g in all_individuals))
 
         # Cap the number of 'optional' group allocations
         if group_defs['MaxNumNonComp'][t] != -1:
@@ -487,27 +484,27 @@ def main(argv: Sequence[str]) -> None:
     subparsers = parser.add_subparsers(help='sub-command help')
     run_parser = subparsers.add_parser('run')
     run_parser.add_argument('individuals_file', type=str,
-                            help='List of individuals')
+                            help='CSV file detailing individuals.')
     run_parser.add_argument('pairwise_relatedness_file', type=str,
-                            help='Scaled pairwise relatedness matrix')
+                            help='Scaled pairwise relatedness matrix.')
     run_parser.add_argument('group_file', type=str,
-                            help='Group specification')
+                            help='CSV file detailing groups.')
     run_parser.add_argument("obj_function", type=str,
                             choices=[e.name for e in CobreederObjectiveFunction],
-                            help='String for objective function')
+                            help='String specifying objective function.')
     run_parser.add_argument("unique_run_id", type=str,
-                            help='Unique identifier for each solver run.')
+                            help='Unique string identifier for each run.')
     run_parser.add_argument("weight_alleles", type=int,
                             help='Weight for alleles.')
     run_parser.add_argument("weight_pr", type=int,
                             help='Weight for PR.')
     run_parser.add_argument("total_individuals", type=int,
-                            help='The minimum number of individuals allocated to a solution.')
+                            help='Minimum number of individuals allocated to a solution.')
     run_parser.add_argument("exclude_disallow", type=str, choices=["EX", "ALL"],
-                            help='Exclude individuals or specify disallowed pairings with "EX".')
+                            help='Exclude individuals or specify disallowed pairings with "EX", or use all with "ALL".')
     run_parser.add_argument("prio_calc_threshold", type=int, choices=range(0, 101),
-                            help='Threshold for priority calculation. 0 to disable priority calculation and use'
-                                 'manual priority assignments only.')
+                            help='Threshold for priority calculation. 0 to disable and use manual priority assignments '
+                                 'only.')
     run_parser.add_argument('subst', nargs='?', default=0, type=int)
 
     args = parser.parse_args()
