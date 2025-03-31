@@ -414,10 +414,10 @@ def solve_with_discrete_model(args):
             print("\tIndividual %i is allocated to group %i" % (g1, allocate_first_group[g1]))
             model.Add(seats[(allocate_first_group[g1], g1)] == 1)
 
-    paramstring = "%i,%i,%i" % (num_groups, objective_function, num_individuals)
+    # ----- SOLVE MODEL ----- #
 
-    # Solve model.
     solver = cp_model.CpSolver()
+    paramstring = "%i,%i,%i" % (num_groups, objective_function, num_individuals)
     solution_printer = CobreederPrinter(seats, names, num_groups, num_individuals, paramstring, unique_id)
 
     solver.parameters.max_time_in_seconds = MAX_TIME_SECONDS
