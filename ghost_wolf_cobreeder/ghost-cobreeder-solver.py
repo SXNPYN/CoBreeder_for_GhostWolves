@@ -14,15 +14,11 @@ best_solution = {}  # Record best solution for save_solution_csv
 
 
 class CobreederObjectiveFunction(IntEnum):
-    ALL_PAIRS = 11
-    MALE_FEMALE = 2
-    ALLELES_MAX = 4
-    ALL_PAIRS_PR_MAX = 6
-    WEIGHTED_ALLELES_PR_50_50 = 7
-    ALL_PAIRS_PR_MIN_SQUARED = 8
-    ALL_PAIRS_PR_MAX_SQUARED = 9
-    MALE_FEMALE_SQUARED = 10
-    SWINGER = 11
+    ALL_PAIRS_PR_MAX = 1
+    ALL_PAIRS_PR_MAX_SQUARED = 2
+    ALLELES_MAX = 3
+    MAX_ALLELES_MIN_PR = 4
+    PRIO_MAX = 5
 
 
 class CobreederPrinter(cp_model.CpSolverSolutionCallback):
@@ -230,7 +226,7 @@ def solve_with_discrete_model(args):
     # Create the CP model.
     model = cp_model.CpModel()
 
-    # ----- DECISION VARIABLES ----- #
+    # ------------------------------ DECISION VARIABLES ------------------------------ #
 
     seats = {}
     individual_must_be_allocated = {}
@@ -262,16 +258,18 @@ def solve_with_discrete_model(args):
         for g2 in range(g1 + 1, num_individuals):
             opposing_sex[(g1, g2)] = 0 if males[g1] == males[g2] else 1
 
-    # ----- OBJECTIVE FUNCTIONS ----- #
+    # ------------------------------ OBJECTIVE FUNCTIONS ------------------------------ #
 
     # TODO Maximise ghost while minimising pr whilst maximising priority?
 
+    # Sum of the alleles in the solution
     alleles = sum(
         seats[(t, g)] * individual_allele_count[g]
         for g in range(num_individuals)
         for t in range(num_groups)
     )
 
+    # Sum of the PR across all pairs
     all_pairs_pr = sum(
         connections[g1][g2] * colocated[g1, g2]
         for g1 in range(num_individuals - 1)
@@ -279,13 +277,7 @@ def solve_with_discrete_model(args):
         if connections[g1][g2] > 0
     )
 
-    opposing_sex_pr = sum(
-        connections[g1][g2] * colocated[g1, g2] * opposing_sex[g1, g2]
-        for g1 in range(num_individuals - 1)
-        for g2 in range(g1 + 1, num_individuals)
-        if connections[g1][g2] > 0
-    )
-
+    # Sum of the PR across all pairs, squared
     all_pairs_pr_squared = sum(
         connections[g1][g2] * connections[g1][g2] * colocated[g1, g2]  # * colocated[g1, g2]
         for g1 in range(num_individuals - 1)
@@ -293,53 +285,25 @@ def solve_with_discrete_model(args):
         if connections[g1][g2] > 0
     )
 
-    swinger_a = sum(
-        connections[g1][g2] * connections[g1][g2] * colocated[g1, g2]  # * colocated[g1, g2]
-        for g1 in range(num_individuals - 1)
-        for g2 in range(g1 + 1, num_individuals)
-        if connections[g1][g2] > 0
+    # Sum of priorities in solution
+    all_priorities = sum(
+        seats[(t, g)] * priority_values[g]
+        for g in range(num_individuals)
+        for t in range(num_groups)
     )
 
-    swinger_b = sum(
-        -1 * colocated[g1, g2]  # * colocated[g1, g2]
-        for g1 in range(num_individuals - 1)
-        for g2 in range(g1 + 1, num_individuals)
-        if connections[g1][g2] > 0
-    )
-
-    opposing_sex_pr_squared = sum(
-        connections[g1][g2] * connections[g1][g2] * colocated[g1, g2] * opposing_sex[g1, g2]
-        for g1 in range(num_individuals - 1)
-        for g2 in range(g1 + 1, num_individuals)
-        if connections[g1][g2] > 0
-    )
-
-    if objective_function == CobreederObjectiveFunction.ALL_PAIRS:
-        model.Minimize(all_pairs_pr)
-    elif objective_function == CobreederObjectiveFunction.MALE_FEMALE:
-        model.Minimize(opposing_sex_pr)
-    elif objective_function == CobreederObjectiveFunction.MALE_FEMALE_SQUARED:
-        model.Minimize(opposing_sex_pr_squared)
-    elif objective_function == CobreederObjectiveFunction.ALL_PAIRS_PR_MIN_SQUARED:
-        model.Minimize(all_pairs_pr_squared)
-    elif objective_function == CobreederObjectiveFunction.ALL_PAIRS_PR_MAX:
+    if objective_function == CobreederObjectiveFunction.ALL_PAIRS_PR_MAX:
         model.Maximize(all_pairs_pr)
     elif objective_function == CobreederObjectiveFunction.ALL_PAIRS_PR_MAX_SQUARED:
         model.Maximize(all_pairs_pr_squared)
-
     elif objective_function == CobreederObjectiveFunction.ALLELES_MAX:
         model.Maximize(alleles)
-    elif objective_function == CobreederObjectiveFunction.SWINGER:
-        # model.Minimize(swingerA * (-1 * swingerB))
-        model.Minimize(swinger_a + swinger_b)
-    elif objective_function == CobreederObjectiveFunction.WEIGHTED_ALLELES_PR_50_50:
-        # Hard coded values to be abstracted for camera ready artifact for AAAI25
-        weighted_alleles = args.weight_alleles * ((alleles - 2721) * (2721 - 4069))
-        weighted_pr = args.weight_pr * ((all_pairs_pr_squared - 7171) * (7171 - 640474))
-        print("weighted_alleles = %s, weighted_pr = %s" % (weighted_alleles, weighted_pr))
-        model.Maximize(weighted_pr + (-1 * weighted_alleles))
+    elif objective_function == CobreederObjectiveFunction.MAX_ALLELES_MIN_PR:
+        model.Maximize(all_pairs_pr)
+    elif objective_function == CobreederObjectiveFunction.PRIO_MAX:
+        model.Maximize(all_priorities)
 
-    # ----- CONSTRAINTS ----- #
+    # ------------------------------ CONSTRAINTS ------------------------------ #
 
     # Allocate at least args.total_individuals individuals.
     total_allocated = sum(seats[(t, g)] for g in range(num_individuals) for t in range(num_groups))
@@ -414,7 +378,7 @@ def solve_with_discrete_model(args):
             print("\tIndividual %i is allocated to group %i" % (g1, allocate_first_group[g1]))
             model.Add(seats[(allocate_first_group[g1], g1)] == 1)
 
-    # ----- SOLVE MODEL ----- #
+    # ------------------------------ SOLVE MODEL ------------------------------ #
 
     solver = cp_model.CpSolver()
     paramstring = "%i,%i,%i" % (num_groups, objective_function, num_individuals)
