@@ -23,9 +23,13 @@ print(f'\nData preview: \n{groups.head()}')
 
 # Generate individuals.
 individuals = pd.DataFrame(columns=["Name", "Male", "Female", "AssignToFirstGroup", "Alleles", "Proven", "Priority"])
-individuals['Name'] = [f"Individual_{i}" for i in range(NUM_INDIVIDUALS)]
 individuals['Male'] = [random.choice([0, 1]) for _ in range(NUM_INDIVIDUALS)]
 individuals['Female'] = [1 - x for x in individuals['Male']]
+for i in range(NUM_INDIVIDUALS):
+    if individuals.loc[i]['Male'] == 1:
+        individuals.loc[i, 'Name'] = f"Individual_{i}_M"
+    else:
+        individuals.loc[i, 'Name'] = f"Individual_{i}_F"
 individuals['AssignToFirstGroup'] = -1
 individuals['Alleles'] = [random.randint(MIN_ALLELES, MAX_ALLELES) for _ in range(NUM_INDIVIDUALS)]
 individuals['Proven'] = [random.choice([0, 1]) for _ in range(NUM_INDIVIDUALS)]
