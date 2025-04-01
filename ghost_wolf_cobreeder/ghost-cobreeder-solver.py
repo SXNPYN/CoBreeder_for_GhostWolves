@@ -216,7 +216,7 @@ def build_data(args):
             objective_function, unique_id)
 
 
-def solve_with_discrete_model(args):
+def solve_model(args):
     """
     # TODO Add docstrings
     """
@@ -437,7 +437,7 @@ def main(argv: Sequence[str]) -> None:
     run_parser.add_argument('subst', nargs='?', default=0, type=int)
 
     args = parser.parse_args()
-    solve_with_discrete_model(args)
+    solve_model(args)
 
 
 if __name__ == "__main__":
