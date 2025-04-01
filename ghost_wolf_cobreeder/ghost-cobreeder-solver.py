@@ -135,7 +135,11 @@ def calculate_priority(individuals, prio_threshold, pr):
 
         individuals = pd.concat([male_individuals, female_individuals]).sort_index()
         individuals['NumMates'] = individuals['NumMates'].astype(int)
-        individuals['Priority'] = [1 if p > prio_threshold else 0 for p in individuals['PriorityValue']]
+
+        individuals['Priority'] = 0  # 0 by default
+        sorted_individuals = individuals.sort_values(by='PriorityValue', ascending=False)
+        top_priority = sorted_individuals.head(prio_threshold)
+        individuals.loc[top_priority.index, 'Priority'] = 1  # Select the top x individuals to be priority individuals
 
     return individuals
 

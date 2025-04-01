@@ -23,7 +23,7 @@ print(f'\n{groups.head()}')
 
 # Generate individuals.
 individuals = pd.DataFrame(columns=["Name", "Male", "Female", "AssignToFirstGroup", "Alleles", "Proven", "Priority"])
-individuals['Name'] = [f"Individual_{i+1}" for i in range(NUM_INDIVIDUALS)]
+individuals['Name'] = [f"Individual_{i}" for i in range(NUM_INDIVIDUALS)]
 individuals['Male'] = [random.choice([0, 1]) for _ in range(NUM_INDIVIDUALS)]
 individuals['Female'] = [1 - x for x in individuals['Male']]
 individuals['AssignToFirstGroup'] = -1
