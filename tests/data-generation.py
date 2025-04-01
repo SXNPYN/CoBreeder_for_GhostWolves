@@ -3,10 +3,12 @@ import random
 import numpy as np
 import os
 
-NUM_INDIVIDUALS = 10
+NUM_INDIVIDUALS = 50
 MIN_ALLELES = 150
 MAX_ALLELES = 900
 NUM_GROUPS = 10
+MIN_PR = 1
+MAX_PR = 1000
 
 
 # Generate groups
@@ -17,7 +19,7 @@ groups['MaxSize'] = [2]*NUM_GROUPS
 groups['NumMale'] = [1]*NUM_GROUPS
 groups['NumFemale'] = [1]*NUM_GROUPS
 groups['PRThreshold'] = [-1]*NUM_GROUPS
-print(f'\n{groups}')
+print(f'\n{groups.head()}')
 
 # Generate individuals
 individuals = pd.DataFrame(columns=["Name", "Male", "Female", "AssignToFirstGroup", "Alleles", "Proven", "Priority"])
@@ -28,14 +30,15 @@ individuals['AssignToFirstGroup'] = -1
 individuals['Alleles'] = [random.randint(MIN_ALLELES, MAX_ALLELES) for _ in range(NUM_INDIVIDUALS)]
 individuals['Proven'] = [random.choice([0, 1]) for _ in range(NUM_INDIVIDUALS)]
 individuals['Priority'] = 0
-print(f'\n{individuals}')
+print(f'\n{individuals.head()}')
 
 # Generate PR matrix
-random_matrix = np.random.randint(1, 1000, size=(NUM_INDIVIDUALS, NUM_INDIVIDUALS))
+random_matrix = np.random.randint(MIN_PR, MAX_PR, size=(NUM_INDIVIDUALS, NUM_INDIVIDUALS))
 random_matrix = (random_matrix + random_matrix.T) / 2
 np.fill_diagonal(random_matrix, 0)
 pr = pd.DataFrame(random_matrix, columns=individuals['Name'])
-print(f'\n{pr}')
+pr = pr.astype(int)
+print(f'\n{pr.head()}')
 
 # Save data
 data_dir_path = "data/wolves_randomly_generated"
