@@ -41,9 +41,9 @@ pr = pr.astype(int)
 print(f'\n{pr.head()}')
 
 # Save data.
-data_dir_path = "data/wolves_randomly_generated"
+data_dir_path = "../data/wolves_randomly_generated"
 os.makedirs(data_dir_path, exist_ok=True)
-groups.to_csv(os.path.join("../", data_dir_path, "generated-groups.csv"), index=False)
-individuals.to_csv(os.path.join("../", data_dir_path, "generated-individuals.csv"), index=False)
-pr.to_csv(os.path.join("../", data_dir_path, "generated-pr-scaled.csv"), index=False)
+groups.to_csv(os.path.join(data_dir_path, "generated-groups.csv"), index=False)
+individuals.to_csv(os.path.join(data_dir_path, "generated-individuals.csv"), index=False)
+pr.to_csv(os.path.join(data_dir_path, "generated-pr-scaled.csv"), index=False)
 print("Random data generated in data/wolves_randomly_generated.")
