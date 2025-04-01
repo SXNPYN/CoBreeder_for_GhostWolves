@@ -3,6 +3,7 @@ from absl import app
 import argparse
 from enum import IntEnum
 from ortools.sat.python import cp_model
+import os
 import pandas as pd
 import sys
 import time
@@ -10,7 +11,7 @@ from typing import Sequence
 
 PR_THRESHOLD = 0  # TODO
 MAX_TIME_SECONDS = 5  # TODO Threshold for max time allowed
-best_solution = {}  # Record best solution for save_solution_csv
+best_solution = {} # Stores best solution for save_solution_csv
 
 
 class CobreederObjectiveFunction(IntEnum):
@@ -78,8 +79,11 @@ def save_solution_csv(args, connections, individual_allele_count):
         solution_data.loc[i, 'Ind_2_Alleles'] = individual_allele_count[individuals[1][0]]
         i += 1
 
-    solution_data.to_csv(out_file, index=False)
-    print("Solution saved to %s." % out_file)
+    # Create results directory if it doesn't exist and save CSV
+    results_dir_path = os.path.join(os.getcwd(), "results")
+    os.makedirs(results_dir_path, exist_ok=True)
+    solution_data.to_csv(os.path.join(results_dir_path, out_file), index=False)
+    print("Solution saved to results/%s." % out_file)
 
 
 def calculate_priority(individuals, prio_threshold, pr):
