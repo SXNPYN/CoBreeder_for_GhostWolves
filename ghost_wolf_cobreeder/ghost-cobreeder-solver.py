@@ -286,9 +286,9 @@ def solve_with_discrete_model(args):
         for t in range(num_groups)
     )
 
-    w_pr = 0.4
-    w_alleles = 0.4
-    w_prio = 0.2
+    w_pr = args.weight_pr
+    w_alleles = args.weight_alleles
+    w_prio = 0.2*w_pr
     pr_alleles = w_pr * sum_pairs_pr + w_alleles * total_alleles + w_prio * total_priorities
 
     if objective_function == CobreederObjectiveFunction.MIN_PR:
