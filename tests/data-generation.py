@@ -19,7 +19,7 @@ groups['MaxSize'] = [2]*NUM_GROUPS
 groups['NumMale'] = [1]*NUM_GROUPS
 groups['NumFemale'] = [1]*NUM_GROUPS
 groups['PRThreshold'] = [-1]*NUM_GROUPS
-print(f'\n{groups.head()}')
+print(f'\nData preview: \n{groups.head()}')
 
 # Generate individuals.
 individuals = pd.DataFrame(columns=["Name", "Male", "Female", "AssignToFirstGroup", "Alleles", "Proven", "Priority"])
@@ -46,4 +46,4 @@ os.makedirs(data_dir_path, exist_ok=True)
 groups.to_csv(os.path.join(data_dir_path, "generated-groups.csv"), index=False)
 individuals.to_csv(os.path.join(data_dir_path, "generated-individuals.csv"), index=False)
 pr.to_csv(os.path.join(data_dir_path, "generated-pr-scaled.csv"), index=False)
-print("Random data generated in data/wolves_randomly_generated.")
+print("\nRandom data generated in data/wolves_randomly_generated.")
