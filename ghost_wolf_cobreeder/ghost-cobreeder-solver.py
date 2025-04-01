@@ -11,7 +11,6 @@ from typing import Sequence
 
 PR_THRESHOLD = 0  # TODO
 MAX_TIME_SECONDS = 5  # TODO Threshold for max time allowed
-best_solution = {} # Stores best solution for save_solution_csv
 
 
 class CobreederObjectiveFunction(IntEnum):
@@ -33,6 +32,7 @@ class CobreederPrinter(cp_model.CpSolverSolutionCallback):
         self.__num_individuals = num_individuals
         self.__paramstring = paramstring
         self.__uniqueid = unique_id
+        self.__best_solution = {} # Stores best solution for save_solution_csv
 
     def on_solution_callback(self):
         current_time = time.time()
@@ -53,35 +53,37 @@ class CobreederPrinter(cp_model.CpSolverSolutionCallback):
                 if self.Value(self.__seats[(t, g)]):
                     print(f"\t\t{self.__names[g]}")
                     individuals.append((g, self.__names[g]))
-            best_solution[t] = individuals
+            self.__best_solution[t] = individuals
 
     def num_solutions(self):
         return self.__solution_count
 
+    def best_solution(self):
+        return self.__best_solution
 
-def save_solution_csv(args, connections, individual_allele_count):
+
+def save_solution_csv(args, connections, individual_allele_count, best_solution):
     """
     # TODO Add docstrings
     """
-    out_file = f"best_solution_{args.unique_run_id}.csv"
     solution_data = pd.DataFrame(columns=["Group", "Ind_1_Name", "Ind_2_Name", "Ind_1_ID", "Ind_2_ID",
                                           "Ind_1_Alleles", "Ind_2_Alleles", "Pairwise_Relatedness"])
-
     i = 0  # Index of current row
     for group, individuals in best_solution.items():
-        solution_data.loc[i, 'Group'] = group
-        solution_data.loc[i, 'Pairwise_Relatedness'] = connections[individuals[0][0]][individuals[1][0]]
-        solution_data.loc[i, 'Ind_1_ID'] = individuals[0][0]
-        solution_data.loc[i, 'Ind_2_ID'] = individuals[1][0]
-        solution_data.loc[i, 'Ind_1_Name'] = individuals[0][1]
-        solution_data.loc[i, 'Ind_2_Name'] = individuals[1][1]
-        solution_data.loc[i, 'Ind_1_Alleles'] = individual_allele_count[individuals[0][0]]
-        solution_data.loc[i, 'Ind_2_Alleles'] = individual_allele_count[individuals[1][0]]
+        solution_data.loc[i, "Group"] = group
+        solution_data.loc[i, "Pairwise_Relatedness"] = connections[individuals[0][0]][individuals[1][0]]
+        solution_data.loc[i, "Ind_1_ID"] = individuals[0][0]
+        solution_data.loc[i, "Ind_2_ID"] = individuals[1][0]
+        solution_data.loc[i, "Ind_1_Name"] = individuals[0][1]
+        solution_data.loc[i, "Ind_2_Name"] = individuals[1][1]
+        solution_data.loc[i, "Ind_1_Alleles"] = individual_allele_count[individuals[0][0]]
+        solution_data.loc[i, "Ind_2_Alleles"] = individual_allele_count[individuals[1][0]]
         i += 1
 
     # Create results directory if it doesn't exist and save CSV
     results_dir_path = os.path.join(os.getcwd(), "results")
     os.makedirs(results_dir_path, exist_ok=True)
+    out_file = f"best_solution_{args.unique_run_id}.csv"
     solution_data.to_csv(os.path.join(results_dir_path, out_file), index=False)
     print("Solution saved to results/%s." % out_file)
 
@@ -406,7 +408,8 @@ def solve_with_discrete_model(args):
         # Save best solution to CSV if desired
         save = input("\nSave final solution to CSV? (Y/N): ")
         if save.lower() == 'y':
-            save_solution_csv(args, connections, individual_allele_count)
+            best_solution = solution_printer.best_solution()
+            save_solution_csv(args, connections, individual_allele_count, best_solution)
     else:
         print("No solution found.")
 
