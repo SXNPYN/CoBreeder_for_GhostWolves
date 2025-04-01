@@ -1,0 +1,11 @@
+Name,Male,Female,AssignToFirstGroup,Alleles,Proven,Priority
+Individual_1,1,0,-1,229,0,0
+Individual_2,1,0,-1,800,0,0
+Individual_3,1,0,-1,676,1,0
+Individual_4,0,1,-1,790,0,0
+Individual_5,0,1,-1,418,0,0
+Individual_6,1,0,-1,741,0,0
+Individual_7,0,1,-1,408,0,0
+Individual_8,1,0,-1,618,0,0
+Individual_9,0,1,-1,859,0,0
+Individual_10,0,1,-1,243,1,0

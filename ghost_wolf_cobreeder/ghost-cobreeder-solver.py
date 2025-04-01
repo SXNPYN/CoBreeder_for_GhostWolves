@@ -14,17 +14,18 @@ MAX_TIME_SECONDS = 5  # TODO Threshold for max time allowed
 
 
 class CobreederObjectiveFunction(IntEnum):
-    ALL_PAIRS_PR_MAX = 1
-    ALL_PAIRS_PR_MAX_SQUARED = 2
-    ALLELES_MAX = 3
-    MAX_ALLELES_MIN_PR = 4
-    PRIO_MAX = 5
+    MIN_PR = 1
+    MAX_ALLELES = 2
+    MAX_PRIO = 3
+    MIN_PR_MAX_ALLELES = 4
+    MIN_PR_MAX_ALLELES_MAX_PRIO = 5
 
 
 class CobreederPrinter(cp_model.CpSolverSolutionCallback):
     def __init__(self, seats, names, num_groups, num_individuals, paramstring, unique_id):
         cp_model.CpSolverSolutionCallback.__init__(self)
         self.__solution_count = 0
+        self.__best_solution = {}
         self.__start_time = time.time()
         self.__seats = seats
         self.__names = names
@@ -32,7 +33,6 @@ class CobreederPrinter(cp_model.CpSolverSolutionCallback):
         self.__num_individuals = num_individuals
         self.__paramstring = paramstring
         self.__uniqueid = unique_id
-        self.__best_solution = {} # Stores best solution for save_solution_csv
 
     def on_solution_callback(self):
         current_time = time.time()
@@ -266,48 +266,41 @@ def solve_with_discrete_model(args):
 
     # ------------------------------ OBJECTIVE FUNCTIONS ------------------------------ #
 
-    # TODO Maximise ghost while minimising pr whilst maximising priority?
-
-    # Sum of the alleles in the solution
-    alleles = sum(
-        seats[(t, g)] * individual_allele_count[g]
-        for g in range(num_individuals)
-        for t in range(num_groups)
-    )
-
-    # Sum of the PR across all pairs
-    all_pairs_pr = sum(
+    # Sum of pairwise relatedness across all pairs in the solution.
+    sum_pairs_pr = sum(
         connections[g1][g2] * colocated[g1, g2]
         for g1 in range(num_individuals - 1)
         for g2 in range(g1 + 1, num_individuals)
         if connections[g1][g2] > 0
     )
-
-    # Sum of the PR across all pairs, squared
-    all_pairs_pr_squared = sum(
-        connections[g1][g2] * connections[g1][g2] * colocated[g1, g2]  # * colocated[g1, g2]
-        for g1 in range(num_individuals - 1)
-        for g2 in range(g1 + 1, num_individuals)
-        if connections[g1][g2] > 0
+    # Sum of ghost alleles across the solution.
+    total_alleles = sum(
+        seats[(t, g)] * individual_allele_count[g]
+        for g in range(num_individuals)
+        for t in range(num_groups)
     )
-
-    # Sum of priorities in solution
-    all_priorities = sum(
+    # Sum of priority values across the solution.
+    total_priorities = sum(
         seats[(t, g)] * priority_values[g]
         for g in range(num_individuals)
         for t in range(num_groups)
     )
 
-    if objective_function == CobreederObjectiveFunction.ALL_PAIRS_PR_MAX:
-        model.Maximize(all_pairs_pr)
-    elif objective_function == CobreederObjectiveFunction.ALL_PAIRS_PR_MAX_SQUARED:
-        model.Maximize(all_pairs_pr_squared)
-    elif objective_function == CobreederObjectiveFunction.ALLELES_MAX:
-        model.Maximize(alleles)
-    elif objective_function == CobreederObjectiveFunction.MAX_ALLELES_MIN_PR:
-        model.Maximize(all_pairs_pr)
-    elif objective_function == CobreederObjectiveFunction.PRIO_MAX:
-        model.Maximize(all_priorities)
+    w_pr = 0.4
+    w_alleles = 0.4
+    w_prio = 0.2
+    pr_alleles = w_pr * sum_pairs_pr + w_alleles * total_alleles + w_prio * total_priorities
+
+    if objective_function == CobreederObjectiveFunction.MIN_PR:
+        model.Maximize(sum_pairs_pr)
+    elif objective_function == CobreederObjectiveFunction.MAX_ALLELES:
+        model.Maximize(total_alleles)
+    elif objective_function == CobreederObjectiveFunction.MAX_PRIO:
+        model.Maximize(total_priorities)
+    elif objective_function == CobreederObjectiveFunction.MIN_PR_MAX_ALLELES:
+        model.Maximize(total_priorities)  # TODO Maximise ghost while minimising pr
+    elif objective_function == CobreederObjectiveFunction.MIN_PR_MAX_ALLELES_MAX_PRIO:
+        model.Maximize(pr_alleles)  # TODO Maximise ghost while minimising pr whilst maximising priority values?
 
     # ------------------------------ CONSTRAINTS ------------------------------ #
 
