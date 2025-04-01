@@ -128,7 +128,6 @@ def calculate_priority(individuals, prio_threshold, pr):
         female_individuals['PriorityValue'] = (female_individuals['Proven'] *
                                                (((a * female_individuals['Alleles']) / female_g_max) +
                                                ((b * female_individuals['NumMates']) / female_m_max)) * 100).astype(int)
-
         male_individuals['PriorityValue'] = (male_individuals['Proven'] *
                                              (((a * male_individuals['Alleles']) / male_g_max) +
                                              ((b * male_individuals['NumMates']) / male_m_max)) * 100).astype(int)
