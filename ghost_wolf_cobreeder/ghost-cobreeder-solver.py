@@ -10,7 +10,6 @@ import time
 from typing import Sequence
 
 PR_THRESHOLD = 0  # TODO
-MAX_TIME_SECONDS = 5  # TODO Threshold for max time allowed
 
 
 class CobreederObjectiveFunction(IntEnum):
@@ -286,10 +285,21 @@ def solve_model(args):
         for t in range(num_groups)
     )
 
-    w_pr = args.weight_pr
-    w_alleles = args.weight_alleles
-    w_prio = 0.2*w_pr
-    pr_alleles = w_pr * sum_pairs_pr + w_alleles * total_alleles + w_prio * total_priorities
+    # TODO Multi-objective optimisation
+    best_total_alleles = max(individual_allele_count) * num_groups * 2  # If all individuals had highest num alleles
+    best_total_pr = max([pr for col in connections for pr in col]) * num_groups
+    # best_total_priorities = 100 * num_groups * 2  # Priority if all individuals had max priority values
+
+    weight_total = args.weight_pr + args.weight_alleles
+    weight_pr = 100 * (args.weight_pr / weight_total) / best_total_pr
+    weight_alleles = 100 * (args.weight_alleles / weight_total) / best_total_alleles
+    pr_alleles = (sum_pairs_pr * weight_pr) + (total_alleles * weight_alleles)
+    '''
+    pr_alleles_prio = (
+                (sum_pairs_pr * (args.weight_pr // best_total_pr)) +
+                (total_alleles * (args.weight_alleles // best_total_alleles)) +
+                (total_priorities * (args.weight_prio // best_total_priorities))
+    )'''
 
     if objective_function == CobreederObjectiveFunction.MIN_PR:
         model.Maximize(sum_pairs_pr)
@@ -298,9 +308,9 @@ def solve_model(args):
     elif objective_function == CobreederObjectiveFunction.MAX_PRIO:
         model.Maximize(total_priorities)
     elif objective_function == CobreederObjectiveFunction.MIN_PR_MAX_ALLELES:
-        model.Maximize(total_priorities)  # TODO Maximise ghost while minimising pr
-    elif objective_function == CobreederObjectiveFunction.MIN_PR_MAX_ALLELES_MAX_PRIO:
-        model.Maximize(pr_alleles)  # TODO Maximise ghost while minimising pr whilst maximising priority values?
+        model.Maximize(pr_alleles)  # TODO
+    # elif objective_function == CobreederObjectiveFunction.MIN_PR_MAX_ALLELES_MAX_PRIO:
+        # model.Maximize(pr_alleles_prio)  # TODO
 
     # ------------------------------ CONSTRAINTS ------------------------------ #
 
@@ -383,7 +393,7 @@ def solve_model(args):
     paramstring = "%i,%i,%i" % (num_groups, objective_function, num_individuals)
     solution_printer = CobreederPrinter(seats, names, num_groups, num_individuals, paramstring, unique_id)
 
-    solver.parameters.max_time_in_seconds = MAX_TIME_SECONDS
+    # solver.parameters.max_time_in_seconds = 5
     # solver.parameters.log_search_progress = True
     # solver.parameters.num_workers = 5
     # solver.parameters.fix_variables_to_their_hinted_value = True
@@ -424,9 +434,9 @@ def main(argv: Sequence[str]) -> None:
     run_parser.add_argument("unique_run_id", type=str,
                             help='Unique string identifier for each run.')
     run_parser.add_argument("weight_alleles", type=int,
-                            help='Weight for alleles.')
+                            help='Weight for alleles (for objective function).')
     run_parser.add_argument("weight_pr", type=int,
-                            help='Weight for PR.')
+                            help='Weight for pairwise relatedness (for objective function).')
     run_parser.add_argument("total_individuals", type=int,
                             help='Minimum number of individuals allocated to a solution.')
     run_parser.add_argument("exclude_disallow", type=str, choices=["EX", "ALL"],
