@@ -10,6 +10,8 @@ import time
 from typing import Sequence
 
 PR_THRESHOLD = 0  # TODO
+# TODO set ideal MAX_SCALED_PR for MOO
+# TODO set ideal MAX_GHOST_ALLELES for MOO
 
 
 class CobreederObjectiveFunction(IntEnum):
@@ -282,38 +284,33 @@ def solve_model(args):
         for t in range(num_groups)
     )
     # Sum of priority values across the solution.
-    total_priorities = sum(
+    total_priority = sum(
         seats[(t, g)] * priority_values[g]
         for g in range(num_individuals)
         for t in range(num_groups)
     )
 
     # TODO Multi-objective optimisation
-    best_total_alleles = max(individual_allele_count) * num_groups * 2  # If all individuals had highest num alleles
-    best_total_pr = max([pr for col in connections for pr in col]) * num_groups
-    # best_total_priorities = 100 * num_groups * 2  # Priority if all individuals had max priority values
-
-    weight_total = args.weight_pr + args.weight_alleles
-    weight_pr = 100 * (args.weight_pr / weight_total) / best_total_pr
-    weight_alleles = 100 * (args.weight_alleles / weight_total) / best_total_alleles
-    pr_alleles = (sum_pairs_pr * weight_pr) + (total_alleles * weight_alleles)
-    '''
-    pr_alleles_prio = (
-                (sum_pairs_pr * (args.weight_pr // best_total_pr)) +
-                (total_alleles * (args.weight_alleles // best_total_alleles)) +
-                (total_priorities * (args.weight_prio // best_total_priorities))
-    )'''
+    ideal_total_pr = max([pr for col in connections for pr in col]) * num_groups  # All pairs have the best PR
+    ideal_total_alleles = max(individual_allele_count) * 2 * num_groups  # All individuals have max alleles
+    ideal_total_priority = 100 * 2 * num_groups  # All individuals have a priority value of 100
+    deviation = model.NewIntVar(0, 999999, "max_deviation")
 
     if objective_function == CobreederObjectiveFunction.MIN_PR:
         model.Maximize(sum_pairs_pr)
     elif objective_function == CobreederObjectiveFunction.MAX_ALLELES:
         model.Maximize(total_alleles)
     elif objective_function == CobreederObjectiveFunction.MAX_PRIO:
-        model.Maximize(total_priorities)
+        model.Maximize(total_priority)
     elif objective_function == CobreederObjectiveFunction.MIN_PR_MAX_ALLELES:
-        model.Maximize(pr_alleles)  # TODO
-    # elif objective_function == CobreederObjectiveFunction.MIN_PR_MAX_ALLELES_MAX_PRIO:
-        # model.Maximize(pr_alleles_prio)  # TODO
+        model.Add(deviation >= args.weight_pr * (ideal_total_pr - sum_pairs_pr))
+        model.Add(deviation >= args.weight_alleles * (ideal_total_alleles - total_alleles))
+        model.Minimize(deviation)
+    elif objective_function == CobreederObjectiveFunction.MIN_PR_MAX_ALLELES_MAX_PRIO:
+        model.Add(deviation >= args.weight_pr * (ideal_total_pr - sum_pairs_pr))
+        model.Add(deviation >= args.weight_alleles * (ideal_total_alleles - total_alleles))
+        model.Add(deviation >= args.weight_prio * (ideal_total_priority - total_priority))
+        model.Minimize(deviation)
 
     # ------------------------------ CONSTRAINTS ------------------------------ #
 
@@ -440,6 +437,8 @@ def main(argv: Sequence[str]) -> None:
                             help='Weight for alleles (for objective function).')
     run_parser.add_argument("weight_pr", type=int,
                             help='Weight for pairwise relatedness (for objective function).')
+    run_parser.add_argument("weight_prio", type=int,
+                            help='Weight for priorities (for objective function).')
     run_parser.add_argument("total_individuals", type=int,
                             help='Minimum number of individuals allocated to a solution.')
     run_parser.add_argument("exclude_disallow", type=str, choices=["EX", "ALL"],
