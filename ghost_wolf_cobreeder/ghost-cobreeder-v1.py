@@ -61,7 +61,14 @@ class GhostCobreederPrinter(cp_model.CpSolverSolutionCallback):
 
 def save_solution_csv(args, connections, individual_allele_count, individual_priority_value, best_solution):
     """
-    # TODO Add docstrings
+    Saves the best solution to a CSV file detailing groups, individuals, ghost alleles, and pairwise relatedness.
+
+    Args: #TODO
+        :param args:
+        :param connections:
+        :param dict individual_allele_count:
+        :param dict individual_priority_value:
+        :param best_solution:
     """
 
     solution_data = pd.DataFrame(columns=["Group", "Ind_1_Name", "Ind_2_Name", "Ind_1_ID", "Ind_2_ID",
@@ -91,12 +98,18 @@ def save_solution_csv(args, connections, individual_allele_count, individual_pri
     print("Solution saved to results/%s." % out_file)
 
 
-def calculate_priority(args, individuals, prio_threshold, pr):
+def calculate_priority(args, individuals, pr):
     """
-    # TODO Add docstrings
+    # TODO
+
+    Args:
+        :param args:
+        :param individuals:
+        :param pr:
+        :return individuals:
     """
 
-    if prio_threshold == 0:  # Use values from csv only
+    if args.prio_calc_threshold == 0:  # Use values from csv only
         priorities = individuals["Priority"].tolist()
         individuals['PriorityValue'] = [100 * p for p in priorities]  # All priority individuals are equal
 
@@ -114,10 +127,10 @@ def calculate_priority(args, individuals, prio_threshold, pr):
 
         female_individuals = individuals.query("Female == 1").copy()
         male_individuals = individuals.query("Male == 1").copy()
-        female_g_max = max(female_individuals["Alleles"])  # Highest/best number of ghost alleles amongst females
-        male_g_max = max(male_individuals["Alleles"])  # Highest/best number of ghost alleles amongst males
+        female_g_max = max(female_individuals["Alleles"])  # Largest number of ghost alleles amongst females
+        male_g_max = max(male_individuals["Alleles"])
         female_m_max = len(male_individuals)  # Max number of potential mates that a female can have
-        male_m_max = len(female_individuals)  # Max number of potential mates that a male can have
+        male_m_max = len(female_individuals)
 
         # Calculate number of potential mates each individual has from the PR matrix
         pr_threshold = args.pr_threshold
@@ -130,6 +143,7 @@ def calculate_priority(args, individuals, prio_threshold, pr):
             male_individuals.loc[i, "NumMates"] = num_mates
             print(f'Male {i} has {num_mates} mates.')
 
+        # Calculate priority value between 0 and 100.
         female_individuals['PriorityValue'] = (female_individuals['Proven'] *
                                                (((a * female_individuals['Alleles']) / female_g_max) +
                                                ((b * female_individuals['NumMates']) / female_m_max)) * 100).astype(int)
@@ -142,7 +156,7 @@ def calculate_priority(args, individuals, prio_threshold, pr):
 
         individuals['Priority'] = 0  # 0 by default
         sorted_individuals = individuals.sort_values(by='PriorityValue', ascending=False)
-        top_priority = sorted_individuals.head(prio_threshold)
+        top_priority = sorted_individuals.head(args.prio_calc_threshold)
         individuals.loc[top_priority.index, 'Priority'] = 1  # Select the top x individuals to be priority individuals
 
     return individuals
@@ -150,7 +164,11 @@ def calculate_priority(args, individuals, prio_threshold, pr):
 
 def build_data(args):
     """
-    # TODO Add docstrings
+    # TODO
+
+    Args:
+        :param args:
+        :return:
     """
 
     objective_function = GhostCobreederObjectiveFunction[args.obj_function]
@@ -202,7 +220,7 @@ def build_data(args):
             else:
                 break
 
-    individuals = calculate_priority(args, individuals, args.prio_calc_threshold, pr)
+    individuals = calculate_priority(args, individuals, pr)
     print(f"\nSUMMARY OF INDIVIDUALS AFTER PROCESSING: \n{individuals}")
     print(f"\nPR MATRIX: \n{pr}")
 
@@ -225,7 +243,10 @@ def build_data(args):
 
 def solve_model(args):
     """
-    # TODO Add docstrings
+    # TODO
+
+    Args:
+        :param args:
     """
 
     (connections, group_defs, names, males, females, allocate_first_group, alleles, priorities, priority_values,
@@ -427,38 +448,30 @@ def main(argv: Sequence[str]) -> None:
                                      description='Group-Living Captive Breeding Solver.', add_help=True)
     subparsers = parser.add_subparsers(help='sub-command help')
     run_parser = subparsers.add_parser('run')
-    run_parser.add_argument('individuals_file', type=str,
-                            help='CSV file detailing individuals.')
+    run_parser.add_argument('individuals_file', type=str, help='CSV file detailing individuals.')
     run_parser.add_argument('pairwise_relatedness_file', type=str,
                             help='Scaled pairwise relatedness matrix.')
-    run_parser.add_argument('group_file', type=str,
-                            help='CSV file detailing groups.')
+    run_parser.add_argument('group_file', type=str, help='CSV file detailing groups.')
     run_parser.add_argument("obj_function", type=str,
                             choices=[e.name for e in GhostCobreederObjectiveFunction],
                             help='String specifying objective function.')
-    run_parser.add_argument("unique_run_id", type=str,
-                            help='Unique string identifier for each run.')
-    run_parser.add_argument("weight_alleles", type=int,
-                            help='Weight for alleles (for objective function).')
-    run_parser.add_argument("weight_pr", type=int,
-                            help='Weight for pairwise relatedness (for objective function).')
-    run_parser.add_argument("weight_prio", type=int,
-                            help='Weight for priorities (for objective function).')
+    run_parser.add_argument("unique_run_id", type=str, help='Unique string identifier for each run.')
+    run_parser.add_argument("weight_alleles", type=int, help='Weight for alleles.')
+    run_parser.add_argument("weight_pr", type=int, help='Weight for pairwise relatedness.')
+    run_parser.add_argument("weight_prio", type=int, help='Weight for priority values.')
     run_parser.add_argument("total_individuals", type=int,
-                            help='Minimum number of individuals allocated to a solution.')
+                            help='Minimum number of individual to allocate to a solution.')
     run_parser.add_argument("pr_threshold", type=int, default=0,
                             help='Threshold for scaled PR permitted in a pairing.')
     run_parser.add_argument("exclude_disallow", type=str, choices=["EX", "ALL"],
-                            help='Exclude individuals or specify disallowed pairings with "EX", or use all with "ALL".')
+                            help='Exclude individuals or specify disallowed pairings.')
     run_parser.add_argument("prio_calc_threshold", type=int, choices=range(0, 101),
                             help='Threshold for priority calculation. 0 to disable and use manual priority assignments '
                                  'only.')
-    run_parser.add_argument('subst', nargs='?', default=0, type=int)
 
     args = parser.parse_args()
-
     if (args.obj_function == "MIN_PR_MAX_ALLELES_MAX_PRIO") and (args.prio_calc_threshold == 0):
-        print("Error: MIN_PR_MAX_ALLELES_MAX_PRIO can only be used if priority calculations are enabled.")
+        print("Error: MIN_PR_MAX_ALLELES_MAX_PRIO requires priority calculations to be enabled.")
         sys.exit(1)
 
     solve_model(args)
