@@ -76,7 +76,7 @@ def save_solution_csv(args, connections, individual_allele_count, best_solution)
         solution_data.loc[i, "Ind_2_Name"] = individuals[1][1]
         solution_data.loc[i, "Ind_1_Alleles"] = individual_allele_count[individuals[0][0]]
         solution_data.loc[i, "Ind_2_Alleles"] = individual_allele_count[individuals[1][0]]
-        solution_data.loc[i, "Priority_Sum"] = "N/A" if args.prio_calc_threshold == 0 else "To implement" # TODO
+        solution_data.loc[i, "Priority_Sum"] = "N/A" if args.prio_calc_threshold == 0 else "To implement"  # TODO
         i += 1
 
     # Create results directory if it doesn't exist and save CSV
