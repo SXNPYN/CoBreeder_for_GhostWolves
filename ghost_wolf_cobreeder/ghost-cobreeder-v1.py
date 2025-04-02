@@ -59,7 +59,7 @@ class GhostCobreederPrinter(cp_model.CpSolverSolutionCallback):
         return self.__best_solution
 
 
-def save_solution_csv(args, connections, individual_allele_count, best_solution):
+def save_solution_csv(args, connections, individual_allele_count, individual_priority_value, best_solution):
     """
     # TODO Add docstrings
     """
@@ -76,7 +76,11 @@ def save_solution_csv(args, connections, individual_allele_count, best_solution)
         solution_data.loc[i, "Ind_2_Name"] = individuals[1][1]
         solution_data.loc[i, "Ind_1_Alleles"] = individual_allele_count[individuals[0][0]]
         solution_data.loc[i, "Ind_2_Alleles"] = individual_allele_count[individuals[1][0]]
-        solution_data.loc[i, "Priority_Sum"] = "N/A" if args.prio_calc_threshold == 0 else "To implement"  # TODO
+        if args.prio_calc_threshold == 0:
+            solution_data.loc[i, "Priority_Sum"] = "N/A"
+        else:
+            prio_sum = individual_priority_value[individuals[0][0]] + individual_priority_value[individuals[1][0]]
+            solution_data.loc[i, "Priority_Sum"] = prio_sum
         i += 1
 
     # Create results directory if it doesn't exist and save CSV
@@ -240,6 +244,7 @@ def solve_model(args):
     seats = {}
     individual_must_be_allocated = {}
     individual_allele_count = {}
+    individual_priority_values = {}
     colocated = {}
     same_group = {}
     opposing_sex = {}
@@ -247,6 +252,7 @@ def solve_model(args):
     for g in all_individuals:
         individual_must_be_allocated[g] = 1 if priorities[g] == 1 else 0
         individual_allele_count[g] = alleles[g]
+        individual_priority_values[g] = priority_values[g]
 
     for t in all_groups:
         for g in all_individuals:
@@ -411,7 +417,7 @@ def solve_model(args):
         save = input("\nSave final solution to CSV? (Y/N): ")
         if save.lower() == 'y':
             best_solution = solution_printer.best_solution()
-            save_solution_csv(args, connections, individual_allele_count, best_solution)
+            save_solution_csv(args, connections, individual_allele_count, individual_priority_values, best_solution)
     else:
         print("No solution found.")
 
