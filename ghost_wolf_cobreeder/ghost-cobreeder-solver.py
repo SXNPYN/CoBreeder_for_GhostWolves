@@ -290,7 +290,7 @@ def solve_model(args):
         for t in range(num_groups)
     )
 
-    # TODO Multi-objective optimisation
+    # Attempt at weighted Chebyshev method
     ideal_total_pr = max([pr for col in connections for pr in col]) * num_groups  # All pairs have the best PR
     ideal_total_alleles = max(individual_allele_count) * 2 * num_groups  # All individuals have max alleles
     ideal_total_priority = 100 * 2 * num_groups  # All individuals have a priority value of 100
