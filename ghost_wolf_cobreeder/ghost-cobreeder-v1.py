@@ -9,12 +9,8 @@ import sys
 import time
 from typing import Sequence
 
-PR_THRESHOLD = 0  # TODO
-# TODO set ideal MAX_SCALED_PR for MOO
-# TODO set ideal MAX_GHOST_ALLELES for MOO
 
-
-class CobreederObjectiveFunction(IntEnum):
+class GhostCobreederObjectiveFunction(IntEnum):
     MIN_PR = 1
     MAX_ALLELES = 2
     MAX_PRIO = 3
@@ -22,7 +18,7 @@ class CobreederObjectiveFunction(IntEnum):
     MIN_PR_MAX_ALLELES_MAX_PRIO = 5
 
 
-class CobreederPrinter(cp_model.CpSolverSolutionCallback):
+class GhostCobreederPrinter(cp_model.CpSolverSolutionCallback):
     def __init__(self, seats, names, num_groups, num_individuals, paramstring, unique_id):
         cp_model.CpSolverSolutionCallback.__init__(self)
         self.__solution_count = 0
@@ -67,8 +63,9 @@ def save_solution_csv(args, connections, individual_allele_count, best_solution)
     """
     # TODO Add docstrings
     """
+
     solution_data = pd.DataFrame(columns=["Group", "Ind_1_Name", "Ind_2_Name", "Ind_1_ID", "Ind_2_ID",
-                                          "Ind_1_Alleles", "Ind_2_Alleles", "Pairwise_Relatedness"])
+                                          "Ind_1_Alleles", "Ind_2_Alleles", "Pairwise_Relatedness", "Priority_Sum"])
     i = 0  # Index of current row
     for group, individuals in best_solution.items():
         solution_data.loc[i, "Group"] = group
@@ -79,7 +76,7 @@ def save_solution_csv(args, connections, individual_allele_count, best_solution)
         solution_data.loc[i, "Ind_2_Name"] = individuals[1][1]
         solution_data.loc[i, "Ind_1_Alleles"] = individual_allele_count[individuals[0][0]]
         solution_data.loc[i, "Ind_2_Alleles"] = individual_allele_count[individuals[1][0]]
-        # TODO add priority values if used
+        solution_data.loc[i, "Priority_Sum"] = "N/A" if args.prio_calc_threshold == 0 else "To implement" # TODO
         i += 1
 
     # Create results directory if it doesn't exist and save CSV
@@ -90,7 +87,7 @@ def save_solution_csv(args, connections, individual_allele_count, best_solution)
     print("Solution saved to results/%s." % out_file)
 
 
-def calculate_priority(individuals, prio_threshold, pr):
+def calculate_priority(args, individuals, prio_threshold, pr):
     """
     # TODO Add docstrings
     """
@@ -119,12 +116,13 @@ def calculate_priority(individuals, prio_threshold, pr):
         male_m_max = len(female_individuals)  # Max number of potential mates that a male can have
 
         # Calculate number of potential mates each individual has from the PR matrix
+        pr_threshold = args.pr_threshold
         for i in female_individuals.index:
-            num_mates = (pr.loc[male_individuals.index][i] > PR_THRESHOLD).sum()
+            num_mates = (pr.loc[male_individuals.index][i] > pr_threshold).sum()
             female_individuals.loc[i, "NumMates"] = num_mates
             print(f'Female {i} has {num_mates} potential mates.')
         for i in male_individuals.index:
-            num_mates = (pr.loc[female_individuals.index][i] > PR_THRESHOLD).sum()
+            num_mates = (pr.loc[female_individuals.index][i] > pr_threshold).sum()
             male_individuals.loc[i, "NumMates"] = num_mates
             print(f'Male {i} has {num_mates} mates.')
 
@@ -151,7 +149,7 @@ def build_data(args):
     # TODO Add docstrings
     """
 
-    objective_function = CobreederObjectiveFunction[args.obj_function]
+    objective_function = GhostCobreederObjectiveFunction[args.obj_function]
     unique_id = args.unique_run_id
     print("\nRUN ID: %s \nOBJECTIVE FUNCTION: %i" % (unique_id, objective_function))
 
@@ -200,7 +198,7 @@ def build_data(args):
             else:
                 break
 
-    individuals = calculate_priority(individuals, args.prio_calc_threshold, pr)
+    individuals = calculate_priority(args, individuals, args.prio_calc_threshold, pr)
     print(f"\nSUMMARY OF INDIVIDUALS AFTER PROCESSING: \n{individuals}")
     print(f"\nPR MATRIX: \n{pr}")
 
@@ -297,17 +295,17 @@ def solve_model(args):
     ideal_total_priority = 100 * 2 * num_groups  # All individuals have a priority value of 100
     deviation = model.NewIntVar(0, 999999, "max_deviation")
 
-    if objective_function == CobreederObjectiveFunction.MIN_PR:
+    if objective_function == GhostCobreederObjectiveFunction.MIN_PR:
         model.Maximize(sum_pairs_pr)
-    elif objective_function == CobreederObjectiveFunction.MAX_ALLELES:
+    elif objective_function == GhostCobreederObjectiveFunction.MAX_ALLELES:
         model.Maximize(total_alleles)
-    elif objective_function == CobreederObjectiveFunction.MAX_PRIO:
+    elif objective_function == GhostCobreederObjectiveFunction.MAX_PRIO:
         model.Maximize(total_priority)
-    elif objective_function == CobreederObjectiveFunction.MIN_PR_MAX_ALLELES:
+    elif objective_function == GhostCobreederObjectiveFunction.MIN_PR_MAX_ALLELES:
         model.Add(deviation >= args.weight_pr * (ideal_total_pr - sum_pairs_pr))
         model.Add(deviation >= args.weight_alleles * (ideal_total_alleles - total_alleles))
         model.Minimize(deviation)
-    elif objective_function == CobreederObjectiveFunction.MIN_PR_MAX_ALLELES_MAX_PRIO:
+    elif objective_function == GhostCobreederObjectiveFunction.MIN_PR_MAX_ALLELES_MAX_PRIO:
         model.Add(deviation >= args.weight_pr * (ideal_total_pr - sum_pairs_pr))
         model.Add(deviation >= args.weight_alleles * (ideal_total_alleles - total_alleles))
         model.Add(deviation >= args.weight_prio * (ideal_total_priority - total_priority))
@@ -362,7 +360,7 @@ def solve_model(args):
                     connections[g1][g2] * same_group[(g1, g2, t)]
                     for g1 in range(num_individuals - 1)
                     for g2 in range(g1 + 1, num_individuals)
-                    if connections[g1][g2] < PR_THRESHOLD
+                    if connections[g1][g2] < args.pr_threshold
                 ) < 1
             )
 
@@ -392,7 +390,7 @@ def solve_model(args):
 
     solver = cp_model.CpSolver()
     paramstring = "%i,%i,%i" % (num_groups, objective_function, num_individuals)
-    solution_printer = CobreederPrinter(seats, names, num_groups, num_individuals, paramstring, unique_id)
+    solution_printer = GhostCobreederPrinter(seats, names, num_groups, num_individuals, paramstring, unique_id)
 
     # solver.parameters.max_time_in_seconds = 5
     # solver.parameters.log_search_progress = True
@@ -430,7 +428,7 @@ def main(argv: Sequence[str]) -> None:
     run_parser.add_argument('group_file', type=str,
                             help='CSV file detailing groups.')
     run_parser.add_argument("obj_function", type=str,
-                            choices=[e.name for e in CobreederObjectiveFunction],
+                            choices=[e.name for e in GhostCobreederObjectiveFunction],
                             help='String specifying objective function.')
     run_parser.add_argument("unique_run_id", type=str,
                             help='Unique string identifier for each run.')
@@ -442,6 +440,8 @@ def main(argv: Sequence[str]) -> None:
                             help='Weight for priorities (for objective function).')
     run_parser.add_argument("total_individuals", type=int,
                             help='Minimum number of individuals allocated to a solution.')
+    run_parser.add_argument("pr_threshold", type=int, default=0,
+                            help='Threshold for scaled PR permitted in a pairing.')
     run_parser.add_argument("exclude_disallow", type=str, choices=["EX", "ALL"],
                             help='Exclude individuals or specify disallowed pairings with "EX", or use all with "ALL".')
     run_parser.add_argument("prio_calc_threshold", type=int, choices=range(0, 101),
