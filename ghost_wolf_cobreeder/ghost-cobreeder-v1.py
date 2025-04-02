@@ -63,13 +63,15 @@ def save_solution_csv(args, connections, individual_allele_count, individual_pri
     """
     Saves the best solution to a CSV file detailing groups, individuals, ghost alleles, and pairwise relatedness.
 
-    Args: #TODO
-        :param args:
-        :param connections:
-        :param dict individual_allele_count:
-        :param dict individual_priority_value:
-        :param best_solution:
+    Args:
+        :param args: Variable length argument list.
+        :param list of lists connections: PR relatedness matrix.
+        :param dict individual_allele_count: Dictionary mapping individual IDs to their number of ghost alleles.
+        :param dict individual_priority_value: Dictionary mapping individual IDs to their priority value.
+        :param dict best_solution: Dictionary mapping group number to a list of tuples in the form (individual ID, name)
     """
+
+    input(f'{best_solution}')
 
     solution_data = pd.DataFrame(columns=["Group", "Ind_1_Name", "Ind_2_Name", "Ind_1_ID", "Ind_2_ID",
                                           "Ind_1_Alleles", "Ind_2_Alleles", "Pairwise_Relatedness", "Priority_Sum"])
@@ -100,13 +102,14 @@ def save_solution_csv(args, connections, individual_allele_count, individual_pri
 
 def calculate_priority(args, individuals, pr):
     """
-    # TODO
+    Dynamically calculates a priority value for each individual based on the dataset between 0 and 100, where 100 is
+    the highest priority value possible.
 
     Args:
-        :param args:
-        :param individuals:
-        :param pr:
-        :return individuals:
+        :param args: Variable length argument list.
+        :param individuals: DataFrame containing information about each individual.
+        :param pr: DataFrame containing pairwise relatedness information for each individual.
+        :return individuals: Edited DataFrame detailing individuals and their calculated priorities.
     """
 
     if args.prio_calc_threshold == 0:  # Use values from csv only
@@ -164,11 +167,13 @@ def calculate_priority(args, individuals, pr):
 
 def build_data(args):
     """
-    # TODO
+    Takes the CSV files (detailing individuals, groups, and pairwise relatedness) provided by the user and converts the
+    data into a format that can be used by solve_model(). Also allows for exclusion of specific individuals and
+    disallowed pairings, if enabled from the command line.
 
     Args:
-        :param args:
-        :return:
+        :param args: Variable length argument list.
+        :return: Various variables storing data from the CSV files, mostly columns in list format.
     """
 
     objective_function = GhostCobreederObjectiveFunction[args.obj_function]
@@ -243,10 +248,11 @@ def build_data(args):
 
 def solve_model(args):
     """
-    # TODO
+    Uses the processed data to define decision variables, constraints and the objective functions, solve the model and
+    output final statistics.
 
     Args:
-        :param args:
+        :param args: Variable length argument list.
     """
 
     (connections, group_defs, names, males, females, allocate_first_group, alleles, priorities, priority_values,
