@@ -79,6 +79,7 @@ def save_solution_csv(args, connections, individual_allele_count, best_solution)
         solution_data.loc[i, "Ind_2_Name"] = individuals[1][1]
         solution_data.loc[i, "Ind_1_Alleles"] = individual_allele_count[individuals[0][0]]
         solution_data.loc[i, "Ind_2_Alleles"] = individual_allele_count[individuals[1][0]]
+        # TODO add priority values if used
         i += 1
 
     # Create results directory if it doesn't exist and save CSV
@@ -449,6 +450,11 @@ def main(argv: Sequence[str]) -> None:
     run_parser.add_argument('subst', nargs='?', default=0, type=int)
 
     args = parser.parse_args()
+
+    if (args.obj_function == "MIN_PR_MAX_ALLELES_MAX_PRIO") and (args.prio_calc_threshold == 0):
+        print("Error: MIN_PR_MAX_ALLELES_MAX_PRIO can only be used if priority calculations are enabled.")
+        sys.exit(1)
+
     solve_model(args)
 
 
