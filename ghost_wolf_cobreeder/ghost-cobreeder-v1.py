@@ -71,8 +71,6 @@ def save_solution_csv(args, connections, individual_allele_count, individual_pri
         :param dict best_solution: Dictionary mapping group number to a list of tuples in the form (individual ID, name)
     """
 
-    input(f'{best_solution}')
-
     solution_data = pd.DataFrame(columns=["Group", "Ind_1_Name", "Ind_2_Name", "Ind_1_ID", "Ind_2_ID",
                                           "Ind_1_Alleles", "Ind_2_Alleles", "Pairwise_Relatedness", "Priority_Sum"])
     i = 0  # Index of current row
