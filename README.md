@@ -4,23 +4,75 @@
 
 Explain what it is and does.
 Builds upon CoBreeder for Galapagos tortoises, reference Matt's work.
-PR of 0 means not compatible 
+PR of 0 means not compatible
 
-## Inputs
 
-The program is run via the terminal/command line. You will need to specify various arguments as well as provide paths 
-to the files to use. 
+## Command Line Arguments
 
-### COMMAND LINE ARGUMENTS
-```python
-# Insert code here
-```
+This program is run via the command line. You will need to specify various arguments as well as provide relative paths 
+to the data that will be used. The program expects the following arguments, in the order introduced:
+
+- `individuals_file`
+  - Relative path to the CSV file detailing the individuals.
+- `pairwise_relatedness_file`
+  - Relative path to the CSV file containing the scaled pairwise relatedness matrix.
+- `group_file`
+  - Relative path to the CSV file detailing the group specifications.
+- `obj_function`
+  - String specifying the objective function to use when solving. The options are:
+    - `MIN_PR` - Minimise the pairwise relatedness of each pairing.
+    - `MAX_ALLELES` - Maximise the number of ghost alleles in each pairing.
+    - `MAX_PRIO` - Maximise the priority values in each pairing.
+    - `MIN_PR_MAX_ALLELES` - Minimise pairwise relatedness and maximise the number of ghost alleles in each pairing 
+    using the weights specified. 
+    - `MIN_PR_MAX_ALLELES_MAX_PRIO` - Minimise pairwise relatedness, maximise the number of ghost alleles, and 
+    maximise priority in each pairing using the weights specified.
+  - Note that `MIN_PR_MAX_ALLELES_MAX_PRIO` and `MAX_PRIO` cannot be used if `prio_calc_threshold` is set to 0 as they
+    use dynamic priority calculations. 
+- `unique_run_id`
+  - Unique string identifier for each run. Has no bearing on functionality but is useful to identify results when 
+    running the program multiple times.
+- `weight_alleles`
+  - Integer specifying how much to prioritise alleles when performing multi-objective optimisation.
+- `weight_pr`
+  - Integer specifying how much to prioritise pairwise relatedness when performing multi-objective optimisation.
+- `weight_prio`
+  - Integer specifying how much to prioritise priority values when performing multi-objective optimisation.
+- `total_individuals`
+  - Minimum number of individuals to allocate to a solution.
+- `pr_threshold`
+  - Threshold for the scaled pairwise relatedness permitted in a pairing. 0 by default. 
+- `exclude_disallow`
+  - Exclude individuals or specify disallowed pairings with "EX", or skip this step with "ALL".
+  - This is explained in more detail in the "Excluded Individuals & Disallowed Pairings" section
+- `prio_calc_threshold`
+  - Threshold for priority calculation between 0 and 100.0 to disable and use manual priority assignments only.
+
+EXAMPLE 1:
+
+`Example`
+What it means 
+
+EXAMPLE 2:
+
+`Example`
+What it means 
+
+EXAMPLE 3: 
+
+`Example`
+What it means 
+
+		- Recommend to not prioritise number of mates heavily at the start
+		- Weightings etc
+		- Recommend not to use prio optimisation if not done calculation
+
 
 ## Expected File Formats
 
 All input files should be in CSV format, with the column names specified below. The program expects three files, 
 detailing the individuals, groups, and the pairwise relatedness between the individuals. Please ensure that these
-files are complete. If the pairwise relatedness between two individuals is unknown, assigning these cells with 0 will
+files are complete. If the pairwise relatedness between two individuals is unknown, marking these cells with 0 will
 ensure that the individuals are not paired together. 
 
 ### INDIVIDUAL SPECIFICATION FILE:
@@ -32,8 +84,7 @@ ensure that the individuals are not paired together.
   - For any row, both columns cannot take the same value.
 - `AssignToGroup` 
   - Specifies whether to assign this individual to a specific group.
-  - This column should be -1 by default.
-  - 
+  - This column should be -1 by default. If specifying a group, ensure that the value used matches a group ID.
 - `Alleles` 
   - A positive integer representing the number of ghost alleles that the individual has. 
 - `Proven` 
@@ -104,18 +155,27 @@ Example:
 | 538            | 616            | 542            | 368            | 0              |
 
 
-### Recommended weighting values & inputs whilst the program runs 
+## Excluded Individuals & Disallowed Pairings
 
-		- Recommend to not prioritise number of mates heavily at the start
-		- Weightings etc
-		- Recommend not to use prio optimisation if not done calculation
+1. You will be shown a preview of the individuals file in table format. Each individual will have an ID on the 
+far left hand side, starting at 0.
+2. You will first be prompted to specify disallowed pairings. 
+   - To disallow pairings between individual 4 and 8, and 0 and 1 you will type: 4-8, 0-1
+   - Order does not matter here. For example, you could also type: 1-0, 8-4 
+   - To skip this, leave it blank and tap the enter key.
+3. You will then be prompted to specify individuals to exclude.
+   - To exclude individuals 2, 5, and 6 you will type: 2,5,6
+   - Again, order does not matter here, and you can skip this by leaving it blank and tapping the enter key.
+
+Note: neither of these options edit the original files. Your original data will be left untouched and this will only
+apply to the current run.
 
 ## Outputs
 
 Each feasible solution found will be printed to the terminal as the code is running. Once the search has finished, 
 you will be prompted to choose whether to save the best solution to a CSV file. If this option is chosen, the solution 
 with the best objective value will be saved to the `results` folder, with a file name following the format
-`best_solution_(experiment name).csv`. This will also be confirmed in the terminal. 
+`best_solution_(unique_run_id).csv`. This will also be confirmed in the terminal. 
 
 This file may look something like this:
 
