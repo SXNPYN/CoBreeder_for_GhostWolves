@@ -229,7 +229,7 @@ def build_data(args):
     names = individuals["Name"].tolist()
     males = individuals["Male"].tolist()
     females = individuals["Female"].tolist()
-    allocate_first_group = individuals["AssignToFirstGroup"].tolist()
+    allocate_first_group = individuals["AssignToGroup"].tolist()
     alleles = individuals["Alleles"].tolist()
     priorities = individuals["Priority"].tolist()
     priority_values = individuals["PriorityValue"].tolist()

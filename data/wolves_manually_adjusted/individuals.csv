@@ -1,4 +1,4 @@
-Name,Male,Female,AssignToFirstGroup,Alleles,Proven,Priority
+Name,Male,Female,AssignToGroup,Alleles,Proven,Priority
 "LA34M CL14229 (Cameron, Moore-Odom, Transient)",1,0,-1,589,0,0
 "LA35F CL14230 (Cameron, Moore-Odom, SE Odom)",0,1,-1,525,1,1
 "LA36M CL14231 (Cameron, Moore-Odom, Garrison)",1,0,-1,227,0,1
