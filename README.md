@@ -1,9 +1,21 @@
-# CoBreeder for Ghost Wolves (V1) Usage Guidelines
+# CoBreeder for Ghost Wolves Usage Guidelines [Version 1]
 
 ---
 
-(Introduction explaining what the program does)
-(Explain how it builds upon CoBreeder for Galápagos tortoises, reference Matt's work.)
+This project builds upon the work completed by _Forshaw et al._, titled _Constraint Optimisation Approaches for 
+Designing Group-Living Captive Breeding Programmes_ [1]. The tool produced (_CoBreeder_) was designed with a focus on 
+the Galápagos tortoise which required single-objective optimisation to minimise pairwise relatedness when allocating 
+individual animals to breeding groups. 
+
+The aim of this project is to adapt and extend this tool to improve its suitability for breeding coyotes with red wolf 
+ancestry. This requires multi-objective optimisation, minimising genetic relatedness and maximising the number of ghost 
+alleles in each pairing. Additional functionality that may aid conservationists with their tasks has also been 
+implemented, such as the ability to exclude individuals and specify disallow pairings without permanently editing the 
+data. There is also an optional priority calculation system. 
+
+This initial adaptation focuses on assigning coyote pairings; however coyotes tend to live in packs with a single 
+breeding pair in the wild. Future versions of this tool should take that into account, as well as improve accessibility 
+for users who may find the current command line system confusing.
 
 
 ## Command Line Arguments
@@ -51,20 +63,19 @@ to the data that will be used. The program expects the following arguments, in t
   - E.g. 4 will enable priority calculations and select the top 4 scoring individuals for the priority set.
   - This is explained in more detail in the "Priority Calculations" section.
 
-EXAMPLE 1:
+##### EXAMPLE:
 
-`Example`
-What it means 
-
-EXAMPLE 2:
-
-`Example`
-What it means 
-
-EXAMPLE 3: 
-
-`Example`
-What it means
+- `poetry run python ghost_wolf_cobreeder/ghost-cobreeder-v1.py run data/individuals.csv data/pr-scaled.csv 
+data/groups.csv MIN_PR_MAX_ALLELES ghost_experiment 1 1 0 12 0 ALL 4`
+  - The name of the experiment is "ghost_experiment", which will be displayed alongside results.
+  - The solver will maximise the number of ghost alleles and minimise pairwise relatedness between individuals in each 
+  pairing. Equal weight is placed on each of these.
+  - At least 12 individuals must be included in a solution.
+  - Any individuals with a PR greater than 0 can be paired (note that this will almost definitely need to be adjusted).
+  - All individuals in the individuals file will be considered, and all opposite sex pairings (provided PR > 0) are 
+  allowed.
+  - Priority calculations are enabled and the top 4 individuals with the best priority values must be included in 
+    solutions.
 
 
 ## Expected File Formats
@@ -208,3 +219,10 @@ Each group is represented by a row, which contains information on the names, IDs
 individuals in the pairing as well as their pairwise relatedness. The `Priority_Sum` column is the sum of the priority
 values of each individual, and can reach a maximum of 200. Note that, if priority calculations are not enabled, the 
 cells in this column will be "N/A".
+
+---
+
+### References
+
+[1] M. Forshaw et al., "Constraint Optimisation Approaches for Designing Group-Living Captive Breeding Programmes," 
+presented at 39th Ann. AAAI Conf. on Artificial Intelligence, Philadelphia, Pennsylvania, USA, 2025.
