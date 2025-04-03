@@ -9,13 +9,13 @@ individual animals to breeding groups.
 
 The aim of this project is to adapt and extend this tool to improve its suitability for breeding coyotes with red wolf 
 ancestry. This requires multi-objective optimisation, minimising genetic relatedness and maximising the number of ghost 
-alleles in each pairing. Additional functionality that may aid conservationists with their tasks has also been 
-implemented, such as the ability to exclude individuals and specify disallow pairings without permanently editing the 
-data. There is also an optional priority calculation system. 
+alleles in each pairing. Additional functionality that could aid conservationists has also been implemented, such as 
+the ability to exclude individuals and specify disallowed pairings without editing the original data. There is also 
+the option to calculate the priority of individuals based on the characteristics of the dataset. 
 
-This initial adaptation focuses on assigning coyote pairings; however coyotes tend to live in packs with a single 
-breeding pair in the wild. Future versions of this tool should take that into account, as well as improve accessibility 
-for users who may find the current command line system confusing.
+This initial adaptation focuses on assigning coyote pairings, however coyotes tend to live in larger packs with a single 
+breeding pair in the wild. Future versions of this tool should take this into account, as well as improve 
+accessibility for users who may find the current command line system confusing.
 
 
 ## Command Line Arguments
