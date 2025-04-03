@@ -469,8 +469,8 @@ def main(argv: Sequence[str]) -> None:
     run_parser.add_argument("exclude_disallow", type=str, choices=["EX", "ALL"],
                             help='Exclude individuals or specify disallowed pairings.')
     run_parser.add_argument("prio_calc_threshold", type=int, choices=range(0, 101),
-                            help='Threshold for priority calculation. 0 to disable and use manual priority assignments '
-                                 'only.')
+                            help='Threshold for priority calculations representing the number of individuals that can'
+                                 'fall into the priority set. 0 to disable and use manual priority assignments only.')
 
     args = parser.parse_args()
     if (args.obj_function == "MIN_PR_MAX_ALLELES_MAX_PRIO" or "MAX_PRIO") and (args.prio_calc_threshold == 0):
