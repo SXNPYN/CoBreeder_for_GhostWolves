@@ -2,9 +2,8 @@
 
 ---
 
-Explain what it is and does.
-Builds upon CoBreeder for Galapagos tortoises, reference Matt's work.
-PR of 0 means not compatible
+(Introduction explaining what the program does)
+(Explain how it builds upon CoBreeder for Galápagos tortoises, reference Matt's work.)
 
 
 ## Command Line Arguments
@@ -44,9 +43,13 @@ to the data that will be used. The program expects the following arguments, in t
   - Threshold for the scaled pairwise relatedness permitted in a pairing. 0 by default. 
 - `exclude_disallow`
   - Exclude individuals or specify disallowed pairings with "EX", or skip this step with "ALL".
-  - This is explained in more detail in the "Excluded Individuals & Disallowed Pairings" section
+  - This is explained in more detail in the "Excluded Individuals & Disallowed Pairings" section.
 - `prio_calc_threshold`
-  - Threshold for priority calculation between 0 and 100.0 to disable and use manual priority assignments only.
+  - Threshold for priority calculations representing the number of individuals that can fall into the priority set.
+  - This number must be a positive integer.
+  - Specify 0 to disable dynamic priority calculations and use manual priority assignments only.
+  - E.g. 4 will enable priority calculations and select the top 4 scoring individuals for the priority set.
+  - This is explained in more detail in the "Priority Calculations" section.
 
 EXAMPLE 1:
 
@@ -61,11 +64,7 @@ What it means
 EXAMPLE 3: 
 
 `Example`
-What it means 
-
-		- Recommend to not prioritise number of mates heavily at the start
-		- Weightings etc
-		- Recommend not to use prio optimisation if not done calculation
+What it means
 
 
 ## Expected File Formats
@@ -169,6 +168,24 @@ far left hand side, starting at 0.
 
 Note: neither of these options edit the original files. Your original data will be left untouched and this will only
 apply to the current run.
+
+## Priority Calculations
+
+Previous tools allow breeding program managers to manually specify "priority individuals", individuals that have 
+desirable characteristics and must be included in solutions. This program allows for this, but also builds upon this
+idea with dynamic priority calculations, which compare individuals to their peers and assign each individual a score
+between 0 and 100, where 100 is the maximum priority value. This allows for individuals to be ranked by priority. 
+
+The top x individuals are selected to fall into the priority set, representing individuals that must be included in 
+solutions, whilst the more complex priority values can be used in some objective functions.
+
+Priority calculations consider various factors including whether individuals are proven and the number of mates and 
+ghost alleles that they have compared to their competitors. If priority calculations are enabled, you will be prompted 
+to provide a weight for ghost alleles. This is a number between 0 and 1.0, where 0 represents completely ignoring 
+ghost alleles in favour of number of mates, and 1.0 means only considering number of mates and ignoring the number
+of ghost alleles. 0.5 will strike a balance between these. It is recommended to prioritise ghost alleles more heavily
+at the start and increase emphasis on the number of mates if there are unforeseen circumstances (e.g. individuals are
+proving hard to capture).
 
 ## Outputs
 
