@@ -422,7 +422,6 @@ def solve_model(args):
     paramstring = "%i,%i,%i" % (num_groups, objective_function, num_individuals)
     solution_printer = GhostCobreederPrinter(seats, names, num_groups, num_individuals, paramstring, unique_id)
 
-    # TODO Experiment with parameters
     # solver.parameters.max_time_in_seconds = 5
     # solver.parameters.log_search_progress = True
     # solver.parameters.num_workers = 5
@@ -474,7 +473,7 @@ def main(argv: Sequence[str]) -> None:
                                  'only.')
 
     args = parser.parse_args()
-    if (args.obj_function == "MIN_PR_MAX_ALLELES_MAX_PRIO") and (args.prio_calc_threshold == 0):
+    if (args.obj_function == "MIN_PR_MAX_ALLELES_MAX_PRIO" or "MAX_PRIO") and (args.prio_calc_threshold == 0):
         print("Error: MIN_PR_MAX_ALLELES_MAX_PRIO requires priority calculations to be enabled.")
         sys.exit(1)
 
