@@ -35,12 +35,12 @@ class GhostCobreederPrinter(cp_model.CpSolverSolutionCallback):
         current_time = time.time()
         objective = self.ObjectiveValue()
         self.__solution_count += 1
+        num_groups, obj_f, num_ind = self.__paramstring.split(",")
 
         print(
-            "\nCOBREEDER-SOLUTION #%i, time elapsed: %f, objective value: %i, paramstring: %s, experiment: %s"
-            % (self.__solution_count,
-               current_time - self.__start_time,
-               objective, self.__paramstring, self.__uniqueid)
+            f"\nCOBREEDER-SOLUTION #{self.__solution_count}: time elapsed: {(current_time - self.__start_time):.5f}, "
+            f"objective value: {int(objective)} ({GhostCobreederObjectiveFunction(int(obj_f)).name}), "
+            f"experiment: {self.__uniqueid} ({num_ind} individuals, {num_groups} groups)"
         )
 
         for t in range(self.__num_groups):
@@ -66,13 +66,14 @@ def save_solution_csv(args, connections, individual_allele_count, individual_pri
     Args:
         :param args: Variable length argument list.
         :param list of lists connections: PR relatedness matrix.
-        :param dict individual_allele_count: Dictionary mapping individual IDs to their number of ghost alleles.
-        :param dict individual_priority_value: Dictionary mapping individual IDs to their priority value.
-        :param dict best_solution: Dictionary mapping group number to a list of tuples in the form (individual ID, name)
+        :param dict individual_allele_count: Dictionary mapping every individual's ID to number of ghost alleles.
+        :param dict individual_priority_value: Dictionary mapping every individual's ID to priority value.
+        :param dict best_solution: Dictionary mapping every group number to (individual ID, individual name)
     """
 
     solution_data = pd.DataFrame(columns=["Group", "Ind_1_Name", "Ind_2_Name", "Ind_1_ID", "Ind_2_ID",
                                           "Ind_1_Alleles", "Ind_2_Alleles", "Pairwise_Relatedness", "Priority_Sum"])
+
     i = 0  # Index of current row
     for group, individuals in best_solution.items():
         solution_data.loc[i, "Group"] = group
@@ -83,11 +84,8 @@ def save_solution_csv(args, connections, individual_allele_count, individual_pri
         solution_data.loc[i, "Ind_2_Name"] = individuals[1][1]
         solution_data.loc[i, "Ind_1_Alleles"] = individual_allele_count[individuals[0][0]]
         solution_data.loc[i, "Ind_2_Alleles"] = individual_allele_count[individuals[1][0]]
-        if args.prio_calc_threshold == 0:
-            solution_data.loc[i, "Priority_Sum"] = "N/A"
-        else:
-            prio_sum = individual_priority_value[individuals[0][0]] + individual_priority_value[individuals[1][0]]
-            solution_data.loc[i, "Priority_Sum"] = prio_sum
+        solution_data.loc[i, "Priority_Sum"] = "N/A" if args.prio_calc_threshold == 0 else (
+                individual_priority_value[individuals[0][0]] + individual_priority_value[individuals[1][0]])
         i += 1
 
     # Create results directory if it doesn't exist and save CSV
@@ -100,8 +98,8 @@ def save_solution_csv(args, connections, individual_allele_count, individual_pri
 
 def calculate_priority(args, individuals, pr):
     """
-    Dynamically calculates a priority value for each individual based on the dataset between 0 and 100, where 100 is
-    the highest priority value possible.
+    Dynamically calculates a priority value between 0 and 100 for each individual based on the dataset, where 100 is
+    the highest priority possible.
 
     Args:
         :param args: Variable length argument list.
@@ -147,10 +145,11 @@ def calculate_priority(args, individuals, pr):
         # Calculate priority value between 0 and 100.
         female_individuals['PriorityValue'] = (female_individuals['Proven'] *
                                                (((a * female_individuals['Alleles']) / female_g_max) +
-                                               ((b * female_individuals['NumMates']) / female_m_max)) * 100).astype(int)
+                                                ((b * female_individuals['NumMates']) / female_m_max)) * 100).astype(
+            int)
         male_individuals['PriorityValue'] = (male_individuals['Proven'] *
                                              (((a * male_individuals['Alleles']) / male_g_max) +
-                                             ((b * male_individuals['NumMates']) / male_m_max)) * 100).astype(int)
+                                              ((b * male_individuals['NumMates']) / male_m_max)) * 100).astype(int)
 
         individuals = pd.concat([male_individuals, female_individuals]).sort_index()
         individuals['NumMates'] = individuals['NumMates'].astype(int)
@@ -158,7 +157,7 @@ def calculate_priority(args, individuals, pr):
         individuals['Priority'] = 0  # 0 by default
         sorted_individuals = individuals.sort_values(by='PriorityValue', ascending=False)
         top_priority = sorted_individuals.head(args.prio_calc_threshold)
-        individuals.loc[top_priority.index, 'Priority'] = 1  # Select the top x individuals to be priority individuals
+        individuals.loc[top_priority.index, 'Priority'] = 1  # Select the top x individuals to be "priority individuals"
 
     return individuals
 
@@ -264,7 +263,7 @@ def solve_model(args):
     # Create the CP model.
     model = cp_model.CpModel()
 
-    # ------------------------------ DECISION VARIABLES ------------------------------ #
+    # ------------------------------------ DECISION VARIABLES ------------------------------------ #
 
     seats = {}
     individual_must_be_allocated = {}
@@ -298,7 +297,7 @@ def solve_model(args):
         for g2 in range(g1 + 1, num_individuals):
             opposing_sex[(g1, g2)] = 0 if males[g1] == males[g2] else 1
 
-    # ------------------------------ OBJECTIVE FUNCTIONS ------------------------------ #
+    # ------------------------------------ OBJECTIVE FUNCTIONS ------------------------------------ #
 
     # Sum of pairwise relatedness across all pairs in the solution.
     sum_pairs_pr = sum(
@@ -320,7 +319,7 @@ def solve_model(args):
         for t in range(num_groups)
     )
 
-    # Attempt at weighted Chebyshev method
+    # 1st attempt at weighted Chebyshev method
     ideal_total_pr = max([pr for col in connections for pr in col]) * num_groups  # All pairs have the best PR
     ideal_total_alleles = max(individual_allele_count) * 2 * num_groups  # All individuals have max alleles
     ideal_total_priority = 100 * 2 * num_groups  # All individuals have a priority value of 100
@@ -342,7 +341,7 @@ def solve_model(args):
         model.Add(deviation >= args.weight_prio * (ideal_total_priority - total_priority))
         model.Minimize(deviation)
 
-    # ------------------------------ CONSTRAINTS ------------------------------ #
+    # ------------------------------------ CONSTRAINTS ------------------------------------ #
 
     # Allocate at least args.total_individuals individuals.
     total_allocated = sum(seats[(t, g)] for g in range(num_individuals) for t in range(num_groups))
@@ -423,6 +422,7 @@ def solve_model(args):
     paramstring = "%i,%i,%i" % (num_groups, objective_function, num_individuals)
     solution_printer = GhostCobreederPrinter(seats, names, num_groups, num_individuals, paramstring, unique_id)
 
+    # TODO Experiment with parameters
     # solver.parameters.max_time_in_seconds = 5
     # solver.parameters.log_search_progress = True
     # solver.parameters.num_workers = 5
