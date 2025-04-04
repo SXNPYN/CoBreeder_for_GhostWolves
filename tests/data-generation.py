@@ -3,12 +3,12 @@ import random
 import numpy as np
 import os
 
-NUM_INDIVIDUALS = 50
-NUM_GROUPS = 10
-MIN_ALLELES = 150
-MAX_ALLELES = 700
-MIN_PR = 1
-MAX_PR = 1000
+NUM_INDIVIDUALS = 50  # Number of individuals to generate
+NUM_GROUPS = 10  # Number of groups to generate
+MIN_ALLELES = 150  # Lower bound for ghost alleles (value included)
+MAX_ALLELES = 700  # Upper bound for ghost alleles (value included)
+MIN_PR = 1  # Lower bound for PR permitted between two different individuals (value included)
+MAX_PR = 1000  # Upper bound for PR permitted between two different individuals (value included)
 
 
 # Generate groups.
@@ -45,9 +45,9 @@ pr = pr.astype(int)
 print(f'\n{pr.head()}')
 
 # Save data.
-data_dir_path = "../data/wolves_randomly_generated"
+data_dir_path = "../data/randomly_generated_data"
 os.makedirs(data_dir_path, exist_ok=True)
 groups.to_csv(os.path.join(data_dir_path, "generated-groups.csv"), index=False)
 individuals.to_csv(os.path.join(data_dir_path, "generated-individuals.csv"), index=False)
 pr.to_csv(os.path.join(data_dir_path, "generated-pr-scaled.csv"), index=False)
-print("\nRandom data generated in data/wolves_randomly_generated.")
+print(f"\nRandom data generated in {data_dir_path}.")
