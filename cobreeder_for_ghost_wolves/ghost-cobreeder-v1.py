@@ -263,7 +263,7 @@ def solve_model(args):
     # Create the CP model.
     model = cp_model.CpModel()
 
-    # ------------------------------------ DECISION VARIABLES ------------------------------------ #
+    # --------------------------------------------- DECISION VARIABLES --------------------------------------------- #
 
     seats = {}
     individual_must_be_allocated = {}
@@ -297,7 +297,7 @@ def solve_model(args):
         for g2 in range(g1 + 1, num_individuals):
             opposing_sex[(g1, g2)] = 0 if males[g1] == males[g2] else 1
 
-    # ------------------------------------ OBJECTIVE FUNCTIONS ------------------------------------ #
+    # -------------------------------------------- OBJECTIVE FUNCTIONS -------------------------------------------- #
 
     # Sum of pairwise relatedness across all pairs in the solution.
     sum_pairs_pr = sum(
@@ -319,11 +319,11 @@ def solve_model(args):
         for t in range(num_groups)
     )
 
-    # 1st attempt at weighted Chebyshev method
+    # 1st attempt at weighted Chebyshev method - not sure if correct
     ideal_total_pr = max([pr for col in connections for pr in col]) * num_groups  # All pairs have the best PR
     ideal_total_alleles = max(individual_allele_count) * 2 * num_groups  # All individuals have max alleles
     ideal_total_priority = 100 * 2 * num_groups  # All individuals have a priority value of 100
-    deviation = model.NewIntVar(0, 999999, "max_deviation")
+    deviation = model.NewIntVar(0, 9999999, "max_deviation")
 
     if objective_function == GhostCobreederObjectiveFunction.MIN_PR:
         model.Maximize(sum_pairs_pr)
@@ -341,7 +341,7 @@ def solve_model(args):
         model.Add(deviation >= args.weight_prio * (ideal_total_priority - total_priority))
         model.Minimize(deviation)
 
-    # ------------------------------------ CONSTRAINTS ------------------------------------ #
+    # ----------------------------------------------- CONSTRAINTS ----------------------------------------------- #
 
     # Allocate at least args.total_individuals individuals.
     total_allocated = sum(seats[(t, g)] for g in range(num_individuals) for t in range(num_groups))
@@ -416,7 +416,7 @@ def solve_model(args):
             print("\tIndividual %i is allocated to group %i" % (g1, allocate_first_group[g1]))
             model.Add(seats[(allocate_first_group[g1], g1)] == 1)
 
-    # ------------------------------ SOLVE MODEL ------------------------------ #
+    # --------------------------------------------- SOLVE MODEL --------------------------------------------- #
 
     solver = cp_model.CpSolver()
     paramstring = "%i,%i,%i" % (num_groups, objective_function, num_individuals)
