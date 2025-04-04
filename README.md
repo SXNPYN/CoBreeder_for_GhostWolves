@@ -12,7 +12,7 @@ has also been implemented, such as the ability to exclude individuals and specif
 the original data. There is also the option to calculate a priority score for each individual based on the 
 characteristics of the dataset. 
 
-This initial adaptation focuses on assigning coyote pairings, however this may not be entirely accurate to life as 
+This initial adaptation focuses on assigning coyote pairings however this may not be entirely accurate to life as 
 coyotes, though sometimes solitary animals, often live in packs with a single breeding pair. Future versions of this 
 tool should take this into account, improving its flexibility. Secondly, there is room for improvement where 
 accessibility is concerned, as some users may find the current system for defining arguments confusing and cluttered.
@@ -68,7 +68,7 @@ the following arguments, in the order introduced:
   - E.g. 4 will enable priority calculations and select the top 4 scoring individuals for the priority set.
   - This is explained in more detail in the "Priority Calculations" section.
 
-##### EXAMPLE:
+### EXAMPLE:
 
 - `poetry run python ghost_wolf_cobreeder/ghost-cobreeder-v1.py run data/individuals.csv data/pr-scaled.csv 
 data/groups.csv MIN_PR_MAX_ALLELES ghost_experiment 1 1 0 12 0 ALL 4`
@@ -92,7 +92,7 @@ files are complete. If the pairwise relatedness between two individuals is unkno
 ensure that the individuals are not paired together. 
 
 Note that data can be randomly generated for testing purposes using the script in `tests/data-generation.py`, specifying
-number of individuals, groups and lower/upper bounds on PR and ghost alleles. 
+number of individuals, groups, and lower/upper bounds on PR and ghost alleles. 
 
 ### INDIVIDUAL SPECIFICATION FILE:
 
@@ -152,7 +152,7 @@ Example:
 ### SCALED PR SPECIFICATION FILE:
 
 This file represents the pairwise relatedness matrix and must include values for each individual in the individuals
-file. Note that the values in this file are scaled; 0 represents the same individual, and is also used to specify
+file. Note that the values in this file are scaled; 0 represents the same individual and is also used to specify
 banned pairings. A larger value indicates that the individuals are less related. This may not seem intuitive,
 but when minimising pairwise relatedness the program is actually maximising these values. 
 
@@ -177,7 +177,7 @@ Example:
 ## Excluded Individuals & Disallowed Pairings
 
 1. If "EX" was specified on the command line, you will be shown a preview of the individuals file in table format. Each 
-individual will have an ID on the far left hand side, starting at 0.
+individual will have an ID on the far left-hand side, starting at 0.
 2. You will first be prompted to specify disallowed pairings. 
    - To disallow pairings between individual 4 and 8, and 0 and 1 you will type: 4-8, 0-1
    - Order does not matter here. For example, you could also type: 1-0, 8-4 
@@ -227,12 +227,12 @@ This file may look something like this:
 
 Each group is represented by a row, which contains information on the names, IDs, and number of ghost alleles of the 
 individuals in the pairing as well as their pairwise relatedness. The `Priority_Sum` column is the sum of the priority
-values of each individual, and can reach a maximum of 200. Note that, if priority calculations are not enabled, the 
+values of each individual and can reach a maximum of 200. Note that, if priority calculations are not enabled, the 
 cells in this column will be "N/A".
 
 ---
 
-### References
+## References
 
 [1] M. Forshaw et al., "Constraint Optimisation Approaches for Designing Group-Living Captive Breeding Programmes," 
 presented at 39th Ann. AAAI Conf. on Artificial Intelligence, Philadelphia, Pennsylvania, USA, 2025.
