@@ -5,23 +5,27 @@
 This project builds upon the work completed by _Forshaw et al._, titled _Constraint Optimisation Approaches for 
 Designing Group-Living Captive Breeding Programmes_ [1]. The tool produced (_CoBreeder_) was designed with a focus on 
 the Galápagos tortoise which required single-objective optimisation to minimise pairwise relatedness when allocating 
-individual animals to breeding groups. 
+individuals to breeding groups. The aim of this project is to adapt and extend _CoBreeder_ to improve its suitability 
+for breeding coyotes with red wolf ancestry. This requires multi-objective optimisation, minimising genetic relatedness 
+and maximising the number of ghost alleles in each pairing. Additional functionality that could aid conservationists 
+has also been implemented, such as the ability to exclude individuals and specify disallowed pairings without editing 
+the original data. There is also the option to calculate a priority score for each individual based on the 
+characteristics of the dataset. 
 
-The aim of this project is to adapt and extend this tool to improve its suitability for breeding coyotes with red wolf 
-ancestry. This requires multi-objective optimisation, minimising genetic relatedness and maximising the number of ghost 
-alleles in each pairing. Additional functionality that could aid conservationists has also been implemented, such as 
-the ability to exclude individuals and specify disallowed pairings without editing the original data. There is also 
-the option to calculate the priority of individuals based on the characteristics of the dataset. 
-
-This initial adaptation focuses on assigning coyote pairings, however coyotes tend to live in larger packs with a single 
-breeding pair in the wild. Future versions of this tool should take this into account, as well as improve 
-accessibility for users who may find the current command line system confusing.
+This initial adaptation focuses on assigning coyote pairings, however this may not be entirely accurate to life as 
+coyotes, though sometimes solitary animals, often live in packs with a single breeding pair. Future versions of this 
+tool should take this into account, improving its flexibility. Secondly, there is room for improvement where 
+accessibility is concerned, as some users may find the current system for defining arguments confusing and cluttered.
+Thirdly, the pairwise relatedness file currently assumes that values are scaled and a larger value means that two 
+individuals are less related. This can be developed further to allow for users to specify more intuitive thresholds
+(e.g. third cousins). Finally, input validation should be improved to counter human error.
 
 
 ## Command Line Arguments
 
 This program is run via the command line. You will need to specify various arguments as well as provide relative paths 
-to the data that will be used. The program expects the following arguments, in the order introduced:
+to the data that will be used (please see the "Expected File Formats" section for more details). The program expects 
+the following arguments, in the order introduced:
 
 - `individuals_file`
   - Relative path to the CSV file detailing the individuals.
@@ -44,21 +48,22 @@ to the data that will be used. The program expects the following arguments, in t
   - Unique string identifier for each run. Has no bearing on functionality but is useful to identify results when 
     running the program multiple times.
 - `weight_alleles`
-  - Integer specifying how much to prioritise alleles when performing multi-objective optimisation.
+  - Integer specifying the relative weight to place on alleles when performing multi-objective optimisation.
 - `weight_pr`
-  - Integer specifying how much to prioritise pairwise relatedness when performing multi-objective optimisation.
+  - Integer specifying the relative weight to place on pairwise relatedness when performing multi-objective optimisation.
 - `weight_prio`
-  - Integer specifying how much to prioritise priority values when performing multi-objective optimisation.
+  - Integer specifying the relative weight to place on priority values when performing multi-objective optimisation.
 - `total_individuals`
   - Minimum number of individuals to allocate to a solution.
 - `pr_threshold`
-  - Threshold for the scaled pairwise relatedness permitted in a pairing. 0 by default. 
+  - Threshold for the scaled pairwise relatedness permitted in a pairing (0 by default).
+  - Value not included.
 - `exclude_disallow`
   - Exclude individuals or specify disallowed pairings with "EX", or skip this step with "ALL".
   - This is explained in more detail in the "Excluded Individuals & Disallowed Pairings" section.
 - `prio_calc_threshold`
   - Threshold for priority calculations representing the number of individuals that can fall into the priority set.
-  - This number must be a positive integer.
+  - Must be a positive integer.
   - Specify 0 to disable dynamic priority calculations and use manual priority assignments only.
   - E.g. 4 will enable priority calculations and select the top 4 scoring individuals for the priority set.
   - This is explained in more detail in the "Priority Calculations" section.
@@ -67,11 +72,12 @@ to the data that will be used. The program expects the following arguments, in t
 
 - `poetry run python ghost_wolf_cobreeder/ghost-cobreeder-v1.py run data/individuals.csv data/pr-scaled.csv 
 data/groups.csv MIN_PR_MAX_ALLELES ghost_experiment 1 1 0 12 0 ALL 4`
-  - The name of the experiment is "ghost_experiment", which will be displayed alongside results.
+  - The name of the run is "ghost_experiment". This string will be displayed alongside results.
   - The solver will maximise the number of ghost alleles and minimise pairwise relatedness between individuals in each 
   pairing. Equal weight is placed on each of these.
   - At least 12 individuals must be included in a solution.
-  - Any individuals with a PR greater than 0 can be paired (note that this will almost definitely need to be adjusted).
+  - Any individuals with a PR greater than 0 can be paired (note that this would almost certainly need to be adjusted
+  in a real-life scenario).
   - All individuals in the individuals file will be considered, and all opposite sex pairings (provided PR > 0) are 
   allowed.
   - Priority calculations are enabled and the top 4 individuals with the best priority values must be included in 
@@ -84,6 +90,9 @@ All input files should be in CSV format, with the column names specified below. 
 detailing the individuals, groups, and the pairwise relatedness between the individuals. Please ensure that these
 files are complete. If the pairwise relatedness between two individuals is unknown, marking these cells with 0 will
 ensure that the individuals are not paired together. 
+
+Note that data can be randomly generated for testing purposes using the script in `tests/data-generation.py`, specifying
+number of individuals, groups and lower/upper bounds on PR and ghost alleles. 
 
 ### INDIVIDUAL SPECIFICATION FILE:
 
@@ -142,14 +151,14 @@ Example:
 
 ### SCALED PR SPECIFICATION FILE:
 
-This file represents the pairwise relatedness matrix, and must include values for each individual in the individuals
+This file represents the pairwise relatedness matrix and must include values for each individual in the individuals
 file. Note that the values in this file are scaled; 0 represents the same individual, and is also used to specify
-banned pairings. A larger value indicates that the individuals are less related. This may not seem intuitive at first,
-but when minimising pairwise relatedness, the program is actually maximising the values in this file. 
+banned pairings. A larger value indicates that the individuals are less related. This may not seem intuitive,
+but when minimising pairwise relatedness the program is actually maximising these values. 
 
 It is important that every individual specified in the individual specification file is included here, and that the 
 values are mirrored. There are two cells for each pairing, therefore if editing the PR between two different 
-individuals, you will need to edit two cells.
+individuals you will need to edit two cells.
 
 Note that you do not need to manually edit the file to exclude individuals or create disallowed pairings, this can be
 done whilst running the program. 
@@ -167,8 +176,8 @@ Example:
 
 ## Excluded Individuals & Disallowed Pairings
 
-1. You will be shown a preview of the individuals file in table format. Each individual will have an ID on the 
-far left hand side, starting at 0.
+1. If "EX" was specified on the command line, you will be shown a preview of the individuals file in table format. Each 
+individual will have an ID on the far left hand side, starting at 0.
 2. You will first be prompted to specify disallowed pairings. 
    - To disallow pairings between individual 4 and 8, and 0 and 1 you will type: 4-8, 0-1
    - Order does not matter here. For example, you could also type: 1-0, 8-4 
@@ -180,23 +189,24 @@ far left hand side, starting at 0.
 Note: neither of these options edit the original files. Your original data will be left untouched and this will only
 apply to the current run.
 
+
 ## Priority Calculations
 
 Previous tools allow breeding program managers to manually specify "priority individuals", individuals that have 
-desirable characteristics and must be included in solutions. This program allows for this, but also builds upon this
-idea with dynamic priority calculations, which compare individuals to their peers and assign each individual a score
-between 0 and 100, where 100 is the maximum priority value. This allows for individuals to be ranked by priority. 
+desirable characteristics and must be included in solutions. This program allows for this but also builds upon this
+idea with dynamic priority calculations that allow individuals to be ranked by priority. Individuals are compared to
+their peers and assigned a priority score between 0 and 100, where 100 is the maximum priority value.
 
 The top x individuals are selected to fall into the priority set, representing individuals that must be included in 
 solutions, whilst the more complex priority values can be used in some objective functions.
 
 Priority calculations consider various factors including whether individuals are proven and the number of mates and 
 ghost alleles that they have compared to their competitors. If priority calculations are enabled, you will be prompted 
-to provide a weight for ghost alleles. This is a number between 0 and 1.0, where 0 represents completely ignoring 
-ghost alleles in favour of number of mates, and 1.0 means only considering number of mates and ignoring the number
+to provide a weight for ghost alleles. This is a float between 0 and 1, where 0 represents completely ignoring 
+number of mates in favour of ghost alleles, and 1.0 means only considering number of mates and ignoring the number
 of ghost alleles. 0.5 will strike a balance between these. It is recommended to prioritise ghost alleles more heavily
 at the start and increase emphasis on the number of mates if there are unforeseen circumstances (e.g. individuals are
-proving hard to capture).
+proving hard to capture). This will result in more flexible solutions.
 
 ## Outputs
 
