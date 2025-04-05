@@ -333,19 +333,19 @@ def solve_model(args):
         model.Maximize(total_priority)
     elif objective_function == GhostCobreederObjectiveFunction.MIN_PR_MAX_ALLELES:
         combined_denominator = ideal_total_pr * ideal_total_alleles
-        scaled_actual_pr = total_pr * ideal_total_alleles
-        scaled_actual_alleles = total_alleles * ideal_total_pr
-        model.Add(deviation >= args.weight_pr * (combined_denominator - scaled_actual_pr))
-        model.Add(deviation >= args.weight_alleles * (combined_denominator - scaled_actual_alleles))
+        pr_deviation = combined_denominator - (total_pr * ideal_total_alleles)
+        allele_deviation = combined_denominator - (total_alleles * ideal_total_pr)
+        model.Add(deviation >= (args.weight_pr * pr_deviation))
+        model.Add(deviation >= (args.weight_alleles * allele_deviation))
         model.Minimize(deviation)
     elif objective_function == GhostCobreederObjectiveFunction.MIN_PR_MAX_ALLELES_MAX_PRIO:
-        total_denominator = ideal_total_priority * ideal_total_pr * ideal_total_alleles
-        scaled_actual_pr = total_pr * (ideal_total_priority * ideal_total_alleles)
-        scaled_actual_alleles = total_alleles * (ideal_total_priority * ideal_total_pr)
-        scaled_actual_priority = total_priority * (ideal_total_pr * ideal_total_alleles)
-        model.Add(deviation >= args.weight_pr * (total_denominator - scaled_actual_pr))
-        model.Add(deviation >= args.weight_alleles * (total_denominator - scaled_actual_alleles))
-        model.Add(deviation >= args.weight_alleles * (total_denominator - scaled_actual_priority))
+        combined_denominator = ideal_total_pr * ideal_total_alleles * ideal_total_priority
+        pr_deviation = combined_denominator - (total_pr * ideal_total_priority * ideal_total_alleles)
+        allele_deviation = combined_denominator - (total_alleles * ideal_total_priority * ideal_total_pr)
+        prio_deviation = combined_denominator - (total_priority * ideal_total_pr * ideal_total_alleles)
+        model.Add(deviation >= (args.weight_pr * pr_deviation))
+        model.Add(deviation >= (args.weight_alleles * allele_deviation))
+        model.Add(deviation >= (args.weight_prio * prio_deviation))
         model.Minimize(deviation)
 
     # ----------------------------------------------- CONSTRAINTS ----------------------------------------------- #

@@ -1,11 +1,6 @@
 Group,Ind_1_Name,Ind_2_Name,Ind_1_ID,Ind_2_ID,Ind_1_Alleles,Ind_2_Alleles,Pairwise_Relatedness,Priority_Sum
-0,Individual_20_F,Individual_23_M,20,23,564,557,942,0
-1,Individual_29_M,Individual_35_F,29,35,477,609,954,89
-2,Individual_6_F,Individual_19_M,6,19,444,473,827,175
-3,Individual_18_F,Individual_31_M,18,31,624,644,830,100
-4,Individual_4_F,Individual_40_M,4,40,545,569,649,0
-5,Individual_8_M,Individual_14_F,8,14,450,589,733,181
-6,Individual_10_M,Individual_45_F,10,45,556,537,740,0
-7,Individual_28_F,Individual_30_M,28,30,550,363,706,174
-8,Individual_9_M,Individual_25_F,9,25,488,674,779,100
-9,Individual_16_M,Individual_49_F,16,49,534,591,774,93
+0,Individual_4_M,Individual_7_F,4,7,342,194,747,64
+1,Individual_8_M,Individual_10_F,8,10,225,361,831,143
+2,Individual_5_M,Individual_6_F,5,6,290,490,493,0
+3,Individual_2_F,Individual_12_M,2,12,296,309,394,72
+4,Individual_0_M,Individual_1_F,0,1,683,656,569,0
