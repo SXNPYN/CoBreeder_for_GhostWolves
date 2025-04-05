@@ -321,8 +321,13 @@ def solve_model(args):
 
     # 1st attempt at weighted Chebyshev method - not sure if correct
     ideal_total_pr = max([pr for col in connections for pr in col]) * num_groups  # All pairs have the best PR
-    ideal_total_alleles = max(individual_allele_count) * 2 * num_groups  # All individuals have max alleles
-    ideal_total_priority = 100 * 2 * num_groups  # All individuals have a priority value of 100
+    ideal_total_alleles = max(individual_allele_count.values()) * 2 * num_groups  # All paired individuals have max alleles
+    ideal_total_priority = 100 * 2 * num_groups  # All paired individuals have a priority value of 100
+
+    pr_division = model.NewIntVar(0, 9999999, "sum_pairs_pr//ideal_total_pr")
+    alleles_division = model.NewIntVar(0, 9999999, "total_alleles//ideal_total_alleles")
+    priority_division = model.NewIntVar(0, 9999999, "total_priority//ideal_total_priority")
+
     deviation = model.NewIntVar(0, 9999999, "max_deviation")
 
     if objective_function == GhostCobreederObjectiveFunction.MIN_PR:
@@ -332,13 +337,18 @@ def solve_model(args):
     elif objective_function == GhostCobreederObjectiveFunction.MAX_PRIO:
         model.Maximize(total_priority)
     elif objective_function == GhostCobreederObjectiveFunction.MIN_PR_MAX_ALLELES:
-        model.Add(deviation >= args.weight_pr * (ideal_total_pr - sum_pairs_pr))
-        model.Add(deviation >= args.weight_alleles * (ideal_total_alleles - total_alleles))
+        model.AddDivisionEquality(pr_division, sum_pairs_pr, ideal_total_pr)
+        model.AddDivisionEquality(alleles_division, total_alleles, ideal_total_alleles)
+        model.Add(deviation >= args.weight_pr * (1 - pr_division))
+        model.Add(deviation >= args.weight_alleles * (1 - alleles_division))
         model.Minimize(deviation)
     elif objective_function == GhostCobreederObjectiveFunction.MIN_PR_MAX_ALLELES_MAX_PRIO:
-        model.Add(deviation >= args.weight_pr * (ideal_total_pr - sum_pairs_pr))
-        model.Add(deviation >= args.weight_alleles * (ideal_total_alleles - total_alleles))
-        model.Add(deviation >= args.weight_prio * (ideal_total_priority - total_priority))
+        model.AddDivisionEquality(pr_division, sum_pairs_pr, ideal_total_pr)
+        model.AddDivisionEquality(alleles_division, total_alleles, ideal_total_alleles)
+        model.AddDivisionEquality(priority_division, total_priority, ideal_total_priority)
+        model.Add(deviation >= args.weight_pr * (1 - pr_division))
+        model.Add(deviation >= args.weight_alleles * (1 - alleles_division))
+        model.Add(deviation >= args.weight_alleles * (1 - priority_division))
         model.Minimize(deviation)
 
     # ----------------------------------------------- CONSTRAINTS ----------------------------------------------- #
