@@ -321,7 +321,7 @@ def solve_model(args):
 
     # 1st attempt at weighted Chebyshev method - not sure if correct
     ideal_total_pr = max([pr for col in connections for pr in col]) * num_groups  # All pairs have the best PR
-    ideal_total_alleles = max(individual_allele_count.values()) * 2 * num_groups  # All paired individuals have max alleles
+    ideal_total_alleles = max(individual_allele_count.values()) * 2 * num_groups  # All individuals have max alleles
     ideal_total_priority = 100 * 2 * num_groups  # All paired individuals have a priority value of 100
 
     pr_division = model.NewIntVar(0, 9999999, "sum_pairs_pr//ideal_total_pr")
