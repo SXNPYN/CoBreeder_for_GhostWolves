@@ -300,7 +300,7 @@ def solve_model(args):
     # -------------------------------------------- OBJECTIVE FUNCTIONS -------------------------------------------- #
 
     # Sum of pairwise relatedness across all pairs in the solution.
-    sum_pairs_pr = sum(
+    total_pr = sum(
         connections[g1][g2] * colocated[g1, g2]
         for g1 in range(num_individuals - 1)
         for g2 in range(g1 + 1, num_individuals)
@@ -323,32 +323,29 @@ def solve_model(args):
     ideal_total_pr = max([pr for col in connections for pr in col]) * num_groups  # All pairs have the best PR
     ideal_total_alleles = max(individual_allele_count.values()) * 2 * num_groups  # All individuals have max alleles
     ideal_total_priority = 100 * 2 * num_groups  # All paired individuals have a priority value of 100
-
-    pr_division = model.NewIntVar(0, 9999999, "sum_pairs_pr//ideal_total_pr")
-    alleles_division = model.NewIntVar(0, 9999999, "total_alleles//ideal_total_alleles")
-    priority_division = model.NewIntVar(0, 9999999, "total_priority//ideal_total_priority")
-
-    deviation = model.NewIntVar(0, 9999999, "max_deviation")
+    deviation = model.NewIntVar(0, 99999999999999999, "max_deviation")
 
     if objective_function == GhostCobreederObjectiveFunction.MIN_PR:
-        model.Maximize(sum_pairs_pr)
+        model.Maximize(total_pr)
     elif objective_function == GhostCobreederObjectiveFunction.MAX_ALLELES:
         model.Maximize(total_alleles)
     elif objective_function == GhostCobreederObjectiveFunction.MAX_PRIO:
         model.Maximize(total_priority)
     elif objective_function == GhostCobreederObjectiveFunction.MIN_PR_MAX_ALLELES:
-        model.AddDivisionEquality(pr_division, sum_pairs_pr, ideal_total_pr)
-        model.AddDivisionEquality(alleles_division, total_alleles, ideal_total_alleles)
-        model.Add(deviation >= args.weight_pr * (1 - pr_division))
-        model.Add(deviation >= args.weight_alleles * (1 - alleles_division))
+        combined_denominator = ideal_total_pr * ideal_total_alleles
+        scaled_actual_pr = total_pr * ideal_total_alleles
+        scaled_actual_alleles = total_alleles * ideal_total_pr
+        model.Add(deviation >= args.weight_pr * (combined_denominator - scaled_actual_pr))
+        model.Add(deviation >= args.weight_alleles * (combined_denominator - scaled_actual_alleles))
         model.Minimize(deviation)
     elif objective_function == GhostCobreederObjectiveFunction.MIN_PR_MAX_ALLELES_MAX_PRIO:
-        model.AddDivisionEquality(pr_division, sum_pairs_pr, ideal_total_pr)
-        model.AddDivisionEquality(alleles_division, total_alleles, ideal_total_alleles)
-        model.AddDivisionEquality(priority_division, total_priority, ideal_total_priority)
-        model.Add(deviation >= args.weight_pr * (1 - pr_division))
-        model.Add(deviation >= args.weight_alleles * (1 - alleles_division))
-        model.Add(deviation >= args.weight_alleles * (1 - priority_division))
+        total_denominator = ideal_total_priority * ideal_total_pr * ideal_total_alleles
+        scaled_actual_pr = total_pr * (ideal_total_priority * ideal_total_alleles)
+        scaled_actual_alleles = total_alleles * (ideal_total_priority * ideal_total_pr)
+        scaled_actual_priority = total_priority * (ideal_total_pr * ideal_total_alleles)
+        model.Add(deviation >= args.weight_pr * (total_denominator - scaled_actual_pr))
+        model.Add(deviation >= args.weight_alleles * (total_denominator - scaled_actual_alleles))
+        model.Add(deviation >= args.weight_alleles * (total_denominator - scaled_actual_priority))
         model.Minimize(deviation)
 
     # ----------------------------------------------- CONSTRAINTS ----------------------------------------------- #
