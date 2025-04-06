@@ -319,11 +319,10 @@ def solve_model(args):
         for t in range(num_groups)
     )
 
-    # 1st attempt at weighted Chebyshev method - not sure if correct
-    ideal_total_pr = max([pr for col in connections for pr in col]) * num_groups  # All pairs have the best PR
-    ideal_total_alleles = max(individual_allele_count.values()) * 2 * num_groups  # All individuals have max alleles
-    ideal_total_priority = 100 * 2 * num_groups  # All paired individuals have a priority value of 100
-    deviation = model.NewIntVar(0, 99999999999999999, "max_deviation")
+    # Calculate PR and sum of alleles/priority values for an ideal pair
+    ideal_pair_pr = max([pr for col in connections for pr in col])  # Uses best PR in matrix as ideal value.
+    ideal_pair_alleles = max(individual_allele_count.values()) * 2  # Uses best alleles as ideal value.
+    ideal_pair_priority = 100 * 2  # Max priority for an individual is 100, hence max across a pair is 200.
 
     if objective_function == GhostCobreederObjectiveFunction.MIN_PR:
         model.Maximize(total_pr)
@@ -332,21 +331,34 @@ def solve_model(args):
     elif objective_function == GhostCobreederObjectiveFunction.MAX_PRIO:
         model.Maximize(total_priority)
     elif objective_function == GhostCobreederObjectiveFunction.MIN_PR_MAX_ALLELES:
-        combined_denominator = ideal_total_pr * ideal_total_alleles
-        pr_deviation = combined_denominator - (total_pr * ideal_total_alleles)
-        allele_deviation = combined_denominator - (total_alleles * ideal_total_pr)
-        model.Add(deviation >= (args.weight_pr * pr_deviation))
-        model.Add(deviation >= (args.weight_alleles * allele_deviation))
-        model.Minimize(deviation)
+
+        av_pair_pr = model.NewIntVar(0, 100000000, "av_pair_pr")  # Actual average PR across pairs
+        model.Add(total_pr == av_pair_pr * num_groups)  # av_pair_pr = total_pr // num_groups
+        scaled_pr_difference = model.NewIntVar(0, 100000000, "scaled_pr_difference")
+        model.Add(scaled_pr_difference == (100 * ideal_pair_pr) - (100 * av_pair_pr))
+        percent_deviation_pr = model.NewIntVar(0, 100000000, "percent_deviation_pr")
+        model.Add(scaled_pr_difference == percent_deviation_pr * ideal_pair_pr)
+        weighted_pr = model.NewIntVar(0, 100000000, "weighted_pr")
+        model.AddMultiplicationEquality(weighted_pr, [percent_deviation_pr, args.weight_pr])
+
+        av_pair_alleles = model.NewIntVar(0, 100000000, "av_pair_alleles")
+        model.Add(total_alleles == av_pair_alleles * num_groups)
+        scaled_allele_difference = model.NewIntVar(0, 100000000, "scaled_allele_difference")
+        model.Add(scaled_allele_difference == (100 * ideal_pair_alleles) - (100 * av_pair_alleles))
+        percent_deviation_alleles = model.NewIntVar(0, 100000000, "percent_deviation_alleles")
+        model.Add(scaled_allele_difference == percent_deviation_alleles * ideal_pair_alleles)
+        weighted_alleles = model.NewIntVar(0, 100000000, "weighted_alleles")
+        model.AddMultiplicationEquality(weighted_alleles, [percent_deviation_alleles, args.weight_alleles])
+
+        #deviation = model.NewIntVar(0, 1000000000, "max_deviation")  # Value to minimise
+        #model.Add(deviation >= weighted_pr)
+        #model.Add(deviation >= weighted_alleles)
+        #model.Minimize(deviation)
+        model.Minimize(weighted_pr + weighted_alleles)
+
     elif objective_function == GhostCobreederObjectiveFunction.MIN_PR_MAX_ALLELES_MAX_PRIO:
-        combined_denominator = ideal_total_pr * ideal_total_alleles * ideal_total_priority
-        pr_deviation = combined_denominator - (total_pr * ideal_total_priority * ideal_total_alleles)
-        allele_deviation = combined_denominator - (total_alleles * ideal_total_priority * ideal_total_pr)
-        prio_deviation = combined_denominator - (total_priority * ideal_total_pr * ideal_total_alleles)
-        model.Add(deviation >= (args.weight_pr * pr_deviation))
-        model.Add(deviation >= (args.weight_alleles * allele_deviation))
-        model.Add(deviation >= (args.weight_prio * prio_deviation))
-        model.Minimize(deviation)
+
+        model.Minimize(total_priority)
 
     # ----------------------------------------------- CONSTRAINTS ----------------------------------------------- #
 
@@ -451,6 +463,7 @@ def solve_model(args):
             save_solution_csv(args, connections, individual_allele_count, individual_priority_values, best_solution)
     else:
         print("No solution found.")
+        print(f"{status}")
 
 
 def main(argv: Sequence[str]) -> None:
@@ -480,7 +493,8 @@ def main(argv: Sequence[str]) -> None:
                                  'fall into the priority set. 0 to disable and use manual priority assignments only.')
 
     args = parser.parse_args()
-    if (args.obj_function == "MIN_PR_MAX_ALLELES_MAX_PRIO" or "MAX_PRIO") and (args.prio_calc_threshold == 0):
+    if ((args.obj_function == "MIN_PR_MAX_ALLELES_MAX_PRIO" or args.obj_function == "MAX_PRIO") and
+            (args.prio_calc_threshold == 0)):
         print("Error: MIN_PR_MAX_ALLELES_MAX_PRIO requires priority calculations to be enabled.")
         sys.exit(1)
 
