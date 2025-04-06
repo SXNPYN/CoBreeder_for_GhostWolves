@@ -30,7 +30,9 @@ for i in range(NUM_INDIVIDUALS):
         individuals.loc[i, 'Name'] = f"Individual_{i}_M"
     else:
         individuals.loc[i, 'Name'] = f"Individual_{i}_F"
-individuals['AssignToGroup'] = -1
+l = [-1] * (NUM_INDIVIDUALS - 1) + [1]
+random.shuffle(l)
+individuals['AssignToGroup'] = l
 individuals['Alleles'] = [random.randint(MIN_ALLELES, MAX_ALLELES) for _ in range(NUM_INDIVIDUALS)]
 individuals['Proven'] = [random.choice([0, 1]) for _ in range(NUM_INDIVIDUALS)]
 individuals['Priority'] = 0
