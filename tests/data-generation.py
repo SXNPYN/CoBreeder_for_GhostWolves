@@ -7,7 +7,7 @@ NUM_INDIVIDUALS = 50  # Number of individuals to generate
 NUM_GROUPS = 10  # Number of groups to generate
 MIN_ALLELES = 150  # Lower bound for ghost alleles (value included)
 MAX_ALLELES = 700  # Upper bound for ghost alleles (value included)
-MIN_PR = 1  # Lower bound for PR permitted between two different individuals (value included)
+MIN_PR = 100  # Lower bound for PR permitted between two different individuals (value included)
 MAX_PR = 1000  # Upper bound for PR permitted between two different individuals (value included)
 
 
@@ -32,6 +32,7 @@ for i in range(NUM_INDIVIDUALS):
         individuals.loc[i, 'Name'] = f"Individual_{i}_F"
 l = [-1] * (NUM_INDIVIDUALS - 1) + [1]
 random.shuffle(l)
+#l = [-1] * NUM_INDIVIDUALS
 individuals['AssignToGroup'] = l
 individuals['Alleles'] = [random.randint(MIN_ALLELES, MAX_ALLELES) for _ in range(NUM_INDIVIDUALS)]
 individuals['Proven'] = [random.choice([0, 1]) for _ in range(NUM_INDIVIDUALS)]
