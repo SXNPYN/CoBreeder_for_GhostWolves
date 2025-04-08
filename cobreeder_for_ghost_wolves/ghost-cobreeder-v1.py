@@ -458,7 +458,7 @@ def solve_model(args):
     paramstring = "%i,%i,%i" % (num_groups, objective_function, num_individuals)
     solution_printer = GhostCobreederPrinter(seats, names, num_groups, num_individuals, paramstring, unique_id)
 
-    # solver.parameters.max_time_in_seconds = 5
+    solver.parameters.max_time_in_seconds = 1800
     solver.parameters.log_search_progress = True
     # solver.parameters.num_workers = 1
     # solver.parameters.fix_variables_to_their_hinted_value = True
