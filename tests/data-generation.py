@@ -14,7 +14,7 @@ MAX_PR = 1000  # Upper bound for PR permitted between two different individuals 
 # Generate groups.
 groups = pd.DataFrame(columns=["ID", "MinSize", "MaxSize", "NumMale", "NumFemale", "PRThreshold"])
 groups['ID'] = [i for i in range(NUM_GROUPS)]
-groups['MinSize'] = [2]*NUM_GROUPS
+groups['MinSize'] = [2]*NUM_GROUPS  # Focus on pairings for now
 groups['MaxSize'] = [2]*NUM_GROUPS
 groups['NumMale'] = [1]*NUM_GROUPS
 groups['NumFemale'] = [1]*NUM_GROUPS
@@ -30,10 +30,12 @@ for i in range(NUM_INDIVIDUALS):
         individuals.loc[i, 'Name'] = f"Individual_{i}_M"
     else:
         individuals.loc[i, 'Name'] = f"Individual_{i}_F"
-l = [-1] * (NUM_INDIVIDUALS - 1) + [1]
-random.shuffle(l)
-#l = [-1] * NUM_INDIVIDUALS
-individuals['AssignToGroup'] = l
+if (random.choice([0, 1])) == 1:
+    assign_col = [-1] * NUM_INDIVIDUALS
+else:
+    assign_col = [-1] * (NUM_INDIVIDUALS - 1) + [random.randint(0, NUM_GROUPS - 1)]
+    random.shuffle(assign_col)
+individuals['AssignToGroup'] = assign_col
 individuals['Alleles'] = [random.randint(MIN_ALLELES, MAX_ALLELES) for _ in range(NUM_INDIVIDUALS)]
 individuals['Proven'] = [random.choice([0, 1]) for _ in range(NUM_INDIVIDUALS)]
 individuals['Priority'] = 0
