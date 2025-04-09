@@ -199,6 +199,8 @@ their peers and assigned a priority score between 0 and 100, where 100 is the ma
 
 The top x individuals are selected to fall into the priority set, representing individuals that must be included in 
 solutions, whilst the more complex priority values can be used in some objective functions.
+(NOTE: The PR threshold for priority calculations was removed as this didn't feel intuitive in practice and created too 
+many priority individuals in some datasets.)
 
 Priority calculations consider various factors including whether individuals are proven and the number of mates and 
 ghost alleles that they have compared to their competitors. If priority calculations are enabled, you will be prompted 
