@@ -202,8 +202,8 @@ solutions, whilst the more complex priority values can be used in some objective
 
 Priority calculations consider various factors including whether individuals are proven and the number of mates and 
 ghost alleles that they have compared to their competitors. If priority calculations are enabled, you will be prompted 
-to provide a weight for ghost alleles. This is a float between 0 and 1, where 0 represents completely ignoring 
-number of mates in favour of ghost alleles, and 1.0 means only considering number of mates and ignoring the number
+to provide a weight for ghost alleles. This is a float between 0 and 1, where 1 represents completely ignoring 
+number of mates in favour of ghost alleles, and 0 means only considering number of mates and ignoring the number
 of ghost alleles. 0.5 will strike a balance between these. It is recommended to prioritise ghost alleles more heavily
 at the start and increase emphasis on the number of mates if there are unforeseen circumstances (e.g. individuals are
 proving hard to capture). This will result in more flexible solutions.
