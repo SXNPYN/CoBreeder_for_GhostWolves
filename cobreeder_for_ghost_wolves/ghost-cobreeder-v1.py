@@ -306,26 +306,37 @@ def solve_model(args):
         for g2 in range(g1 + 1, num_individuals)
         if connections[g1][g2] > 0
     )
+    # Average PR across all pairs in the solution.
+    av_pair_pr = model.NewIntVar(0, 100000000, "av_pair_pr")
+    model.Add(total_pr == av_pair_pr * num_groups)  # av_pair_pr = total_pr // num_groups
+
     # Sum of ghost alleles across the solution.
     total_alleles = sum(
         seats[(t, g)] * individual_allele_count[g]
         for g in range(num_individuals)
         for t in range(num_groups)
     )
+    # Average number of alleles across all pairs in the solution.
+    av_pair_alleles = model.NewIntVar(0, 100000000, "av_pair_alleles")
+    model.Add(total_alleles == av_pair_alleles * num_groups)
+
     # Sum of priority values across the solution.
     total_priority = sum(
         seats[(t, g)] * priority_values[g]
         for g in range(num_individuals)
         for t in range(num_groups)
     )
+    # Average sum of priority values across all pairs in the solution.
+    av_pair_priority = model.NewIntVar(0, 100000000, "av_pair_priority")
+    model.Add(total_priority == av_pair_priority * num_groups)
 
     # Single-objective optimisation
     if objective_function == GhostCobreederObjectiveFunction.MIN_PR:
-        model.Maximize(total_pr)
+        model.Maximize(av_pair_pr)
     elif objective_function == GhostCobreederObjectiveFunction.MAX_ALLELES:
-        model.Maximize(total_alleles)
+        model.Maximize(av_pair_alleles)
     elif objective_function == GhostCobreederObjectiveFunction.MAX_PRIO:
-        model.Maximize(total_priority)
+        model.Maximize(av_pair_priority)
 
     # Multi-objective optimisation
     elif (objective_function == GhostCobreederObjectiveFunction.MIN_PR_MAX_ALLELES) or \
@@ -337,8 +348,6 @@ def solve_model(args):
         ideal_pair_priority = 100 * 2  # Max priority for an individual is 100, hence max across a pair is 200.
 
         # PR
-        av_pair_pr = model.NewIntVar(0, 100000000, "av_pair_pr")  # Actual average PR across pairs
-        model.Add(total_pr == av_pair_pr * num_groups)  # av_pair_pr = total_pr // num_groups
         scaled_pr_difference = model.NewIntVar(0, 100000000, "scaled_pr_difference")
         model.Add(scaled_pr_difference == (100 * ideal_pair_pr) - (100 * av_pair_pr))
         percent_deviation_pr = model.NewIntVar(0, 100000000, "percent_deviation_pr")
@@ -347,8 +356,6 @@ def solve_model(args):
         model.AddMultiplicationEquality(weighted_pr, [percent_deviation_pr, args.weight_pr])
 
         # Alleles
-        av_pair_alleles = model.NewIntVar(0, 100000000, "av_pair_alleles")
-        model.Add(total_alleles == av_pair_alleles * num_groups)
         scaled_allele_difference = model.NewIntVar(0, 100000000, "scaled_allele_difference")
         model.Add(scaled_allele_difference == (100 * ideal_pair_alleles) - (100 * av_pair_alleles))
         percent_deviation_alleles = model.NewIntVar(0, 100000000, "percent_deviation_alleles")
@@ -366,8 +373,6 @@ def solve_model(args):
         elif objective_function == GhostCobreederObjectiveFunction.MIN_PR_MAX_ALLELES_MAX_PRIO:
 
             # Priority
-            av_pair_priority = model.NewIntVar(0, 100000000, "av_pair_priority")
-            model.Add(total_priority == av_pair_priority * num_groups)
             scaled_priority_difference = model.NewIntVar(0, 100000000, "scaled_priority_difference")
             model.Add(scaled_priority_difference == (100 * ideal_pair_priority) - (100 * av_pair_priority))
             percent_deviation_priority = model.NewIntVar(0, 100000000, "percent_deviation_priority")
@@ -480,7 +485,6 @@ def solve_model(args):
             save_solution_csv(args, connections, individual_allele_count, individual_priority_values, best_solution)
     else:
         print("No solution found.")
-        print(f"{status}")
 
 
 def main(argv: Sequence[str]) -> None:
