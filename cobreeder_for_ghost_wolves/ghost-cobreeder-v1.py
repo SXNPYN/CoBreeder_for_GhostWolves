@@ -13,9 +13,9 @@ from typing import Sequence
 
 
 class GhostCobreederObjectiveFunction(IntEnum):
-    MIN_PR = 1
-    MAX_ALLELES = 2
-    MAX_PRIO = 3
+    MIN_AV_PR = 1
+    MAX_AV_ALLELES = 2
+    MAX_AV_PRIO = 3
     MIN_PR_MAX_ALLELES = 4
     MIN_PR_MAX_ALLELES_MAX_PRIO = 5
 
@@ -333,11 +333,11 @@ def solve_model(args):
     model.Add(total_priority == av_pair_priority * num_groups)
 
     # Single-objective optimisation
-    if objective_function == GhostCobreederObjectiveFunction.MIN_PR:
+    if objective_function == GhostCobreederObjectiveFunction.MIN_AV_PR:
         model.Maximize(av_pair_pr)
-    elif objective_function == GhostCobreederObjectiveFunction.MAX_ALLELES:
+    elif objective_function == GhostCobreederObjectiveFunction.MAX_AV_ALLELES:
         model.Maximize(av_pair_alleles)
-    elif objective_function == GhostCobreederObjectiveFunction.MAX_PRIO:
+    elif objective_function == GhostCobreederObjectiveFunction.MAX_AV_PRIO:
         model.Maximize(av_pair_priority)
 
     # Multi-objective optimisation
@@ -386,10 +386,6 @@ def solve_model(args):
 
     # ----------------------------------------------- CONSTRAINTS ----------------------------------------------- #
 
-    # Allocate at least args.total_individuals individuals.
-    total_allocated = sum(seats[(t, g)] for g in range(num_individuals) for t in range(num_groups))
-    model.Add(total_allocated >= args.total_individuals)
-
     for g in all_individuals:
         if individual_must_be_allocated[g]:
             # Priority individuals must be allocated to exactly one group.
@@ -398,12 +394,8 @@ def solve_model(args):
         else:
             # Non-priority individuals may or may not be allocated.
             model.Add(sum(seats[(t, g)] for t in all_groups) <= 1)
-        if allocate_first_group[g] != -1:
-            # Allocate first individual to the group specified.
-            model.Add(seats[(allocate_first_group[g], g)] == 1)
 
     for t in all_groups:
-
         # Each group is filled to the required capacity with a fixed number of males and females.
         if group_defs['MinSize'][t] == group_defs['MaxSize'][t] == 2:  # Expected to be the default for coyotes
             # print("Group %s is a M-F pairing." % t)
@@ -454,10 +446,10 @@ def solve_model(args):
 
     # Breaking symmetry. First individual is placed in the first group.
     print("\nInitial group allocations:")
-    for g1 in range(len(allocate_first_group)):
-        if allocate_first_group[g1] != -1:
-            print("\tIndividual %i is allocated to group %i" % (g1, allocate_first_group[g1]))
-            model.Add(seats[(allocate_first_group[g1], g1)] == 1)
+    for g in range(len(allocate_first_group)):
+        if allocate_first_group[g] != -1:
+            print("\tIndividual %i is allocated to group %i" % (g, allocate_first_group[g]))
+            model.Add(seats[(allocate_first_group[g], g)] == 1)
 
     # --------------------------------------------- SOLVE MODEL --------------------------------------------- #
 
@@ -505,8 +497,6 @@ def main(argv: Sequence[str]) -> None:
     run_parser.add_argument("weight_alleles", type=int, help='Weight for alleles.')
     run_parser.add_argument("weight_pr", type=int, help='Weight for pairwise relatedness.')
     run_parser.add_argument("weight_prio", type=int, help='Weight for priority values.')
-    run_parser.add_argument("total_individuals", type=int,
-                            help='Minimum number of individual to allocate to a solution.')
     run_parser.add_argument("pr_threshold", type=int, default=0,
                             help='Threshold for scaled PR permitted in a pairing.')
     run_parser.add_argument("exclude_disallow", type=str, choices=["EX", "ALL"],

@@ -53,8 +53,6 @@ the following arguments, in the order introduced:
   - Integer specifying the relative weight to place on pairwise relatedness when performing multi-objective optimisation.
 - `weight_prio`
   - Integer specifying the relative weight to place on priority values when performing multi-objective optimisation.
-- `total_individuals`
-  - Minimum number of individuals to allocate to a solution.
 - `pr_threshold`
   - Threshold for the scaled pairwise relatedness permitted in a pairing (0 by default).
   - Value not included.
@@ -71,11 +69,10 @@ the following arguments, in the order introduced:
 ### EXAMPLE:
 
 - `poetry run python ghost_wolf_cobreeder/ghost-cobreeder-v1.py run data/individuals.csv data/pr-scaled.csv 
-data/groups.csv MIN_PR_MAX_ALLELES ghost_experiment 1 1 0 12 0 ALL 4`
+data/groups.csv MIN_PR_MAX_ALLELES ghost_experiment 1 1 0 0 ALL 4`
   - The name of the run is "ghost_experiment". This string will be displayed alongside results.
   - The solver will maximise the number of ghost alleles and minimise pairwise relatedness between individuals in each 
   pairing. Equal weight is placed on each of these.
-  - At least 12 individuals must be included in a solution.
   - Any individuals with a PR greater than 0 can be paired (note that this would almost certainly need to be adjusted
   in a real-life scenario).
   - All individuals in the individuals file will be considered, and all opposite sex pairings (provided PR > 0) are 
