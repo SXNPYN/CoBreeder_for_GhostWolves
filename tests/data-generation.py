@@ -3,8 +3,10 @@ import random
 import numpy as np
 import os
 
-NUM_INDIVIDUALS = 50  # Number of individuals to generate
-NUM_GROUPS = 10  # Number of groups to generate
+pd.set_option("display.max_columns", None)
+
+NUM_INDIVIDUALS = 10  # Number of individuals to generate
+NUM_GROUPS = 4  # Number of groups to generate
 MIN_ALLELES = 150  # Lower bound for ghost alleles (value included)
 MAX_ALLELES = 700  # Upper bound for ghost alleles (value included)
 MIN_PR = 100  # Lower bound for PR permitted between two different individuals (value included)
@@ -19,7 +21,7 @@ groups['MaxSize'] = [2]*NUM_GROUPS
 groups['NumMale'] = [1]*NUM_GROUPS
 groups['NumFemale'] = [1]*NUM_GROUPS
 groups['PRThreshold'] = [-1]*NUM_GROUPS
-print(f'\nData preview: \n{groups.head()}')
+print(f'\nData preview: \n{groups}')
 
 # Generate individuals.
 individuals = pd.DataFrame(columns=["Name", "Male", "Female", "AssignToGroup", "Alleles", "Proven", "Priority"])
@@ -27,9 +29,9 @@ individuals['Male'] = [random.choice([0, 1]) for _ in range(NUM_INDIVIDUALS)]
 individuals['Female'] = [1 - x for x in individuals['Male']]
 for i in range(NUM_INDIVIDUALS):
     if individuals.loc[i]['Male'] == 1:
-        individuals.loc[i, 'Name'] = f"Individual_{i}_M"
+        individuals.loc[i, 'Name'] = f"Ind_{i}_M"
     else:
-        individuals.loc[i, 'Name'] = f"Individual_{i}_F"
+        individuals.loc[i, 'Name'] = f"Ind_{i}_F"
 if (random.choice([0, 1])) == 1:
     assign_col = [-1] * NUM_INDIVIDUALS
 else:
@@ -39,7 +41,7 @@ individuals['AssignToGroup'] = assign_col
 individuals['Alleles'] = [random.randint(MIN_ALLELES, MAX_ALLELES) for _ in range(NUM_INDIVIDUALS)]
 individuals['Proven'] = [random.choice([0, 1]) for _ in range(NUM_INDIVIDUALS)]
 individuals['Priority'] = 0
-print(f'\n{individuals.head()}')
+print(f'\n{individuals}')
 
 # Generate PR matrix.
 random_matrix = np.random.randint(MIN_PR, MAX_PR, size=(NUM_INDIVIDUALS, NUM_INDIVIDUALS))
@@ -47,7 +49,7 @@ random_matrix = (random_matrix + random_matrix.T) / 2
 np.fill_diagonal(random_matrix, 0)
 pr = pd.DataFrame(random_matrix, columns=individuals['Name'])
 pr = pr.astype(int)
-print(f'\n{pr.head()}')
+print(f'\n{pr}')
 
 # Save data.
 data_dir_path = "../data/randomly_generated_data"
