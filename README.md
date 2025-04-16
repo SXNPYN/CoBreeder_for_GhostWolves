@@ -35,9 +35,9 @@ the following arguments, in the order introduced:
   - Relative path to the CSV file detailing the group specifications.
 - `obj_function`
   - String specifying the objective function to use when solving. The options are:
-    - `MIN_PR` - Minimise the pairwise relatedness of each pairing.
-    - `MAX_ALLELES` - Maximise the number of ghost alleles in each pairing.
-    - `MAX_PRIO` - Maximise the priority values in each pairing.
+    - `MIN_AV_PR` - Minimise the average pairwise relatedness across pairings.
+    - `MAX_TOTAL_ALLELES` - Maximise the total number of ghost alleles in a solution.
+    - `MAX_TOTAL_PRIO` - Maximise the total priority in a solution.
     - `MIN_PR_MAX_ALLELES` - Minimise pairwise relatedness and maximise the number of ghost alleles in each pairing 
     using the weights specified. 
     - `MIN_PR_MAX_ALLELES_MAX_PRIO` - Minimise pairwise relatedness, maximise the number of ghost alleles, and 

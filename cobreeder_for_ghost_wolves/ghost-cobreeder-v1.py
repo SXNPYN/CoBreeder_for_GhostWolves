@@ -14,11 +14,10 @@ from typing import Sequence
 
 class GhostCobreederObjectiveFunction(IntEnum):
     MIN_AV_PR = 1
-    MAX_AV_ALLELES = 2
-    MAX_AV_PRIO = 3
+    MAX_TOTAL_ALLELES = 2
+    MAX_TOTAL_PRIO = 3
     MIN_PR_MAX_ALLELES = 4
     MIN_PR_MAX_ALLELES_MAX_PRIO = 5
-
 
 class GhostCobreederPrinter(cp_model.CpSolverSolutionCallback):
     def __init__(self, seats, names, num_groups, num_individuals, paramstring, unique_id):
@@ -335,10 +334,10 @@ def solve_model(args):
     # Single-objective optimisation
     if objective_function == GhostCobreederObjectiveFunction.MIN_AV_PR:
         model.Maximize(av_pair_pr)
-    elif objective_function == GhostCobreederObjectiveFunction.MAX_AV_ALLELES:
-        model.Maximize(av_pair_alleles)
-    elif objective_function == GhostCobreederObjectiveFunction.MAX_AV_PRIO:
-        model.Maximize(av_pair_priority)
+    elif objective_function == GhostCobreederObjectiveFunction.MAX_TOTAL_ALLELES:
+        model.Maximize(total_alleles)
+    elif objective_function == GhostCobreederObjectiveFunction.MAX_TOTAL_PRIO:
+        model.Maximize(total_priority)
 
     # Multi-objective optimisation
     elif (objective_function == GhostCobreederObjectiveFunction.MIN_PR_MAX_ALLELES) or \
@@ -380,7 +379,8 @@ def solve_model(args):
             percent_deviation_priority = model.NewIntVar(0, 100000000, "percent_deviation_priority")
             model.Add(scaled_priority_difference == percent_deviation_priority * ideal_pair_priority)
             weighted_priority = model.NewIntVar(0, 100000000, "weighted_priority")
-            model.AddMultiplicationEquality(weighted_priority, [percent_deviation_priority, args.weight_prio])
+            model.AddMultiplicationEquality(weighted_priority, [percent_deviation_priority,
+                                                                args.weight_prio])
 
             model.Minimize(weighted_pr + weighted_alleles + weighted_priority)
 
