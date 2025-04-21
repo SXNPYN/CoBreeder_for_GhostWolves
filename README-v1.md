@@ -2,6 +2,8 @@
 
 ---
 
+This is the README file for v1. See README.md for v2. 
+
 This project builds upon the work completed by _Forshaw et al._, titled _Constraint Optimisation Approaches for 
 Designing Group-Living Captive Breeding Programmes_ [1]. The tool produced (_CoBreeder_) was designed with a focus on 
 the Galápagos tortoise which required single-objective optimisation to minimise pairwise relatedness when allocating 
