@@ -3,7 +3,7 @@ name = "cobreeder-for-ghostwolves"
 version = "0.1.0"
 description = ""
 authors = ["Saxen Payne <payne.saxen@gmail.com>"]
-readme = "README.md"
+readme = "README-v2.md"
 
 [tool.poetry.dependencies]
 python = ">=3.11"
