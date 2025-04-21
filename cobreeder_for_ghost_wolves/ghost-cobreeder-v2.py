@@ -10,6 +10,8 @@ import time
 from typing import Sequence
 
 # TODO - Add citations
+# TODO - Improve input validation
+# TODO - Add GUI
 
 
 class GhostCobreederObjectiveFunction(IntEnum):
@@ -45,6 +47,8 @@ class GhostCobreederPrinter(cp_model.CpSolverSolutionCallback):
             f"experiment: {self.__uniqueid} ({num_ind} individuals, {num_groups} groups)"
         )
 
+        grouped_ids = []
+
         for t in range(self.__num_groups):
             print("\tGroup %d: " % t)
             individuals = []
@@ -52,7 +56,15 @@ class GhostCobreederPrinter(cp_model.CpSolverSolutionCallback):
                 if self.Value(self.__seats[(t, g)]):
                     print(f"\t\t{self.__names[g]}")
                     individuals.append((g, self.__names[g]))
+                    grouped_ids.append(g)
             self.__best_solution[t] = individuals
+
+        # Print ungrouped individuals
+        all_ids = list(range(self.__num_individuals))
+        ungrouped_ids = [i for i in all_ids if i not in grouped_ids]
+        print("\n\tUngrouped individuals: ")
+        for g in ungrouped_ids:
+            print(f"\t\t{self.__names[g]}")
 
     def num_solutions(self):
         return self.__solution_count
@@ -476,7 +488,7 @@ def solve_model(args):
     solution_printer = GhostCobreederPrinter(seats, names, num_groups, num_individuals, paramstring, unique_id)
 
     solver.parameters.max_time_in_seconds = 1800
-    solver.parameters.log_search_progress = True
+    # solver.parameters.log_search_progress = True
     # solver.parameters.num_workers = 1
     # solver.parameters.fix_variables_to_their_hinted_value = True
 
