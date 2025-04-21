@@ -2,6 +2,7 @@
 from absl import app
 import argparse
 from enum import IntEnum
+import numpy as np
 from ortools.sat.python import cp_model
 import os
 import pandas as pd
@@ -176,6 +177,54 @@ def calculate_priority(args, individuals, pr):
     return individuals
 
 
+def check_file_format(args):
+    """
+    Performs input validation for CSV files.
+
+    :param args: Variable length argument list.
+    :return pr: DataFrame detailing scaled PR for each individual.
+    :return individuals: DataFrame detailing individuals.
+    """
+
+    try:
+        # Files must be CSVs with no missing values
+        pr = pd.read_csv(args.pairwise_relatedness_file, delimiter=',', header=None, skiprows=1)
+        individuals = pd.read_csv(args.individuals_file, delimiter=',')
+        assert not (np.any(pr.isnull()) or np.any(individuals.isnull())), "\nERROR: CSV files contain missing values."
+
+        # PR file must be symmetrical and only contain non-negative integers
+        assert (pr >= 0).values.all(), "\nERROR: PR matrix contains negative values."
+        assert all(np.issubdtype(d, np.integer) for d in pr.dtypes), "\nERROR: PR matrix contains non-integer values."
+        assert pr.equals(pr.T), "\nERROR: PR matrix is not symmetrical."
+
+        # Individuals specification file must contain the required columns
+        assert list(individuals.columns) == ['Name', 'Male', 'Female', 'AssignToGroup', 'Alleles', 'Proven',
+                                             'Priority'], "\nERROR: Unexpected column in individuals file."
+        # Alleles and AssignToGroup must be integers
+        assert all(np.issubdtype(d, np.integer) for d in individuals[['AssignToGroup', 'Alleles']].dtypes), \
+            "\nERROR: Non-integer value identified in individuals specification file."
+        # Alleles cannot be negative
+        assert all(individuals['Alleles'] >= 0), \
+            "\nERROR: Individual specification file contains negative alleles."
+        # AssignToGroup can only be -1 or a group ID
+        assert ((individuals['AssignToGroup'] >= -1) & (individuals['AssignToGroup'] < args.num_pairs)).all(), \
+            "\nERROR: Invalid value in AssignToGroup column."
+
+        # Proven, Priority, Male, and Female can only take values 0 or 1
+        for col in ['Proven', 'Priority', 'Male', 'Female']:
+            assert set(individuals[col]) <= {0, 1}, "\nERROR: Proven, Priority, Male, and Female can only be 0 or 1."
+
+        # Individuals can only be male or female
+        assert ((individuals['Male'] + individuals['Female']) == 1).all(), \
+            "\nERROR: Individuals can only be male or female."
+
+    except Exception as e:
+        print(e)
+        sys.exit()
+
+    return pr, individuals
+
+
 def build_data(args):
     """
     Takes the CSV files (detailing individuals and pairwise relatedness) provided by the user and converts the
@@ -189,8 +238,7 @@ def build_data(args):
 
     objective_function = GhostCobreederObjectiveFunction[args.obj_function]
     unique_id = args.unique_run_id
-    pr = pd.read_csv(args.pairwise_relatedness_file, delimiter=',', header=None, skiprows=1)
-    individuals = pd.read_csv(args.individuals_file, delimiter=',')
+    pr, individuals = check_file_format(args)
 
     print("\nRUN ID: %s" % unique_id)
     print("OBJECTIVE FUNCTION: %i" % objective_function)
@@ -256,9 +304,10 @@ def build_data(args):
                     custom_prs = [tuple(map(int, x.split('-'))) for x in custom_prs.strip().split(",")]
                     # Set custom PRs in dictionary
                     for i, j in custom_prs:
+                        assert j in list(range(args.num_pairs))
                         group_prs[i] = j
                     break
-                except (IndexError, ValueError):
+                except (IndexError, ValueError, AssertionError):
                     print("Invalid input. Please enter valid group IDs and scaled PR values.")
             else:
                 break
