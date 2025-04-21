@@ -36,7 +36,8 @@ the following arguments, in the order introduced:
 - `num_pairs`
   - The number of pairings (groups) to allocate. 
 - `specify_pr`
-  - Specify custom PR thresholds for certain groups with "CUSTOM_PR", or only use the default with "DEFAULT_PR".
+  - Specify custom PR thresholds for certain groups with "CUSTOM_PR", or use the default threshold for all groups with 
+    "DEFAULT_PR".
 - `obj_function`
   - String specifying the objective function to use when solving. The options are:
     - `MIN_AV_PR` - Minimise the average pairwise relatedness across pairings.
@@ -74,12 +75,13 @@ the following arguments, in the order introduced:
 
 - `poetry run python ghost_wolf_cobreeder/ghost-cobreeder-v2.py run data/individuals.csv data/pr-scaled.csv 5
 CUSTOM_PR MIN_PR_MAX_ALLELES ghost_experiment 1 1 0 10 ALL 4`
-  - 5 pairings will be allocated and the user will be prompted to enter any custom PR thresholds for specific pairs. 
+  - 5 pairings will be allocated. 
+  - The user will be prompted to enter any custom PR thresholds for specific groups. 
   - The name of the run is "ghost_experiment". This string will be displayed alongside results.
   - The solver will maximise the number of ghost alleles and minimise pairwise relatedness between individuals in each 
   pairing. Equal weight is placed on each of these.
   - Any individuals with a PR greater than 10 can be paired.
-  - All individuals in the individuals file will be considered, and all opposite sex pairings are allowed.
+  - All individuals in the individuals file will be considered and all pairings are allowed (provided PR is appropriate).
   - Priority calculations are enabled and the top 4 individuals with the best priority values must be included in 
     solutions.
 
@@ -91,8 +93,8 @@ detailing the individuals and the pairwise relatedness between them. Please ensu
 the pairwise relatedness between two individuals is unknown, marking these cells with 0 will ensure that the 
 individuals are not paired together. 
 
-Note that data can be randomly generated for testing purposes using the script in `tests/data-generation.py`, specifying
-number of individuals and lower/upper bounds on PR and ghost alleles. 
+Note that data can be randomly generated for testing purposes using the script in `tests/data-generation-v2.py`, 
+specifying number of individuals and lower/upper bounds for PR and ghost alleles. 
 
 ### INDIVIDUAL SPECIFICATION FILE:
 
