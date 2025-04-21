@@ -11,7 +11,6 @@ import time
 from typing import Sequence
 
 # TODO - Add citations
-# TODO - Improve input validation
 # TODO - Add GUI
 
 
