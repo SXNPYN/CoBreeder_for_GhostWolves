@@ -33,8 +33,10 @@ the following arguments, in the order introduced:
   - Relative path to the CSV file detailing the individuals.
 - `pairwise_relatedness_file`
   - Relative path to the CSV file containing the scaled pairwise relatedness matrix.
-- `group_file`
-  - Relative path to the CSV file detailing the group specifications.
+- `num_pairs`
+  - The number of pairings (groups) to allocate. 
+- `specify_pr`
+  - Specify custom PR thresholds for certain groups with "CUSTOM_PR", or only use the default with "DEFAULT_PR".
 - `obj_function`
   - String specifying the objective function to use when solving. The options are:
     - `MIN_AV_PR` - Minimise the average pairwise relatedness across pairings.
@@ -70,28 +72,27 @@ the following arguments, in the order introduced:
 
 ### EXAMPLE:
 
-- `poetry run python ghost_wolf_cobreeder/ghost-cobreeder-v1.py run data/individuals.csv data/pr-scaled.csv 
-data/groups.csv MIN_PR_MAX_ALLELES ghost_experiment 1 1 0 0 ALL 4`
+- `poetry run python ghost_wolf_cobreeder/ghost-cobreeder-v2.py run data/individuals.csv data/pr-scaled.csv 5
+CUSTOM_PR MIN_PR_MAX_ALLELES ghost_experiment 1 1 0 10 ALL 4`
+  - 5 pairings will be allocated and the user will be prompted to enter any custom PR thresholds for specific pairs. 
   - The name of the run is "ghost_experiment". This string will be displayed alongside results.
   - The solver will maximise the number of ghost alleles and minimise pairwise relatedness between individuals in each 
   pairing. Equal weight is placed on each of these.
-  - Any individuals with a PR greater than 0 can be paired (note that this would almost certainly need to be adjusted
-  in a real-life scenario).
-  - All individuals in the individuals file will be considered, and all opposite sex pairings (provided PR > 0) are 
-  allowed.
+  - Any individuals with a PR greater than 10 can be paired.
+  - All individuals in the individuals file will be considered, and all opposite sex pairings are allowed.
   - Priority calculations are enabled and the top 4 individuals with the best priority values must be included in 
     solutions.
 
 
 ## Expected File Formats
 
-All input files should be in CSV format, with the column names specified below. The program expects three files, 
-detailing the individuals, groups, and the pairwise relatedness between the individuals. Please ensure that these
-files are complete. If the pairwise relatedness between two individuals is unknown, marking these cells with 0 will
-ensure that the individuals are not paired together. 
+All input files should be in CSV format, with the column names specified below. The program expects two files, 
+detailing the individuals and the pairwise relatedness between them. Please ensure that these files are complete. If 
+the pairwise relatedness between two individuals is unknown, marking these cells with 0 will ensure that the 
+individuals are not paired together. 
 
 Note that data can be randomly generated for testing purposes using the script in `tests/data-generation.py`, specifying
-number of individuals, groups, and lower/upper bounds on PR and ghost alleles. 
+number of individuals and lower/upper bounds on PR and ghost alleles. 
 
 ### INDIVIDUAL SPECIFICATION FILE:
 
@@ -120,32 +121,6 @@ Example:
 | Individual_1_M | 1    | 0      | -1            | 312     | 0      | 0        |
 | Individual_2_F | 0    | 1      | 1             | 488     | 1      | 1        |
 | ...            | ...  | ...    | ...           | ...     | ...    | ...      |
-
-
-### GROUP SPECIFICATION FILE:
-
-- `ID` 
-  - Unique group ID, usually equal to the row index.
-- `MinSize` & `MaxSize`
-  - Minimum/maximum number of individuals to assign to this group (values included).
-  - For pairings, both of these columns should be set to 2. 
-- `NumMale` & `NumFemale` 
-  - Number of males/females allowed in the group. The sum of these should not exceed the maximum capacity of the group.
-  - For pairings, both of these columns should be set to 1. 
-- `PRThreshold` 
-  - The scaled PR threshold allowed in this group. 
-  - Set to -1 to use the default value. 
-
-All values in this file should be integers. 
-
-Example:
-
-| ID  | MinSize | MaxSize | NumMale | NumFemale | PRThreshold |
-|-----|---------|---------|---------|-----------|-------------|
-| 0   | 2       | 2       | 1       | 1         | -1          |
-| 1   | 2       | 2       | 1       | 1         | -1          |
-| 2   | 2       | 2       | 1       | 1         | -1          |
-| ... | ...     | ...     | ...     | ...       | ...         |
 
 
 ### SCALED PR SPECIFICATION FILE:
