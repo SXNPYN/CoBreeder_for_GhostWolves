@@ -5,8 +5,8 @@ import os
 
 pd.set_option("display.max_columns", None)
 
-NUM_INDIVIDUALS = 10  # Number of individuals to generate
-NUM_GROUPS = 4  # Number of groups to generate
+NUM_INDIVIDUALS = 20  # Number of individuals to generate
+NUM_GROUPS = 5  # Number of groups to generate
 MIN_ALLELES = 150  # Lower bound for ghost alleles (value included)
 MAX_ALLELES = 700  # Upper bound for ghost alleles (value included)
 MIN_PR = 100  # Lower bound for PR permitted between two different individuals (value included)
