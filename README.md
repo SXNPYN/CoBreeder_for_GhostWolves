@@ -1,4 +1,4 @@
-# CoBreeder for Ghost Wolves (v1) Usage Guidelines
+# CoBreeder for Ghost Wolves (v2) Usage Guidelines
 
 ---
 
