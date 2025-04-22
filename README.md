@@ -2,8 +2,6 @@
 
 ---
 
-[NOTE: Out of date - needs updating with v2 changes]
-
 This project builds upon the work completed by _Forshaw et al._, titled _Constraint Optimisation Approaches for 
 Designing Group-Living Captive Breeding Programmes_ [1]. The tool produced (_CoBreeder_) was designed with a focus on 
 the Galápagos tortoise which required single-objective optimisation to minimise pairwise relatedness when allocating 
@@ -20,7 +18,7 @@ tool should take this into account, improving its flexibility. Secondly, there i
 accessibility is concerned, as some users may find the current system for defining arguments confusing and cluttered.
 Thirdly, the pairwise relatedness file currently assumes that values are scaled and a larger value means that two 
 individuals are less related. This can be developed further to allow for users to specify more intuitive thresholds
-(e.g. third cousins). Finally, input validation should be improved to counter human error.
+(e.g. third cousins). 
 
 
 ## Command Line Arguments
@@ -34,7 +32,7 @@ the following arguments, in the order introduced:
 - `pairwise_relatedness_file`
   - Relative path to the CSV file containing the scaled pairwise relatedness matrix.
 - `num_pairs`
-  - The number of pairings (groups) to allocate. 
+  - The number of pairings/groups to allocate. 
 - `specify_pr`
   - Specify custom PR thresholds for certain groups with "CUSTOM_PR", or use the default threshold for all groups with 
     "DEFAULT_PR".
@@ -77,21 +75,21 @@ the following arguments, in the order introduced:
 CUSTOM_PR MIN_PR_MAX_ALLELES ghost_experiment 1 1 0 10 ALL 4`
   - 5 pairings will be allocated. 
   - The user will be prompted to enter any custom PR thresholds for specific groups. 
-  - The name of the run is "ghost_experiment". This string will be displayed alongside results.
   - The solver will maximise the number of ghost alleles and minimise pairwise relatedness between individuals in each 
   pairing. Equal weight is placed on each of these.
+  - The name of the run is "ghost_experiment". This string will be displayed alongside results.
   - Any individuals with a PR greater than 10 can be paired.
-  - All individuals in the individuals file will be considered and all pairings are allowed (provided PR is appropriate).
+  - All individuals in the individuals file will be considered and all pairings are allowed, provided PR is appropriate.
   - Priority calculations are enabled and the top 4 individuals with the best priority values must be included in 
     solutions.
 
 
 ## Expected File Formats
 
-All input files should be in CSV format, with the column names specified below. The program expects two files, 
-detailing the individuals and the pairwise relatedness between them. Please ensure that these files are complete. If 
-the pairwise relatedness between two individuals is unknown, marking these cells with 0 will ensure that the 
-individuals are not paired together. 
+Input files should be CSVs with the column names specified below. The program expects two files, detailing the 
+individuals and the pairwise relatedness between them. Please ensure that these files are complete. If the pairwise 
+relatedness between two individuals is unknown, marking these cells with 0 will ensure that the individuals are not 
+paired together. 
 
 Note that data can be randomly generated for testing purposes using the script in `tests/data-generation-v2.py`, 
 specifying number of individuals and lower/upper bounds for PR and ghost alleles. 
