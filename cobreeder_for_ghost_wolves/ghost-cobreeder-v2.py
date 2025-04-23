@@ -303,7 +303,7 @@ def build_data(args):
                     custom_prs = [tuple(map(int, x.split('-'))) for x in custom_prs.strip().split(",")]
                     # Set custom PRs in dictionary
                     for i, j in custom_prs:
-                        assert j in list(range(args.num_pairs))
+                        assert i in list(range(args.num_pairs))  # Ensure group ID is valid
                         group_prs[i] = j
                     break
                 except (IndexError, ValueError, AssertionError):
@@ -394,7 +394,7 @@ def solve_model(args):
     )
     # Average PR across all pairs in the solution.
     av_pair_pr = model.NewIntVar(0, 100000000, "av_pair_pr")
-    model.Add(total_pr == av_pair_pr * num_groups)  # av_pair_pr = total_pr // num_groups
+    model.Add(total_pr == av_pair_pr * num_groups)  # av_pair_pr = total_pr / num_groups
 
     # Sum of ghost alleles across the solution.
     total_alleles = sum(
@@ -454,7 +454,10 @@ def solve_model(args):
             # model.Add(deviation >= weighted_pr)
             # model.Add(deviation >= weighted_alleles)
             # model.Minimize(deviation)
-            model.Minimize(weighted_pr + weighted_alleles)
+
+            combined_pr_alleles = model.NewIntVar(0, 1000000000, "combined_pr_alleles")
+            model.Add(combined_pr_alleles == weighted_pr + weighted_alleles)
+            model.Minimize(combined_pr_alleles)
 
         elif objective_function == GhostCobreederObjectiveFunction.MIN_PR_MAX_ALLELES_MAX_PRIO:
 
@@ -467,7 +470,9 @@ def solve_model(args):
             model.AddMultiplicationEquality(weighted_priority, [percent_deviation_priority,
                                                                 args.weight_prio])
 
-            model.Minimize(weighted_pr + weighted_alleles + weighted_priority)
+            combined_pr_alleles_prio = model.NewIntVar(0, 1000000000, "combined_pr_alleles_prio")
+            model.Add(combined_pr_alleles_prio == weighted_pr + weighted_alleles + weighted_priority)
+            model.Minimize(combined_pr_alleles_prio)
 
     # ----------------------------------------------- CONSTRAINTS ----------------------------------------------- #
 
@@ -536,7 +541,7 @@ def solve_model(args):
     solution_printer = GhostCobreederPrinter(seats, names, num_groups, num_individuals, paramstring, unique_id)
 
     solver.parameters.max_time_in_seconds = 1800
-    # solver.parameters.log_search_progress = True
+    solver.parameters.log_search_progress = True
     # solver.parameters.num_workers = 1
     # solver.parameters.fix_variables_to_their_hinted_value = True
 
@@ -545,11 +550,12 @@ def solve_model(args):
     # Print solution statistics
     print("\nCOBREEDER-COMPLETION [%s]" % args.unique_run_id)
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
-        print("\tStatistics - Optimal") if status == cp_model.OPTIMAL else print("Statistics - Feasible")
-        print("\t\t- conflicts    : %i" % solver.NumConflicts())
-        print("\t\t- branches     : %i" % solver.NumBranches())
-        print("\t\t- wall time    : %f s" % solver.WallTime())
-        print("\t\t- num solutions: %i" % solution_printer.num_solutions())
+        print("\tStatistics")
+        print("\t\t- Status       : %s" % solver.status_name(status))
+        print("\t\t- Conflicts    : %i" % solver.NumConflicts())
+        print("\t\t- Branches     : %i" % solver.NumBranches())
+        print("\t\t- Wall time    : %f s" % solver.WallTime())
+        print("\t\t- Num solutions: %i" % solution_printer.num_solutions())
         # Save best solution to CSV if desired
         save = input("\nSave final solution to CSV? (Y/N): ")
         if save.lower() == 'y':
@@ -557,6 +563,7 @@ def solve_model(args):
             save_solution_csv(args, connections, individual_allele_count, individual_priority_values, best_solution)
     else:
         print("No solution found.")
+        print("Status: %s" % solver.status_name(status))
 
 
 def main(argv: Sequence[str]) -> None:
