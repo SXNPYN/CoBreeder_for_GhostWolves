@@ -189,33 +189,36 @@ def check_file_format(args):
         # Files must be CSVs with no missing values
         pr = pd.read_csv(args.pairwise_relatedness_file, delimiter=',', header=None, skiprows=1)
         individuals = pd.read_csv(args.individuals_file, delimiter=',')
-        assert not (np.any(pr.isnull()) or np.any(individuals.isnull())), "\nERROR: CSV files contain missing values."
+        if np.any(pr.isnull()) or np.any(individuals.isnull()):
+            raise Exception("\nERROR: CSV files contain missing values.")
 
         # PR file must be symmetrical and only contain non-negative integers
-        assert (pr >= 0).values.all(), "\nERROR: PR matrix contains negative values."
-        assert all(np.issubdtype(d, np.integer) for d in pr.dtypes), "\nERROR: PR matrix contains non-integer values."
-        assert pr.equals(pr.T), "\nERROR: PR matrix is not symmetrical."
+        if not (pr >= 0).values.all():
+            raise Exception("\nERROR: PR matrix contains negative values.")
+        if not all(np.issubdtype(d, np.integer) for d in pr.dtypes):
+            raise Exception("\nERROR: PR matrix contains non-integer values.")
+        if not pr.equals(pr.T):
+            raise Exception("\nERROR: PR matrix is not symmetrical.")
 
         # Individuals specification file must contain the required columns
-        assert list(individuals.columns) == ['Name', 'Male', 'Female', 'AssignToGroup', 'Alleles', 'Proven',
-                                             'Priority'], "\nERROR: Unexpected column in individuals file."
+        if list(individuals.columns) != ['Name', 'Male', 'Female', 'AssignToGroup', 'Alleles', 'Proven', 'Priority']:
+            raise Exception("\nERROR: Unexpected column in individuals file.")
         # Alleles and AssignToGroup must be integers
-        assert all(np.issubdtype(d, np.integer) for d in individuals[['AssignToGroup', 'Alleles']].dtypes), \
-            "\nERROR: Non-integer value identified in individuals specification file."
+        if not all(np.issubdtype(d, np.integer) for d in individuals[['AssignToGroup', 'Alleles']].dtypes):
+            raise Exception("\nERROR: Non-integer value identified in individuals specification file.")
         # Alleles cannot be negative
-        assert all(individuals['Alleles'] >= 0), \
-            "\nERROR: Individual specification file contains negative alleles."
+        if not all(individuals['Alleles'] >= 0):
+            raise Exception("\nERROR: Individual specification file contains negative alleles.")
         # AssignToGroup can only be -1 or a group ID
-        assert ((individuals['AssignToGroup'] >= -1) & (individuals['AssignToGroup'] < args.num_pairs)).all(), \
-            "\nERROR: Invalid value in AssignToGroup column."
-
+        if not ((individuals['AssignToGroup'] >= -1) & (individuals['AssignToGroup'] < args.num_pairs)).all():
+            raise Exception("\nERROR: Invalid value in AssignToGroup column.")
         # Proven, Priority, Male, and Female can only take values 0 or 1
         for col in ['Proven', 'Priority', 'Male', 'Female']:
-            assert set(individuals[col]) <= {0, 1}, "\nERROR: Proven, Priority, Male, and Female can only be 0 or 1."
-
+            if not set(individuals[col]) <= {0, 1}:
+                raise Exception("\nERROR: Proven, Priority, Male, and Female can only be 0 or 1.")
         # Individuals can only be male or female
-        assert ((individuals['Male'] + individuals['Female']) == 1).all(), \
-            "\nERROR: Individuals can only be male or female."
+        if not ((individuals['Male'] + individuals['Female']) == 1).all():
+            raise Exception("\nERROR: Individuals can only be male or female.")
 
     except Exception as e:
         print(e)
@@ -541,7 +544,7 @@ def solve_model(args):
     solution_printer = GhostCobreederPrinter(seats, names, num_groups, num_individuals, paramstring, unique_id)
 
     solver.parameters.max_time_in_seconds = 1800
-    solver.parameters.log_search_progress = True
+    # solver.parameters.log_search_progress = True
     # solver.parameters.num_workers = 1
     # solver.parameters.fix_variables_to_their_hinted_value = True
 
