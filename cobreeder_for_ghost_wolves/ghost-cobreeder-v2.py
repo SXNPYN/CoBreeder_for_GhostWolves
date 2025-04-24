@@ -10,9 +10,6 @@ import sys
 import time
 from typing import Sequence
 
-# TODO - Add citations
-# TODO - Add GUI
-
 
 class GhostCobreederObjectiveFunction(IntEnum):
     MIN_AV_PR = 1
@@ -66,11 +63,11 @@ class GhostCobreederPrinter(cp_model.CpSolverSolutionCallback):
         for g in ungrouped_ids:
             print(f"\t\t{self.__names[g]}")
 
-    def num_solutions(self):
-        return self.__solution_count
-
     def best_solution(self):
         return self.__best_solution
+
+    def num_solutions(self):
+        return self.__solution_count
 
 
 def save_solution_csv(args, connections, individual_allele_count, individual_priority_value, best_solution):
@@ -146,7 +143,7 @@ def calculate_priority(args, individuals, pr):
         male_m_max = len(female_individuals)
 
         # Calculate number of potential mates each individual has from the PR matrix
-        pr_threshold = args.pr_threshold
+        pr_threshold = args.global_pr_threshold
         for i in female_individuals.index:
             num_mates = (pr.loc[male_individuals.index][i] > pr_threshold).sum()
             female_individuals.loc[i, "NumMates"] = num_mates
@@ -296,7 +293,7 @@ def build_data(args):
 
         print(f"\nGROUP IDs: {list(group_prs.keys())}")
         print("NOTE: You do not need to specify PR thresholds for all groups. Unspecified groups will take the default"
-              f" value ({args.pr_threshold}).")
+              f" value ({args.global_pr_threshold}).")
         print("Remember that PR values are scaled.")
 
         while True:
@@ -511,7 +508,7 @@ def solve_model(args):
                     connections[g1][g2] * same_group[(g1, g2, group)]
                     for g1 in range(num_individuals - 1)
                     for g2 in range(g1 + 1, num_individuals)
-                    if connections[g1][g2] < args.pr_threshold
+                    if connections[g1][g2] < args.global_pr_threshold
                 ) < 1
             )
 
@@ -587,7 +584,7 @@ def main(argv: Sequence[str]) -> None:
     run_parser.add_argument("weight_alleles", type=int, help='Weight for alleles.')
     run_parser.add_argument("weight_pr", type=int, help='Weight for pairwise relatedness.')
     run_parser.add_argument("weight_prio", type=int, help='Weight for priority values.')
-    run_parser.add_argument("pr_threshold", type=int, default=0,
+    run_parser.add_argument("global_pr_threshold", type=int, default=0,
                             help='Threshold for scaled PR permitted in a pairing.')
     run_parser.add_argument("exclude_disallow", type=str, choices=["EX", "ALL"],
                             help='Exclude individuals or specify disallowed pairings.')
