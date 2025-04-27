@@ -127,9 +127,10 @@ def calculate_priority(args, individuals, pr):
         a = args.prio_calc_ghost_weight
         try:
             a = float(a)
-            assert 0 <= a <= 1
+            if a < 0 or a > 1:
+                raise ValueError
         except ValueError:
-            print("Please enter a number between 0.0 and 1.0")
+            print("Ghost allele weight must be a number between 0.0 and 1.0.")
             sys.exit()
 
         b = 1.0 - a
@@ -570,10 +571,9 @@ def main(argv: Sequence[str]) -> None:
                             help='Specify whether to save the best solution to a CSV.')
 
     args = parser.parse_args()
-    if ((args.obj_function == "MIN_PR_MAX_ALLELES_MAX_PRIO" or args.obj_function == "MAX_PRIO") and
-            (args.prio_calc_threshold == 0)):
-        print("Error: MIN_PR_MAX_ALLELES_MAX_PRIO requires priority calculations to be enabled.")
-        sys.exit(1)
+    if ("PRIO" in args.obj_function) and args.prio_calc_threshold == 0:
+        print("Error: MIN_PR_MAX_ALLELES_MAX_PRIO and MAX_PRIO require priority calculations to be enabled.")
+        sys.exit()
 
     solve_model(args)
 

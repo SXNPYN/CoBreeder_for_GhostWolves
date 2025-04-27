@@ -9,8 +9,7 @@ import tkinter as tk
 from tkinter import filedialog, scrolledtext, messagebox
 from tkinterweb import HtmlFrame
 
-# TODO Separate functionality for custom PR
-# TODO File input validation and exceptions
+# TODO - testing & exceptions
 
 
 def access_csv(p):
