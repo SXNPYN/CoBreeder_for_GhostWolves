@@ -1,17 +1,38 @@
+import markdown
 import os
 import subprocess
 import sys
 import threading
 import tkinter as tk
 from tkinter import filedialog, scrolledtext, messagebox
+from tkinterweb import HtmlFrame
 
 # TODO - Incorporate functionality from CLI (file input validation and exceptions)
-# TODO - Incorporate functionality from CLI (exclusions/disallowed pairings/custom prs)
+# TODO - Incorporate functionality from CLI (exclusions/disallowed pairings/custom prs) -> button showing file preview
+# TODO - Fix formatting of tables in README
 
 
 def access_csv(p):
+    """Browse files to identify CSV paths."""
     path = filedialog.askopenfilename()
     p.set(path)
+
+
+def open_readme():
+    """Open README file in a new window."""
+    file_path = "../README.md"
+    try:
+        with open(file_path, 'r') as f:
+            content = f.read()
+            readme_window = tk.Toplevel()
+            readme_window.title("CoBreeder for Ghost Wolves (v2) Usage Guidelines")
+            html_frame_container = tk.Frame(readme_window)
+            html_frame_container.pack(fill="both", expand=True)
+            html_frame = HtmlFrame(html_frame_container)
+            html_frame.pack(fill="both", expand=True)
+            html_frame.load_html(markdown.markdown(content, extensions=['tables']))
+    except Exception as e:
+        messagebox.showerror("ERROR", str(e))
 
 
 def threading_func():
@@ -87,7 +108,7 @@ TEXT_COLOUR = "#FFFFFF"
 # Initialise GUI
 root = tk.Tk()
 root.configure(bg=SIDEBAR_COLOUR)
-root.title("CoBreeder for Ghost Wolves (v1)")
+root.title("CoBreeder for Ghost Wolves (v2)")
 frame = tk.Frame(root, bg=SIDEBAR_COLOUR)
 frame.pack(fill='both', expand=True)
 
@@ -101,7 +122,7 @@ terminal.pack(fill='both', expand=True)
 # Add parameter sidebar
 sidebar = tk.Frame(frame, padx=10, pady=10, bg=SIDEBAR_COLOUR)
 sidebar.pack(side='left', fill='y')
-tk.Label(sidebar, text='PARAMETERS', fg=TEXT_COLOUR, bg=SIDEBAR_COLOUR).pack()
+tk.Button(sidebar, text="USAGE GUIDELINES", fg=TEXT_COLOUR, bg=BUTTON_COLOUR, command=open_readme).pack()
 
 # Parameters and default values
 individuals_file = tk.StringVar()
