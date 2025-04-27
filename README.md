@@ -2,6 +2,10 @@
 
 ---
 
+TODO:
+Update with GUI info. Mention which scripts are used for CLI vs GUI (make clearer). Perhaps create GUI specific README 
+to display in help section of GUI rather than this one.
+
 This project builds upon the work completed by _Forshaw et al._, titled _Constraint Optimisation Approaches for 
 Designing Group-Living Captive Breeding Programmes_ [1]. The tool produced (_CoBreeder_) was designed with a focus on 
 the Galápagos tortoise which required single-objective optimisation to minimise pairwise relatedness when allocating 
