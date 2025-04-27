@@ -9,8 +9,7 @@ import tkinter as tk
 from tkinter import filedialog, scrolledtext, messagebox
 from tkinterweb import HtmlFrame
 
-# TODO Combine MOO weights into one and extract
-# TODO Separate functionality for exclusions, disallowed pairings, and custom PR
+# TODO Separate functionality for custom PR
 # TODO File input validation and exceptions
 
 
@@ -61,6 +60,8 @@ def open_readme():
 def threading_func():
     def cobreeder_for_ghost_wolves():
         try:
+            weight_alleles, weight_pr, weight_prio = weights.get().split(",")
+
             arguments = [
                 sys.executable, "ghost-cobreeder-v2-GUI-adjusted.py", "run",
                 individuals_file.get(),
@@ -69,11 +70,12 @@ def threading_func():
                 specify_pr.get(),
                 obj_function.get(),
                 unique_run_id.get(),
-                weight_alleles.get(),
-                weight_pr.get(),
-                weight_prio.get(),
+                weight_alleles,
+                weight_pr,
+                weight_prio,
                 global_pr_threshold.get(),
-                exclude_disallow.get(),
+                exclude.get(),
+                disallow.get(),
                 prio_calc_threshold.get(),
                 prio_calc_ghost_weight.get(),
                 save_csv.get()
@@ -110,13 +112,12 @@ parameters = {
     "pairwise_relatedness_file": "Scaled Pairwise Relatedness File",
     "num_pairs": "Number of Pairings",
     "obj_function": "Objective Function",
-    "weight_pr": "Weight (PR)",
-    "weight_alleles": "Weight (Alleles)",
-    "weight_prio": "Weight (Priority)",
+    "weights": "Weight (Alleles,PR,Priority)",
     "unique_run_id": "Unique Run ID",
     "global_pr_threshold": "Global PR Threshold",
     "specify_pr": "Custom PR Thresholds",
-    "exclude_disallow": "Exclusions/Disallowed Pairings",
+    "exclude": "Exclusions (leave blank to disable)",
+    "disallow": "Disallowed Pairings (leave blank to disable)",
     "prio_calc_threshold": "Size of Priority Set",
     "prio_calc_ghost_weight": "Weight for Alleles (Priority Calculations)",
     "save_csv": "Save final solution to CSV?"
@@ -152,13 +153,12 @@ individuals_file = tk.StringVar()
 pairwise_relatedness_file = tk.StringVar()
 num_pairs = tk.StringVar()
 obj_function = tk.StringVar(value="Select Objective Function...")
-weight_pr = tk.StringVar(value="1")
-weight_alleles = tk.StringVar(value="1")
-weight_prio = tk.StringVar(value="1")
+weights = tk.StringVar(value="1,1,0")
 unique_run_id = tk.StringVar(value="ghost-wolf-experiment-1")
 global_pr_threshold = tk.StringVar(value="0")
-specify_pr = tk.StringVar(value="DEFAULT_PR")
-exclude_disallow = tk.StringVar(value="ALL")
+specify_pr = tk.StringVar(value="e.g. 2-50,1-10")
+exclude = tk.StringVar(value="e.g. 3,13,0")
+disallow = tk.StringVar(value="e.g. 2-4,5-10")
 prio_calc_threshold = tk.StringVar(value="0")
 prio_calc_ghost_weight = tk.StringVar(value="0.5")
 save_csv = tk.StringVar(value="YES")
@@ -175,19 +175,13 @@ for param in parameters:
                   bg=BUTTON_COLOUR, fg=TEXT_COLOUR).pack()
 
     # Dropdown boxes for arguments with specific options
-    elif param in ["obj_function", "specify_pr", "exclude_disallow", "save_csv"]:
+    elif param in ["obj_function", "save_csv"]:
         dropdown = tk.OptionMenu
         if param == "obj_function":
             dropdown = tk.OptionMenu(sidebar, obj_function, *["MIN_AV_PR", "MAX_TOTAL_ALLELES",
                                                               "MAX_TOTAL_PRIO", "MIN_PR_MAX_ALLELES",
                                                               "MIN_PR_MAX_ALLELES_MAX_PRIO"]
                                      )
-        if param == "specify_pr":
-            dropdown = tk.OptionMenu(sidebar, specify_pr, *["DEFAULT_PR", "CUSTOM_PR"])
-        if param == "exclude_disallow":
-            tk.Button(sidebar, text="Preview Individuals", command=preview_individuals, bg=BUTTON_COLOUR,
-                      fg=TEXT_COLOUR).pack()
-            dropdown = tk.OptionMenu(sidebar, exclude_disallow, *["ALL", "EX"])
         if param == "save_csv":
             dropdown = tk.OptionMenu(sidebar, save_csv, *["YES", "NO"])
         dropdown.config(width=33, bg=TERMINAL_COLOUR, fg=TEXT_COLOUR, highlightbackground=SIDEBAR_COLOUR)
@@ -195,6 +189,9 @@ for param in parameters:
 
     # Text boxes for arguments requiring a number to be entered
     else:
+        if param == "exclude":
+            tk.Button(sidebar, text="Preview Individuals", command=preview_individuals, bg=BUTTON_COLOUR,
+                      fg=TEXT_COLOUR).pack()
         tk.Entry(sidebar, textvariable=globals()[param], width=40, bg=TERMINAL_COLOUR, fg=TEXT_COLOUR,
                  insertbackground=TEXT_COLOUR).pack()
 

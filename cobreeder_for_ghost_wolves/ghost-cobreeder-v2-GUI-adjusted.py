@@ -128,8 +128,8 @@ def calculate_priority(args, individuals, pr):
         try:
             a = float(a)
             assert 0 <= a <= 1
-        except Exception as e:
-            print(e)
+        except ValueError:
+            print("Please enter a number between 0.0 and 1.0")
             sys.exit()
 
         b = 1.0 - a
@@ -244,42 +244,27 @@ def build_data(args):
     print("NUMBER OF PAIRINGS TO ALLOCATE: %i" % args.num_pairs)
     print("USING PAIRWISE RELATEDNESS FILE [%s]" % args.pairwise_relatedness_file)
 
-    if args.exclude_disallow == "EX":
-        # Show data to help practitioner know which indices to use
-        print(f"\nSUMMARY OF INDIVIDUALS [{args.individuals_file}]: \n{individuals}")
-
-        while True:
-            disallowed_pairings = input("Specify disallowed parings? (List of ID pairs e.g. 3-5, 2-6, 1-7): ")
-            if disallowed_pairings:
-                try:
-                    disallowed_pairings = [tuple(map(int, x.split('-'))) for x in
-                                           disallowed_pairings.strip().split(",")]
-                    # Set PR for disallowed combinations to 0
-                    for i, j in disallowed_pairings:
-                        pr.iloc[i, j] = 0
-                        pr.iloc[j, i] = 0
-                    break
-                except (IndexError, ValueError):
-                    print("Please ensure indices are valid (e.g. 0-1, 4-2).")
-            else:
-                break
-
-        while True:
-            exclusions = input("Exclude individuals? (List of IDs e.g. 0, 4, 6): ")
-            if exclusions:
-                try:
-                    # Remove excluded individuals from individuals data
-                    exclusions = list(set(int(x) for x in exclusions.strip().split(",")))
-                    individuals.drop(exclusions, axis=0, inplace=True)
-                    print(f"\n UPDATED SUMMARY OF INDIVIDUALS [{args.individuals_file}]: \n{individuals}")
-                    # Update PR matrix to remove excluded individuals
-                    pr.drop(exclusions, axis=0, inplace=True)
-                    pr.drop(exclusions, axis=1, inplace=True)
-                    break
-                except (KeyError, ValueError):
-                    print("Invalid input. Please enter the indices of the individuals to exclude (e.g. 0, 4, 2)")
-            else:
-                break
+    if args.disallow:
+        try:
+            disallowed_pairings = [tuple(map(int, x.split('-'))) for x in args.disallow.strip().split(",")]
+            # Set PR for disallowed combinations to 0
+            for i, j in disallowed_pairings:
+                pr.iloc[i, j] = 0
+                pr.iloc[j, i] = 0
+        except (IndexError, ValueError):
+            print("Please ensure indices are valid when specifying disallowed pairings (e.g. 0-1, 4-2).")
+            sys.exit()
+    if args.exclude:
+        try:
+            # Remove excluded individuals from individuals data
+            exclusions = list(set(int(x) for x in args.exclude.strip().split(",")))
+            individuals.drop(exclusions, axis=0, inplace=True)
+            # Update PR matrix to remove excluded individuals
+            pr.drop(exclusions, axis=0, inplace=True)
+            pr.drop(exclusions, axis=1, inplace=True)
+        except (KeyError, ValueError):
+            print("Please ensure indices are valid when specifying exclusions (e.g. 12,0,3).")
+            sys.exit()
 
     individuals = calculate_priority(args, individuals, pr)
     print(f"\nSUMMARY OF INDIVIDUALS AFTER PROCESSING: \n{individuals}")
@@ -289,27 +274,16 @@ def build_data(args):
     group_prs = {key: -1 for key in range(args.num_pairs)}
 
     # Specify custom PR thresholds for groups
-    if args.specify_pr == "CUSTOM_PR":
-
-        print(f"\nGROUP IDs: {list(group_prs.keys())}")
-        print("NOTE: You do not need to specify PR thresholds for all groups. Unspecified groups will take the default"
-              f" value ({args.global_pr_threshold}).")
-        print("Remember that PR values are scaled.")
-
-        while True:
-            custom_prs = input("Specify custom PR thresholds (List of group-PR pairs e.g. 3-50, 0-100): ")
-            if custom_prs:
-                try:
-                    custom_prs = [tuple(map(int, x.split('-'))) for x in custom_prs.strip().split(",")]
-                    # Set custom PRs in dictionary
-                    for i, j in custom_prs:
-                        assert i in list(range(args.num_pairs))  # Ensure group ID is valid
-                        group_prs[i] = j
-                    break
-                except (IndexError, ValueError, AssertionError):
-                    print("Invalid input. Please enter valid group IDs and scaled PR values.")
-            else:
-                break
+    if args.specify_pr:
+        try:
+            custom_prs = [tuple(map(int, x.split('-'))) for x in args.specify_pr.strip().split(",")]
+            # Set custom PRs in dictionary
+            for i, j in custom_prs:
+                assert i in list(range(args.num_pairs))  # Ensure group ID is valid
+                group_prs[i] = j
+        except (IndexError, ValueError, AssertionError):
+            print("Invalid input. Please enter valid group IDs and scaled PR values.")
+            sys.exit()
 
     names = individuals["Name"].tolist()
     males = individuals["Male"].tolist()
@@ -575,8 +549,7 @@ def main(argv: Sequence[str]) -> None:
     run_parser.add_argument('pairwise_relatedness_file', type=str,
                             help='Scaled pairwise relatedness matrix.')
     run_parser.add_argument('num_pairs', type=int, help='Number of pairings to allocate.')
-    run_parser.add_argument("specify_pr", type=str, choices=["CUSTOM_PR", "DEFAULT_PR"],
-                            help='Specify custom PR for specific groups.')
+    run_parser.add_argument("specify_pr", type=str, help='Specify custom PR for specific groups.')
     run_parser.add_argument("obj_function", type=str,
                             choices=[e.name for e in GhostCobreederObjectiveFunction],
                             help='String specifying objective function.')
@@ -586,8 +559,8 @@ def main(argv: Sequence[str]) -> None:
     run_parser.add_argument("weight_prio", type=int, help='Weight for priority values.')
     run_parser.add_argument("global_pr_threshold", type=int, default=0,
                             help='Threshold for scaled PR permitted in a pairing.')
-    run_parser.add_argument("exclude_disallow", type=str, choices=["EX", "ALL"],
-                            help='Exclude individuals or specify disallowed pairings.')
+    run_parser.add_argument("exclude", type=str, help='Exclude individuals.')
+    run_parser.add_argument("disallow", type=str, help='Specify disallowed pairings.')
     run_parser.add_argument("prio_calc_threshold", type=int, choices=range(0, 101),
                             help='Threshold for priority calculations representing the number of individuals that can'
                                  'fall into the priority set. 0 to disable and use manual priority assignments only.')
