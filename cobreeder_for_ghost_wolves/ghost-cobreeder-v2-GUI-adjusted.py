@@ -558,7 +558,7 @@ def solve_model(args):
         print("\t\t- Num solutions: %i" % solution_printer.num_solutions())
         # Save best solution to CSV if desired
         save = args.save_csv
-        if save.lower() == 'y':
+        if save.lower() == 'yes':
             best_solution = solution_printer.best_solution()
             save_solution_csv(args, connections, individual_allele_count, individual_priority_values, best_solution)
     else:
@@ -593,8 +593,8 @@ def main(argv: Sequence[str]) -> None:
                                  'fall into the priority set. 0 to disable and use manual priority assignments only.')
     run_parser.add_argument("prio_calc_ghost_weight", type=float, default=0.5,
                             help='Weight placed on ghost alleles for priority calculations.')
-    run_parser.add_argument("save_csv", type=str,
-                            help='Specify whether to save the best solution to a CSV (y/n).')
+    run_parser.add_argument("save_csv", type=str, choices=['YES', 'NO'],
+                            help='Specify whether to save the best solution to a CSV.')
 
     args = parser.parse_args()
     if ((args.obj_function == "MIN_PR_MAX_ALLELES_MAX_PRIO" or args.obj_function == "MAX_PRIO") and

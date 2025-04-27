@@ -9,7 +9,7 @@ from tkinterweb import HtmlFrame
 
 # TODO - Incorporate functionality from CLI (file input validation and exceptions)
 # TODO - Incorporate functionality from CLI (exclusions/disallowed pairings/custom prs) -> button showing file preview
-# TODO - Fix formatting of tables in README
+# TODO - Add light/dark mode?
 
 
 def access_csv(p):
@@ -96,7 +96,7 @@ parameters = {
     "exclude_disallow": "Exclusions/Disallowed Pairings",
     "prio_calc_threshold": "Size of Priority Set",
     "prio_calc_ghost_weight": "Weight for Alleles (Priority Calculations)",
-    "save_csv": "Save final solution to CSV (Y/N)"
+    "save_csv": "Save final solution to CSV?"
 }
 
 # GUI colour palette
@@ -122,7 +122,7 @@ terminal.pack(fill='both', expand=True)
 # Add parameter sidebar
 sidebar = tk.Frame(frame, padx=10, pady=10, bg=SIDEBAR_COLOUR)
 sidebar.pack(side='left', fill='y')
-tk.Button(sidebar, text="USAGE GUIDELINES", fg=TEXT_COLOUR, bg=BUTTON_COLOUR, command=open_readme).pack()
+tk.Button(sidebar, text="USAGE GUIDELINES", fg=TEXT_COLOUR, bg=BUTTON_COLOUR, command=open_readme).pack(pady=5)
 
 # Parameters and default values
 individuals_file = tk.StringVar()
@@ -138,7 +138,7 @@ specify_pr = tk.StringVar(value="DEFAULT_PR")
 exclude_disallow = tk.StringVar(value="ALL")
 prio_calc_threshold = tk.StringVar(value="0")
 prio_calc_ghost_weight = tk.StringVar(value="Please enter a number between 0.0 and 1.0")
-save_csv = tk.StringVar(value="Y")
+save_csv = tk.StringVar(value="YES")
 
 for param in parameters:
     tk.Label(sidebar, text=parameters[param], fg=TEXT_COLOUR, bg=SIDEBAR_COLOUR).pack(anchor='w')
@@ -152,7 +152,7 @@ for param in parameters:
                   bg=BUTTON_COLOUR, fg=TEXT_COLOUR).pack()
 
     # Dropdown boxes for arguments with specific options
-    elif param in ["obj_function", "specify_pr", "exclude_disallow"]:
+    elif param in ["obj_function", "specify_pr", "exclude_disallow", "save_csv"]:
         dropdown = tk.OptionMenu
         if param == "obj_function":
             dropdown = tk.OptionMenu(sidebar, obj_function, *["MIN_AV_PR", "MAX_TOTAL_ALLELES",
@@ -163,6 +163,8 @@ for param in parameters:
             dropdown = tk.OptionMenu(sidebar, specify_pr, *["DEFAULT_PR", "CUSTOM_PR"])
         if param == "exclude_disallow":
             dropdown = tk.OptionMenu(sidebar, exclude_disallow, *["ALL", "EX"])
+        if param == "save_csv":
+            dropdown = tk.OptionMenu(sidebar, save_csv, *["YES", "NO"])
         dropdown.config(width=33, bg=TERMINAL_COLOUR, fg=TEXT_COLOUR, highlightbackground=SIDEBAR_COLOUR)
         dropdown.pack()
 
