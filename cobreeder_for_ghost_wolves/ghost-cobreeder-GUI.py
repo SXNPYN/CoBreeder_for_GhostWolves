@@ -1,5 +1,7 @@
 import markdown
 import os
+import pandas as pd
+from pandastable import Table
 import subprocess
 import sys
 import threading
@@ -7,15 +9,36 @@ import tkinter as tk
 from tkinter import filedialog, scrolledtext, messagebox
 from tkinterweb import HtmlFrame
 
-# TODO - Incorporate functionality from CLI (file input validation and exceptions)
-# TODO - Incorporate functionality from CLI (exclusions/disallowed pairings/custom prs) -> button showing file preview
-# TODO - Add light/dark mode?
+# TODO Combine MOO weights into one and extract
+# TODO Separate functionality for exclusions, disallowed pairings, and custom PR
+# TODO File input validation and exceptions
 
 
 def access_csv(p):
     """Browse files to identify CSV paths."""
     path = filedialog.askopenfilename()
     p.set(path)
+
+
+def preview_individuals():
+    """Preview the CSV or Excel file as a DataFrame in a new window."""
+    try:
+        p = individuals_file.get()
+        if ('.csv' not in p) and ('.xlsx' not in p) and ('.xls' not in p):
+            raise Exception("Files must be in CSV or Excel format.")
+        else:
+            df = pd.read_csv(p) if '.csv' in p else pd.read_excel(p)
+            df.reset_index(inplace=True)
+            df.rename(columns={'index': 'Index'}, inplace=True)
+            df['Index'] = df['Index'].astype('Int64')
+            preview_window = tk.Toplevel()
+            preview_window.title("File Preview")
+            preview_frame = tk.Frame(preview_window)
+            preview_frame.pack(expand=True, fill="both")
+            Table(preview_frame, dataframe=df).show()
+
+    except Exception as e:
+        messagebox.showerror("ERROR", str(e))
 
 
 def open_readme():
@@ -128,16 +151,16 @@ tk.Button(sidebar, text="USAGE GUIDELINES", fg=TEXT_COLOUR, bg=BUTTON_COLOUR, co
 individuals_file = tk.StringVar()
 pairwise_relatedness_file = tk.StringVar()
 num_pairs = tk.StringVar()
-obj_function = tk.StringVar(value="Select Objective Function")
+obj_function = tk.StringVar(value="Select Objective Function...")
 weight_pr = tk.StringVar(value="1")
 weight_alleles = tk.StringVar(value="1")
 weight_prio = tk.StringVar(value="1")
-unique_run_id = tk.StringVar(value="experiment-name")
+unique_run_id = tk.StringVar(value="ghost-wolf-experiment-1")
 global_pr_threshold = tk.StringVar(value="0")
 specify_pr = tk.StringVar(value="DEFAULT_PR")
 exclude_disallow = tk.StringVar(value="ALL")
 prio_calc_threshold = tk.StringVar(value="0")
-prio_calc_ghost_weight = tk.StringVar(value="Please enter a number between 0.0 and 1.0")
+prio_calc_ghost_weight = tk.StringVar(value="0.5")
 save_csv = tk.StringVar(value="YES")
 
 for param in parameters:
@@ -162,6 +185,8 @@ for param in parameters:
         if param == "specify_pr":
             dropdown = tk.OptionMenu(sidebar, specify_pr, *["DEFAULT_PR", "CUSTOM_PR"])
         if param == "exclude_disallow":
+            tk.Button(sidebar, text="Preview Individuals", command=preview_individuals, bg=BUTTON_COLOUR,
+                      fg=TEXT_COLOUR).pack()
             dropdown = tk.OptionMenu(sidebar, exclude_disallow, *["ALL", "EX"])
         if param == "save_csv":
             dropdown = tk.OptionMenu(sidebar, save_csv, *["YES", "NO"])
