@@ -277,7 +277,7 @@ def build_data(args):
                     pr.drop(exclusions, axis=1, inplace=True)
                     break
                 except (KeyError, ValueError):
-                    print("Invalid input. Please enter the indices of the individuals to exclude (e.g. 0, 4, 2)")
+                    print("Please ensure indices are valid (e.g. 0,6,17,3)")
             else:
                 break
 
