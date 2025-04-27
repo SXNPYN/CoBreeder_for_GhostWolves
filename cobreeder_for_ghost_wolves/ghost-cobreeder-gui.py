@@ -5,7 +5,8 @@ import threading
 import tkinter as tk
 from tkinter import filedialog, scrolledtext, messagebox
 
-# TODO - Incorporate functionality from CLI e.g. save to csv, input validation exceptions etc.
+# TODO - Incorporate functionality from CLI (file input validation and exceptions)
+# TODO - Incorporate functionality from CLI (exclusions/disallowed pairings/custom prs)
 
 
 def access_csv(p):
@@ -17,7 +18,7 @@ def threading_func():
     def cobreeder_for_ghost_wolves():
         try:
             arguments = [
-                sys.executable, "ghost-cobreeder-v2.py", "run",
+                sys.executable, "ghost-cobreeder-v2-GUI-adjusted.py", "run",
                 individuals_file.get(),
                 pairwise_relatedness_file.get(),
                 num_pairs.get(),
@@ -29,7 +30,9 @@ def threading_func():
                 weight_prio.get(),
                 global_pr_threshold.get(),
                 exclude_disallow.get(),
-                prio_calc_threshold.get()
+                prio_calc_threshold.get(),
+                prio_calc_ghost_weight.get(),
+                save_csv.get()
             ]
 
             # Run ghost-cobreeder-v2.py as a subprocess
@@ -70,7 +73,9 @@ parameters = {
     "global_pr_threshold": "Global PR Threshold",
     "specify_pr": "Custom PR Thresholds",
     "exclude_disallow": "Exclusions/Disallowed Pairings",
-    "prio_calc_threshold": "Priority Calculations"
+    "prio_calc_threshold": "Size of Priority Set",
+    "prio_calc_ghost_weight": "Weight for Alleles (Priority Calculations)",
+    "save_csv": "Save final solution to CSV (Y/N)"
 }
 
 # GUI colour palette
@@ -111,6 +116,8 @@ global_pr_threshold = tk.StringVar(value="0")
 specify_pr = tk.StringVar(value="DEFAULT_PR")
 exclude_disallow = tk.StringVar(value="ALL")
 prio_calc_threshold = tk.StringVar(value="0")
+prio_calc_ghost_weight = tk.StringVar(value="Please enter a number between 0.0 and 1.0")
+save_csv = tk.StringVar(value="Y")
 
 for param in parameters:
     tk.Label(sidebar, text=parameters[param], fg=TEXT_COLOUR, bg=SIDEBAR_COLOUR).pack(anchor='w')
