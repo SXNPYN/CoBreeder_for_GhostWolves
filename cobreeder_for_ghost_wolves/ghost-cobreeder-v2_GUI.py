@@ -1,4 +1,5 @@
 import markdown
+import numpy as np
 import os
 import pandas as pd
 from pandastable import Table
@@ -54,10 +55,66 @@ def open_readme():
         messagebox.showerror("ERROR", str(e))
 
 
+def input_validation():
+    """Performs input validation for fields."""
+
+    try:
+        if int(num_pairs.get()) < 0:
+            raise Exception("\nNumber of Pairings cannot be negative.")
+        if int(global_pr_threshold.get()) < 0:
+            raise Exception("\nGlobal PR Threshold cannot be negative.")
+        if int(prio_calc_threshold.get()) < 0:
+            raise Exception("\nPriority Calculations: Size of Priority Set cannot be negative.")
+
+        # Files must be CSVs with no missing values
+        pr = pd.read_csv(pairwise_relatedness_file.get(), delimiter=',', header=None, skiprows=1)
+        individuals = pd.read_csv(individuals_file.get(), delimiter=',')
+        if np.any(pr.isnull()) or np.any(individuals.isnull()):
+            raise Exception("\nCSV files contain missing values.")
+
+        # PR file must be symmetrical and only contain non-negative integers
+        if not (pr >= 0).values.all():
+            raise Exception("\nPR matrix contains negative values.")
+        if not all(np.issubdtype(d, np.integer) for d in pr.dtypes):
+            raise Exception("\nPR matrix contains non-integer values.")
+        if not pr.equals(pr.T):
+            raise Exception("\nPR matrix is not symmetrical.")
+
+        # Individuals specification file must contain the required columns
+        if list(individuals.columns) != ['Name', 'Male', 'Female', 'AssignToGroup', 'Alleles', 'Proven', 'Priority']:
+            raise Exception("\nUnexpected column in individuals file.")
+        # Alleles and AssignToGroup must be integers
+        if not all(np.issubdtype(d, np.integer) for d in individuals[['AssignToGroup', 'Alleles']].dtypes):
+            raise Exception("\nNon-integer value identified in individuals specification file.")
+        # Alleles cannot be negative
+        if not all(individuals['Alleles'] >= 0):
+            raise Exception("\nIndividual specification file contains negative alleles.")
+        # AssignToGroup can only be -1 or a group ID
+        if not ((individuals['AssignToGroup'] >= -1) & (individuals['AssignToGroup'] < int(num_pairs.get()))).all():
+            raise Exception("\nInvalid value in AssignToGroup column.")
+        # Proven, Priority, Male, and Female can only take values 0 or 1
+        for col in ['Proven', 'Priority', 'Male', 'Female']:
+            if not set(individuals[col]) <= {0, 1}:
+                raise Exception("\nProven, Priority, Male, and Female can only be 0 or 1.")
+        # Individuals can only be male or female
+        if not ((individuals['Male'] + individuals['Female']) == 1).all():
+            raise Exception("\nIndividuals can only be male or female.")
+
+        if int(prio_calc_threshold.get()) > int(num_pairs.get()):
+            raise Exception("The size of the priority set cannot be larger than the number of pairs.")
+
+        if ("PRIO" in str(obj_function.get())) and int(prio_calc_threshold.get()) == 0:
+            raise Exception("MIN_PR_MAX_ALLELES_MAX_PRIO and MAX_PRIO require priority calculations to be enabled.")
+
+    except Exception as e:
+        messagebox.showerror("Error", str(e))
+
+
 def threading_func():
     """Run CoBreeder for Ghost Wolves main logic."""
     def cobreeder_for_ghost_wolves():
         try:
+            input_validation()
             weight_alleles, weight_pr, weight_prio = weights.get().split(",")
 
             arguments = [

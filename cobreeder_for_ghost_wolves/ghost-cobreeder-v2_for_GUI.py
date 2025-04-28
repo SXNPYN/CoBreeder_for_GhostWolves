@@ -571,9 +571,6 @@ def main(argv: Sequence[str]) -> None:
                             help='Specify whether to save the best solution to a CSV.')
 
     args = parser.parse_args()
-    if ("PRIO" in args.obj_function) and args.prio_calc_threshold == 0:
-        print("Error: MIN_PR_MAX_ALLELES_MAX_PRIO and MAX_PRIO require priority calculations to be enabled.")
-        sys.exit()
 
     solve_model(args)
 
