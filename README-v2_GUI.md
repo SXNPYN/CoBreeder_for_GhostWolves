@@ -1,8 +1,12 @@
-# CoBreeder for Ghost Wolves (v1) Usage Guidelines
+# CoBreeder for Ghost Wolves (v2) Usage Guidelines
 
 ---
 
-This is the README file for v1. See README.md for v2. 
+This is the README file for version 2 and is GUI specific. 
+
+TODO:
+Update with GUI info. Mention which scripts are used for CLI vs GUI (make clearer). Perhaps create GUI specific README 
+to display in help section of GUI rather than this one.
 
 This project builds upon the work completed by _Forshaw et al._, titled _Constraint Optimisation Approaches for 
 Designing Group-Living Captive Breeding Programmes_ [1]. The tool produced (_CoBreeder_) was designed with a focus on 
@@ -20,7 +24,7 @@ tool should take this into account, improving its flexibility. Secondly, there i
 accessibility is concerned, as some users may find the current system for defining arguments confusing and cluttered.
 Thirdly, the pairwise relatedness file currently assumes that values are scaled and a larger value means that two 
 individuals are less related. This can be developed further to allow for users to specify more intuitive thresholds
-(e.g. third cousins). Finally, input validation should be improved to counter human error.
+(e.g. third cousins). 
 
 
 ## Command Line Arguments
@@ -33,8 +37,11 @@ the following arguments, in the order introduced:
   - Relative path to the CSV file detailing the individuals.
 - `pairwise_relatedness_file`
   - Relative path to the CSV file containing the scaled pairwise relatedness matrix.
-- `group_file`
-  - Relative path to the CSV file detailing the group specifications.
+- `num_pairs`
+  - The number of pairings/groups to allocate. 
+- `specify_pr`
+  - Specify custom PR thresholds for certain groups with "CUSTOM_PR", or use the default threshold for all groups with 
+    "DEFAULT_PR".
 - `obj_function`
   - String specifying the objective function to use when solving. The options are:
     - `MIN_AV_PR` - Minimise the average pairwise relatedness across pairings.
@@ -70,28 +77,28 @@ the following arguments, in the order introduced:
 
 ### EXAMPLE:
 
-- `poetry run python ghost_wolf_cobreeder/ghost-cobreeder-v1.py run data/individuals.csv data/pr-scaled.csv 
-data/groups.csv MIN_PR_MAX_ALLELES ghost_experiment 1 1 0 0 ALL 4`
-  - The name of the run is "ghost_experiment". This string will be displayed alongside results.
+- `poetry run python ghost_wolf_cobreeder/ghost-cobreeder-v2.py run data/individuals.csv data/pr-scaled.csv 5
+CUSTOM_PR MIN_PR_MAX_ALLELES ghost_experiment 1 1 0 10 ALL 4`
+  - 5 pairings will be allocated. 
+  - The user will be prompted to enter any custom PR thresholds for specific groups. 
   - The solver will maximise the number of ghost alleles and minimise pairwise relatedness between individuals in each 
   pairing. Equal weight is placed on each of these.
-  - Any individuals with a PR greater than 0 can be paired (note that this would almost certainly need to be adjusted
-  in a real-life scenario).
-  - All individuals in the individuals file will be considered, and all opposite sex pairings (provided PR > 0) are 
-  allowed.
+  - The name of the run is "ghost_experiment". This string will be displayed alongside results.
+  - Any individuals with a PR greater than 10 can be paired.
+  - All individuals in the individuals file will be considered and all pairings are allowed, provided PR is appropriate.
   - Priority calculations are enabled and the top 4 individuals with the best priority values must be included in 
     solutions.
 
 
 ## Expected File Formats
 
-All input files should be in CSV format, with the column names specified below. The program expects three files, 
-detailing the individuals, groups, and the pairwise relatedness between the individuals. Please ensure that these
-files are complete. If the pairwise relatedness between two individuals is unknown, marking these cells with 0 will
-ensure that the individuals are not paired together. 
+Input files should be CSVs with the column names specified below. The program expects two files, detailing the 
+individuals and the pairwise relatedness between them. Please ensure that these files are complete. If the pairwise 
+relatedness between two individuals is unknown, marking these cells with 0 will ensure that the individuals are not 
+paired together. 
 
-Note that data can be randomly generated for testing purposes using the script in `tests/data-generation.py`, specifying
-number of individuals, groups, and lower/upper bounds on PR and ghost alleles. 
+Note that data can be randomly generated for testing purposes using the script in `tests/data-generation-v2.py`, 
+specifying number of individuals and lower/upper bounds for PR and ghost alleles. 
 
 ### INDIVIDUAL SPECIFICATION FILE:
 
@@ -120,32 +127,6 @@ Example:
 | Individual_1_M | 1    | 0      | -1            | 312     | 0      | 0        |
 | Individual_2_F | 0    | 1      | 1             | 488     | 1      | 1        |
 | ...            | ...  | ...    | ...           | ...     | ...    | ...      |
-
-
-### GROUP SPECIFICATION FILE:
-
-- `ID` 
-  - Unique group ID, usually equal to the row index.
-- `MinSize` & `MaxSize`
-  - Minimum/maximum number of individuals to assign to this group (values included).
-  - For pairings, both of these columns should be set to 2. 
-- `NumMale` & `NumFemale` 
-  - Number of males/females allowed in the group. The sum of these should not exceed the maximum capacity of the group.
-  - For pairings, both of these columns should be set to 1. 
-- `PRThreshold` 
-  - The scaled PR threshold allowed in this group. 
-  - Set to -1 to use the default value. 
-
-All values in this file should be integers. 
-
-Example:
-
-| ID  | MinSize | MaxSize | NumMale | NumFemale | PRThreshold |
-|-----|---------|---------|---------|-----------|-------------|
-| 0   | 2       | 2       | 1       | 1         | -1          |
-| 1   | 2       | 2       | 1       | 1         | -1          |
-| 2   | 2       | 2       | 1       | 1         | -1          |
-| ... | ...     | ...     | ...     | ...       | ...         |
 
 
 ### SCALED PR SPECIFICATION FILE:
