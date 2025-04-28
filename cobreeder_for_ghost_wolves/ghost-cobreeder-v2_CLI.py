@@ -598,6 +598,10 @@ def main(argv: Sequence[str]) -> None:
         print("Error: MIN_PR_MAX_ALLELES_MAX_PRIO requires priority calculations to be enabled.")
         sys.exit(1)
 
+    if args.prio_calc_threshold > args.num_pairs:
+        print("Error: The size of the priority set cannot be larger than the number of pairs.")
+        sys.exit(1)
+
     solve_model(args)
 
 
