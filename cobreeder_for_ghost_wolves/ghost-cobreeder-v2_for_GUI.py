@@ -148,11 +148,11 @@ def calculate_priority(args, individuals, pr):
         for i in female_individuals.index:
             num_mates = (pr.loc[male_individuals.index][i] > pr_threshold).sum()
             female_individuals.loc[i, "NumMates"] = num_mates
-            print(f'Female {i} has {num_mates} potential mates.')
+            #print(f'Female {i} has {num_mates} potential mates.')
         for i in male_individuals.index:
             num_mates = (pr.loc[female_individuals.index][i] > pr_threshold).sum()
             male_individuals.loc[i, "NumMates"] = num_mates
-            print(f'Male {i} has {num_mates} mates.')
+            #print(f'Male {i} has {num_mates} mates.')
 
         # Calculate priority value between 0 and 100.
         female_individuals['PriorityValue'] = (female_individuals['Proven'] *
