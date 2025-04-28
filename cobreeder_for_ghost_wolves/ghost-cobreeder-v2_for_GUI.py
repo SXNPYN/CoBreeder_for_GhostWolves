@@ -467,7 +467,7 @@ def solve_model(args):
         model.Add(sum(females[g] * seats[(t, g)] for g in all_individuals) == 1)
 
     for group, pr in enumerate(group_prs):
-        print(f"Group:{group}, PR threshold:{pr}")
+        print(f"Group:{group}, PR threshold:{pr if pr != -1 else args.global_pr_threshold}")
         if pr != -1:  # Set custom PR constraint
             model.Add(
                 sum(
