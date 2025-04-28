@@ -2,11 +2,14 @@
 
 ---
 
-This is the README file for V2 (CLI and GUI). 
+These usage guidelines pertain to the **Command Line Interface** (CLI) offered by _CoBreeder for Ghost Wolves_. 
+Please use the script `ghost-cobreeder-v2_CLI.py` when using the CLI.
 
-TODO:
-Update with GUI info. Mention which scripts are used for CLI vs GUI (make clearer). Perhaps create GUI specific README 
-to display in help section of GUI rather than this one.
+_CoBreeder for Ghost Wolves_ also offers a **Graphical User Interface** (GUI). This will be more accessible to users
+that are not too familiar with the terminal. To use the GUI, please run the script `ghost-cobreeder-v2_GUI.py`. This
+script will use an adjusted version of the CLI for its logic (`ghost-cobreeder-v2_for_GUI.py`), but you should not need
+to interact with this file.
+GUI usage guidelines can be accessed from within the GUI itself but are also found in `README-V2_GUI.md`.
 
 ## Context
 
@@ -22,11 +25,9 @@ characteristics of the dataset.
 
 This initial adaptation focuses on assigning coyote pairings however this may not be entirely accurate to life as 
 coyotes, though sometimes solitary animals, often live in packs with a single breeding pair. Future versions of this 
-tool should take this into account, improving its flexibility. Secondly, there is room for improvement where 
-accessibility is concerned, as some users may find the current system for defining arguments confusing and cluttered.
-Thirdly, the pairwise relatedness file currently assumes that values are scaled and a larger value means that two 
-individuals are less related. This can be developed further to allow for users to specify more intuitive thresholds
-(e.g. third cousins). 
+tool should take this into account, improving its flexibility. Secondly, the pairwise relatedness file currently 
+assumes that values are scaled and a larger value means that two individuals are less related. This can be developed 
+further to allow for users to specify more intuitive thresholds (e.g. third cousins). 
 
 
 ## Command Line Arguments
@@ -79,7 +80,7 @@ the following arguments, in the order introduced:
 
 ### EXAMPLE:
 
-- `poetry run python ghost_wolf_cobreeder/ghost-cobreeder-v2.py run data/individuals.csv data/pr-scaled.csv 5
+- `poetry run python ghost_wolf_cobreeder/ghost-cobreeder-v2_CLI.py run data/individuals.csv data/pr-scaled.csv 5
 CUSTOM_PR MIN_PR_MAX_ALLELES ghost_experiment 1 1 0 10 ALL 4`
   - 5 pairings will be allocated. 
   - The user will be prompted to enter any custom PR thresholds for specific groups. 
