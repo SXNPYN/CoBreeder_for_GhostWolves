@@ -116,8 +116,8 @@ parameters = {
     "specify_pr": "Custom PR Thresholds",
     "exclude": "Exclusions",
     "disallow": "Disallowed Pairings",
-    "prio_calc_threshold": "Size of Priority Set",
-    "prio_calc_ghost_weight": "Weight for Alleles (Priority Calculations)",
+    "prio_calc_threshold": "Priority Calculations: Size of Priority Set",
+    "prio_calc_ghost_weight": "Priority Calculations: Weight for Alleles",
     "save_csv": "Save final solution to CSV?"
 }
 
@@ -150,13 +150,13 @@ tk.Button(sidebar, text="USAGE GUIDELINES", fg=TEXT_COLOUR, bg=BUTTON_COLOUR, co
 individuals_file = tk.StringVar()
 pairwise_relatedness_file = tk.StringVar()
 num_pairs = tk.StringVar()
-obj_function = tk.StringVar(value="Select Objective Function...")
+obj_function = tk.StringVar(value="MIN_PR_MAX_ALLELES")
 weights = tk.StringVar(value="1,1,0")
 unique_run_id = tk.StringVar(value="ghost-wolf-experiment-1")
 global_pr_threshold = tk.StringVar(value="0")
-specify_pr = tk.StringVar(value="e.g. 2-50,1-10")
-exclude = tk.StringVar(value="e.g. 3,13,0")
-disallow = tk.StringVar(value="e.g. 2-4,5-10")
+specify_pr = tk.StringVar()
+exclude = tk.StringVar()
+disallow = tk.StringVar()
 prio_calc_threshold = tk.StringVar(value="0")
 prio_calc_ghost_weight = tk.StringVar(value="0.5")
 save_csv = tk.StringVar(value="YES")
