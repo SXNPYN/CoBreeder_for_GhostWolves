@@ -11,7 +11,7 @@ script will use an adjusted version of the CLI for its logic (`ghost-cobreeder-v
 to interact with this file.
 GUI usage guidelines can be accessed from within the GUI itself but are also found in `README-V2_GUI.md`.
 
-## Context
+## <u>Context</u>
 
 This project builds upon the work completed by _Forshaw et al._, titled _Constraint Optimisation Approaches for 
 Designing Group-Living Captive Breeding Programmes_ [1]. The tool produced (_CoBreeder_) was designed with a focus on 
@@ -30,7 +30,7 @@ assumes that values are scaled and a larger value means that two individuals are
 further to allow for users to specify more intuitive thresholds (e.g. third cousins). 
 
 
-## Command Line Arguments
+## <u>Command Line Arguments</u>
 
 This program is run via the command line. You will need to specify various arguments as well as provide relative paths 
 to the data that will be used (please see the "Expected File Formats" section for more details). The program expects 
@@ -78,7 +78,7 @@ the following arguments, in the order introduced:
   - E.g. 4 will enable priority calculations and select the top 4 scoring individuals for the priority set.
   - This is explained in more detail in the "Priority Calculations" section.
 
-### EXAMPLE:
+### Example:
 
 - `poetry run python ghost_wolf_cobreeder/ghost-cobreeder-v2_CLI.py run data/individuals.csv data/pr-scaled.csv 5
 CUSTOM_PR MIN_PR_MAX_ALLELES ghost_experiment 1 1 0 10 ALL 4`
@@ -93,7 +93,7 @@ CUSTOM_PR MIN_PR_MAX_ALLELES ghost_experiment 1 1 0 10 ALL 4`
     solutions.
 
 
-## Expected File Formats
+## <u>Expected File Formats</u>
 
 Input files should be CSVs with the column names specified below. The program expects two files, detailing the 
 individuals and the pairwise relatedness between them. Please ensure that these files are complete. If the pairwise 
@@ -103,7 +103,7 @@ paired together.
 Note that data can be randomly generated for testing purposes using the script in `tests/data-generation-v2.py`, 
 specifying number of individuals and lower/upper bounds for PR and ghost alleles. 
 
-### INDIVIDUAL SPECIFICATION FILE:
+### Individuals Specification File:
 
 - `Name`
   - String describing name of the individual. May include various details such as sex and location.
@@ -132,7 +132,7 @@ Example:
 | ...            | ...  | ...    | ...           | ...     | ...    | ...      |
 
 
-### SCALED PR SPECIFICATION FILE:
+### Scaled PR Specification File:
 
 This file represents the pairwise relatedness matrix and must include values for each individual in the individuals
 file. Note that the values in this file are scaled; 0 represents the same individual and is also used to specify
@@ -157,7 +157,7 @@ Example:
 | 538            | 616            | 542            | 368            | 0              |
 
 
-## Excluded Individuals & Disallowed Pairings
+## <u>Excluded Individuals & Disallowed Pairings</u>
 
 1. If "EX" was specified on the command line, you will be shown a preview of the individuals file in table format. Each 
 individual will have an ID on the far left-hand side, starting at 0.
@@ -173,7 +173,7 @@ Note: neither of these options edit the original files. Your original data will 
 apply to the current run.
 
 
-## Priority Calculations
+## <u>Priority Calculations</u>
 
 Previous tools allow breeding program managers to manually specify "priority individuals", individuals that have 
 desirable characteristics and must be included in solutions. This program allows for this but also builds upon this
@@ -192,7 +192,7 @@ of ghost alleles. 0.5 will strike a balance between these. It is recommended to 
 at the start and increase emphasis on the number of mates if there are unforeseen circumstances (e.g. individuals are
 proving hard to capture). This will result in more flexible solutions.
 
-## Outputs
+## <u>Outputs</u>
 
 Each feasible solution found will be printed to the terminal as the code is running. Once the search has finished, 
 you will be prompted to choose whether to save the best solution to a CSV file. If this option is chosen, the solution 
@@ -216,7 +216,7 @@ cells in this column will be "N/A".
 
 ---
 
-## References
+## <u>References</u>
 
 [1] M. Forshaw et al., "Constraint Optimisation Approaches for Designing Group-Living Captive Breeding Programmes," 
 presented at 39th Ann. AAAI Conf. on Artificial Intelligence, Philadelphia, Pennsylvania, USA, 2025.
