@@ -55,6 +55,7 @@ def open_readme():
 
 
 def threading_func():
+    """Run CoBreeder for Ghost Wolves main logic."""
     def cobreeder_for_ghost_wolves():
         try:
             weight_alleles, weight_pr, weight_prio = weights.get().split(",")
@@ -113,8 +114,8 @@ parameters = {
     "unique_run_id": "Unique Run ID",
     "global_pr_threshold": "Global PR Threshold",
     "specify_pr": "Custom PR Thresholds",
-    "exclude": "Exclusions (leave blank to disable)",
-    "disallow": "Disallowed Pairings (leave blank to disable)",
+    "exclude": "Exclusions",
+    "disallow": "Disallowed Pairings",
     "prio_calc_threshold": "Size of Priority Set",
     "prio_calc_ghost_weight": "Weight for Alleles (Priority Calculations)",
     "save_csv": "Save final solution to CSV?"

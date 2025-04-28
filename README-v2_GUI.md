@@ -1,12 +1,13 @@
-# CoBreeder for Ghost Wolves (v2) Usage Guidelines
+# CoBreeder for Ghost Wolves (v2) Usage Guidelines (GUI)
 
 ---
 
-This is the README file for version 2 and is GUI specific. 
+These usage guidelines pertain to the **Graphical User Interface** (GUI) offered by _CoBreeder for Ghost Wolves_. To 
+use the **Command Line Interface** instead, please see `README.md` and `ghost-cobreeder-v2_CLI.py` in the project 
+directory.
 
-TODO:
-Update with GUI info. Mention which scripts are used for CLI vs GUI (make clearer). Perhaps create GUI specific README 
-to display in help section of GUI rather than this one.
+
+## Context
 
 This project builds upon the work completed by _Forshaw et al._, titled _Constraint Optimisation Approaches for 
 Designing Group-Living Captive Breeding Programmes_ [1]. The tool produced (_CoBreeder_) was designed with a focus on 
@@ -20,30 +21,31 @@ characteristics of the dataset.
 
 This initial adaptation focuses on assigning coyote pairings however this may not be entirely accurate to life as 
 coyotes, though sometimes solitary animals, often live in packs with a single breeding pair. Future versions of this 
-tool should take this into account, improving its flexibility. Secondly, there is room for improvement where 
-accessibility is concerned, as some users may find the current system for defining arguments confusing and cluttered.
-Thirdly, the pairwise relatedness file currently assumes that values are scaled and a larger value means that two 
-individuals are less related. This can be developed further to allow for users to specify more intuitive thresholds
-(e.g. third cousins). 
+tool should take this into account, improving its flexibility. Secondly, the pairwise relatedness file currently 
+assumes that values are scaled and a larger value means that two individuals are less related. This can be developed 
+further to allow for users to specify more intuitive thresholds (e.g. third cousins). 
 
 
-## Command Line Arguments
+## Fields (not the grassy kind)
 
-This program is run via the command line. You will need to specify various arguments as well as provide relative paths 
-to the data that will be used (please see the "Expected File Formats" section for more details). The program expects 
-the following arguments, in the order introduced:
+Unfortunately, these fields aren't particularly biodiverse and must be filled with alphanumeric characters rather than 
+flora and fauna. Some fields are mandatory but others may be left blank. Each field is explained below:
 
-- `individuals_file`
-  - Relative path to the CSV file detailing the individuals.
-- `pairwise_relatedness_file`
-  - Relative path to the CSV file containing the scaled pairwise relatedness matrix.
-- `num_pairs`
-  - The number of pairings/groups to allocate. 
-- `specify_pr`
-  - Specify custom PR thresholds for certain groups with "CUSTOM_PR", or use the default threshold for all groups with 
-    "DEFAULT_PR".
-- `obj_function`
-  - String specifying the objective function to use when solving. The options are:
+- `Individuals Specification File` 
+  - Path to the CSV file detailing the individuals. This can be directly pasted into the field, but it is recommended to
+    use the "Upload CSV" button to browse your files locally and select it from there. 
+  - Please see the "Expected File Formats" section for more details. 
+
+- `Scaled Pairwise Relatedness File`
+  - Path to the CSV file containing the scaled pairwise relatedness matrix. This can be directly pasted into the field, 
+  - but it is recommended to use the "Upload CSV" button to browse your files locally and select it from there. 
+  - Please see the "Expected File Formats" section for more details. 
+
+- `Number of Pairings`
+  - The number of pairings to allocate. This should be an integer (e.g. `4`).
+
+- `Objective Function`
+  - Specifies the objective function to use when solving. The options offered are:
     - `MIN_AV_PR` - Minimise the average pairwise relatedness across pairings.
     - `MAX_TOTAL_ALLELES` - Maximise the total number of ghost alleles in a solution.
     - `MAX_TOTAL_PRIO` - Maximise the total priority in a solution.
@@ -53,41 +55,55 @@ the following arguments, in the order introduced:
     maximise priority in each pairing using the weights specified.
   - Note that `MIN_PR_MAX_ALLELES_MAX_PRIO` and `MAX_PRIO` cannot be used if `prio_calc_threshold` is set to 0 as they
     use dynamic priority calculations. 
-- `unique_run_id`
+
+- `Weight (Alleles,PR,Priority)`
+  - List of integers specifying the relative weight to place on alleles, pairwise relatedness and priority values when 
+    performing multi-objective optimisation.
+  - You must specify these in this order, separated by commas. Do not use other separating characters.
+    - Example: Allele weight = 3, PR weight = 2, Priority weight = 0 -> `3,2,0`
+
+- `Unique Run ID`
   - Unique string identifier for each run. Has no bearing on functionality but is useful to identify results when 
     running the program multiple times.
-- `weight_alleles`
-  - Integer specifying the relative weight to place on alleles when performing multi-objective optimisation.
-- `weight_pr`
-  - Integer specifying the relative weight to place on pairwise relatedness when performing multi-objective optimisation.
-- `weight_prio`
-  - Integer specifying the relative weight to place on priority values when performing multi-objective optimisation.
-- `pr_threshold`
+
+- `Global PR Threshold`
   - Threshold for the scaled pairwise relatedness permitted in a pairing (0 by default).
   - Value not included.
-- `exclude_disallow`
-  - Exclude individuals or specify disallowed pairings with "EX", or skip this step with "ALL".
+
+- `Custom PR Thresholds`
+  - This field is used to specify custom PR thresholds for certain groups.
+  - It requires a list of group-PR pairs, separated by commas. Please remember that PR values are scaled integers. You 
+    will need to use the group ID (index), which starts at zero. 
+    - Example: If you would like the first group to have a custom PR threshold of 42 -> `0-42`
+      - To extend this so that the 5th group has a PR threshold of 100 -> `0-42,4-100`
+  - You do not need to specify a threshold for every group. Non-specified groups will take the global PR threshold, so
+    this field can be left entirely blank.
+
+- `Exclusions`
+  - Exclude individuals by specifying a list of their IDs, separated by commas (e.g. `1,4,12`)
+    - Use the `Preview Individuals` button to help when referencing indices.
   - This is explained in more detail in the "Excluded Individuals & Disallowed Pairings" section.
-- `prio_calc_threshold`
+  - This field can be left blank.
+
+- `Disallowed Pairings`
+  - Define disallowed pairings by specifying a list of ID pairs, separated by commas (e.g. `2-5, 7-0`).
+  - This is explained in more detail in the "Excluded Individuals & Disallowed Pairings" section.
+  - This field can be left blank.
+
+- `Size of Priority Set`
   - Threshold for priority calculations representing the number of individuals that can fall into the priority set.
+    - E.g. 4 will enable priority calculations and select the top 4 scoring individuals for the priority set.
   - Must be a positive integer.
   - Specify 0 to disable dynamic priority calculations and use manual priority assignments only.
-  - E.g. 4 will enable priority calculations and select the top 4 scoring individuals for the priority set.
   - This is explained in more detail in the "Priority Calculations" section.
 
-### EXAMPLE:
+- `Weight for Alleles (Priority Calculations)`
+  - Specifies the weight placed on ghost alleles when performing priority calculations. 
+  - Must be a positive float between 0 and 1.
+  - This is explained in more detail in the "Priority Calculations" section.
 
-- `poetry run python ghost_wolf_cobreeder/ghost-cobreeder-v2.py run data/individuals.csv data/pr-scaled.csv 5
-CUSTOM_PR MIN_PR_MAX_ALLELES ghost_experiment 1 1 0 10 ALL 4`
-  - 5 pairings will be allocated. 
-  - The user will be prompted to enter any custom PR thresholds for specific groups. 
-  - The solver will maximise the number of ghost alleles and minimise pairwise relatedness between individuals in each 
-  pairing. Equal weight is placed on each of these.
-  - The name of the run is "ghost_experiment". This string will be displayed alongside results.
-  - Any individuals with a PR greater than 10 can be paired.
-  - All individuals in the individuals file will be considered and all pairings are allowed, provided PR is appropriate.
-  - Priority calculations are enabled and the top 4 individuals with the best priority values must be included in 
-    solutions.
+- `Save final solution to CSV?`
+  - Selecting YES will save the best solution found to a CSV file in the `results` folder.
 
 
 ## Expected File Formats
@@ -156,19 +172,18 @@ Example:
 
 ## Excluded Individuals & Disallowed Pairings
 
-1. If "EX" was specified on the command line, you will be shown a preview of the individuals file in table format. Each 
-individual will have an ID on the far left-hand side, starting at 0.
-2. You will first be prompted to specify disallowed pairings. 
-   - To disallow pairings between individual 4 and 8, and 0 and 1 you will type: 4-8, 0-1
-   - Order does not matter here. For example, you could also type: 1-0, 8-4 
-   - To skip this, leave it blank and tap the enter key.
-3. You will then be prompted to specify individuals to exclude.
-   - To exclude individuals 2, 5, and 6 you will type: 2,5,6
-   - Again, order does not matter here, and you can skip this by leaving it blank and tapping the enter key.
+- Every individual in the dataset will be assigned an index, starting from 0. The `Preview Individuals` button will 
+display the individuals file in table format to help you when referencing indices. 
+- Disallowed pairings:
+  - To disallow pairings between individual 4 and 8, and 0 and 1 you will type: `4-8, 0-1`
+  - Order does not matter here. For example, you could also type: `1-0, 8-4`
+  - This field can be left blank.
+- Exclusions
+  - To exclude individuals 2, 5, and 6 you will type: `2,5,6`
+  - Again, order does not matter here, and this field can be left blank.
 
 Note: neither of these options edit the original files. Your original data will be left untouched and this will only
 apply to the current run.
-
 
 ## Priority Calculations
 
@@ -179,11 +194,10 @@ their peers and assigned a priority score between 0 and 100, where 100 is the ma
 
 The top x individuals are selected to fall into the priority set, representing individuals that must be included in 
 solutions, whilst the more complex priority values can be used in some objective functions.
-(NOTE: The PR threshold for priority calculations was removed as this didn't feel intuitive in practice.)
 
 Priority calculations consider various factors including whether individuals are proven and the number of mates and 
-ghost alleles that they have compared to their competitors. If priority calculations are enabled, you will be prompted 
-to provide a weight for ghost alleles. This is a float between 0 and 1, where 1 represents completely ignoring 
+ghost alleles that they have compared to their competitors. If priority calculations are enabled, you will need to 
+specify a weight for ghost alleles. This is a float between 0 and 1, where 1 represents completely ignoring 
 number of mates in favour of ghost alleles, and 0 means only considering number of mates and ignoring the number
 of ghost alleles. 0.5 will strike a balance between these. It is recommended to prioritise ghost alleles more heavily
 at the start and increase emphasis on the number of mates if there are unforeseen circumstances (e.g. individuals are
@@ -194,7 +208,7 @@ proving hard to capture). This will result in more flexible solutions.
 Each feasible solution found will be printed to the terminal as the code is running. Once the search has finished, 
 you will be prompted to choose whether to save the best solution to a CSV file. If this option is chosen, the solution 
 with the best objective value will be saved to the `results` folder, with a file name following the format
-`best_solution_(unique_run_id).csv`. This will also be confirmed in the terminal. 
+`best_solution_(unique_run_id).csv`. This will also be confirmed in the terminal display. 
 
 This file may look something like this:
 
