@@ -9,8 +9,6 @@ import sys
 import time
 from typing import Sequence
 
-# TODO - Add citations
-
 
 class GhostCobreederObjectiveFunction(IntEnum):
     MIN_AV_PR = 1
@@ -18,6 +16,7 @@ class GhostCobreederObjectiveFunction(IntEnum):
     MAX_TOTAL_PRIO = 3
     MIN_PR_MAX_ALLELES = 4
     MIN_PR_MAX_ALLELES_MAX_PRIO = 5
+
 
 class GhostCobreederPrinter(cp_model.CpSolverSolutionCallback):
     def __init__(self, seats, names, num_groups, num_individuals, paramstring, unique_id):
