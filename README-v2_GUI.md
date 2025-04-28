@@ -97,7 +97,7 @@ flora and fauna. Some fields are mandatory but others may be left blank. Each fi
   - Specify 0 to disable dynamic priority calculations and use manual priority assignments only.
   - This is explained in more detail in the "Priority Calculations" section.
 
-##### Weight for Alleles (Priority Calculations)
+##### Weight for Alleles
   - Specifies the weight placed on ghost alleles when performing priority calculations. 
   - Must be a positive float between 0 and 1.
   - This is explained in more detail in the "Priority Calculations" section.
