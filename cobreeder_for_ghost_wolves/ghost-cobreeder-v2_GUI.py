@@ -39,7 +39,7 @@ def preview_individuals():
 
 def open_readme():
     """Open README file in a new window."""
-    file_path = "../README.md"
+    file_path = "../README-V2_GUI.md"
     try:
         with open(file_path, 'r') as f:
             content = f.read()
