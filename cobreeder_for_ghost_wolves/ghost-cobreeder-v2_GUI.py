@@ -106,6 +106,22 @@ def input_validation():
         if ("PRIO" in str(obj_function.get())) and int(prio_calc_threshold.get()) == 0:
             raise Exception("MIN_PR_MAX_ALLELES_MAX_PRIO and MAX_PRIO require priority calculations to be enabled.")
 
+        if exclude.get() != "":
+            try:
+                exclusions = list(set(int(x) for x in exclude.get().strip().split(",")))
+                individuals.drop(exclusions, axis=0, inplace=True)
+                # Check index range
+            except (KeyError, ValueError, IndexError):
+                raise Exception("Please ensure indices are valid when specifying exclusions (e.g. 0,4,12).")
+        if disallow.get() != "":
+            try:
+                dp = [tuple(map(int, x.split('-'))) for x in disallow.get().strip().split(",")]
+                for i, j in dp:
+                    pr.iloc[i, j] = 0
+                    pr.iloc[j, i] = 0
+            except (KeyError, ValueError, IndexError):
+                raise Exception("Please ensure indices are valid when specifying disallowed pairings (e.g. 0-4,12-1).")
+
     except Exception as e:
         messagebox.showerror("Error", str(e))
 
