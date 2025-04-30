@@ -195,10 +195,10 @@ parameters = {
 }
 
 # GUI colour palette
-SIDEBAR_COLOUR = "#44403E"
-TERMINAL_COLOUR = "#0B0707"
-BUTTON_COLOUR = "#410C11"
-TEXT_COLOUR = "#FFFFFF"
+SIDEBAR_COLOUR = "#393D3D"  # Grey-blue
+TERMINAL_COLOUR = "#000000"  # Black
+BUTTON_COLOUR = "#58000A"  # Crimson
+TEXT_COLOUR = "#FFFFFF"  # White
 
 # Initialise GUI
 root = tk.Tk()
@@ -243,7 +243,7 @@ for param in parameters:
                          insertbackground=TEXT_COLOUR, width=40)
         entry.pack()
         tk.Button(sidebar, text="Upload CSV", command=lambda p=globals()[param]: access_csv(p),
-                  bg=BUTTON_COLOUR, fg=TEXT_COLOUR).pack()
+                  bg=BUTTON_COLOUR, fg=TEXT_COLOUR).pack(pady=3)
 
     # Dropdown boxes for arguments with specific options
     elif param in ["obj_function", "save_csv"]:
@@ -262,7 +262,7 @@ for param in parameters:
     else:
         if param == "exclude":
             tk.Button(sidebar, text="Preview Individuals", command=preview_individuals, bg=BUTTON_COLOUR,
-                      fg=TEXT_COLOUR).pack()
+                      fg=TEXT_COLOUR).pack(pady=3)
         tk.Entry(sidebar, textvariable=globals()[param], width=40, bg=TERMINAL_COLOUR, fg=TEXT_COLOUR,
                  insertbackground=TEXT_COLOUR).pack()
 
