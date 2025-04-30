@@ -1,3 +1,4 @@
+import ctypes
 import markdown
 import numpy as np
 import os
@@ -9,6 +10,13 @@ import threading
 import tkinter as tk
 from tkinter import filedialog, scrolledtext, messagebox
 from tkinterweb import HtmlFrame
+
+
+# Improve resolution of GUI based on system settings (does not work for some operating systems or versions)
+try:
+    ctypes.windll.shcore.SetProcessDpiAwareness(True)
+except (AttributeError, OSError):
+    pass
 
 
 def access_csv(p):
