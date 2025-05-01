@@ -130,7 +130,7 @@ def calculate_priority(args, individuals, pr):
             if a < 0 or a > 1:
                 raise ValueError
         except ValueError:
-            print("Ghost allele weight must be a number between 0.0 and 1.0.")
+            print("ERROR: Ghost allele weight must be a number between 0.0 and 1.0.")
             sys.exit()
 
         b = 1.0 - a
@@ -253,7 +253,7 @@ def build_data(args):
                 pr.iloc[i, j] = 0
                 pr.iloc[j, i] = 0
         except (IndexError, ValueError):
-            print("Please ensure indices are valid when specifying disallowed pairings (e.g. 0-1, 4-2).")
+            print("ERROR: Please ensure indices are valid when specifying disallowed pairings (e.g. 0-1, 4-2).")
             sys.exit()
     if args.exclude:
         try:
@@ -264,7 +264,7 @@ def build_data(args):
             pr.drop(exclusions, axis=0, inplace=True)
             pr.drop(exclusions, axis=1, inplace=True)
         except (KeyError, ValueError):
-            print("Please ensure indices are valid when specifying exclusions (e.g. 12,0,3).")
+            print("ERROR: Please ensure indices are valid when specifying exclusions (e.g. 12,0,3).")
             sys.exit()
 
     individuals = calculate_priority(args, individuals, pr)
@@ -283,7 +283,7 @@ def build_data(args):
                 assert i in list(range(args.num_pairs))  # Ensure group ID is valid
                 group_prs[i] = j
         except (IndexError, ValueError, AssertionError):
-            print("Invalid input. Please enter valid group IDs and scaled PR values.")
+            print("ERROR: Invalid input. Please enter valid group IDs and scaled PR values.")
             sys.exit()
 
     names = individuals["Name"].tolist()
@@ -298,7 +298,8 @@ def build_data(args):
 
     # Check that no individuals in individuals.csv are being silently ignored for not being in the PR file.
     if len(connections) != len(individuals):
-        raise app.UsageError("There is a mismatch between the number of individuals and the size of the PR matrix.")
+        raise app.UsageError("ERROR: There is a mismatch between the number of individuals and the size of the "
+                             "PR matrix.")
 
     return (connections, names, males, females, group_prs, allocate_first_group, alleles, priorities, priority_values,
             objective_function, unique_id)

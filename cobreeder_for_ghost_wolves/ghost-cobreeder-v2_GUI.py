@@ -60,19 +60,21 @@ def open_readme():
             html_frame.pack(fill="both", expand=True)
             html_frame.load_html(markdown.markdown(content, extensions=['tables']))
     except Exception as e:
-        messagebox.showerror("ERROR", str(e))
+        messagebox.showerror("Error", str(e))
 
 
 def input_validation():
     """Performs input validation for fields."""
 
     try:
-        if int(num_pairs.get()) < 0:
-            raise Exception("\nNumber of Pairings cannot be negative.")
+        if str(num_pairs.get()) == '':
+            raise Exception("\n'Number of Pairings' field is incomplete.")
+        if int(num_pairs.get()) < 1:
+            raise Exception("\n'Number of Pairings' field must be a positive integer.")
         if int(global_pr_threshold.get()) < 0:
-            raise Exception("\nGlobal PR Threshold cannot be negative.")
+            raise Exception("\n'Global PR Threshold' field cannot be negative.")
         if int(prio_calc_threshold.get()) < 0:
-            raise Exception("\nPriority Calculations: Size of Priority Set cannot be negative.")
+            raise Exception("\n'Priority Calculations (Size of Priority Set)' field cannot be negative.")
 
         # Files must be CSVs with no missing values
         pr = pd.read_csv(pairwise_relatedness_file.get(), delimiter=',', header=None, skiprows=1)
@@ -197,8 +199,8 @@ parameters = {
     "specify_pr": "Custom PR Thresholds",
     "exclude": "Exclusions",
     "disallow": "Disallowed Pairings",
-    "prio_calc_threshold": "Priority Calculations: Size of Priority Set",
-    "prio_calc_ghost_weight": "Priority Calculations: Weight for Alleles",
+    "prio_calc_threshold": "Priority Calculations (Size of Priority Set)",
+    "prio_calc_ghost_weight": "Priority Calculations (Weight for Alleles)",
     "save_csv": "Save final solution to CSV?"
 }
 
@@ -245,16 +247,14 @@ save_csv = tk.StringVar(value="YES")
 for param in parameters:
     tk.Label(sidebar, text=parameters[param], fg=TEXT_COLOUR, bg=SIDEBAR_COLOUR).pack(anchor='w')
 
-    # Browse local files to select CSV
-    if param in ["individuals_file", "pairwise_relatedness_file"]:
+    if param in ["individuals_file", "pairwise_relatedness_file"]:  # Browse local files to select CSV
         entry = tk.Entry(sidebar, textvariable=globals()[param], fg=TEXT_COLOUR, bg=TERMINAL_COLOUR,
                          insertbackground=TEXT_COLOUR, width=40)
         entry.pack()
         tk.Button(sidebar, text="Upload CSV", command=lambda p=globals()[param]: access_csv(p),
                   bg=BUTTON_COLOUR, fg=TEXT_COLOUR).pack(pady=3)
 
-    # Dropdown boxes for arguments with specific options
-    elif param in ["obj_function", "save_csv"]:
+    elif param in ["obj_function", "save_csv"]:  # Dropdown boxes for arguments with specific options
         dropdown = tk.OptionMenu
         if param == "obj_function":
             dropdown = tk.OptionMenu(sidebar, obj_function, *["MIN_AV_PR", "MAX_TOTAL_ALLELES",
@@ -266,15 +266,13 @@ for param in parameters:
         dropdown.config(width=33, bg=TERMINAL_COLOUR, fg=TEXT_COLOUR, highlightbackground=SIDEBAR_COLOUR)
         dropdown.pack()
 
-    # Text boxes for arguments requiring a number to be entered
-    else:
+    else:  # Text boxes for arguments requiring a number to be entered
         if param == "exclude":
             tk.Button(sidebar, text="Preview Individuals", command=preview_individuals, bg=BUTTON_COLOUR,
                       fg=TEXT_COLOUR).pack(pady=3)
         tk.Entry(sidebar, textvariable=globals()[param], width=40, bg=TERMINAL_COLOUR, fg=TEXT_COLOUR,
                  insertbackground=TEXT_COLOUR).pack()
 
-# Button that runs the solver
 tk.Button(sidebar, text="Allocate", fg=TEXT_COLOUR, bg=BUTTON_COLOUR, command=threading_func).pack(pady=30)
 
 root.mainloop()
