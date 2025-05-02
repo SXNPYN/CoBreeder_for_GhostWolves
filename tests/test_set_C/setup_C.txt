@@ -1,0 +1,8 @@
+	Synthetic data (50 individuals)
+	Groups: 15
+	Priority individuals: 6
+	Exclusions: individual 20, individual 3
+	Disallowed pairings: 8-15, 8-26, 5-46
+	Global PR threshold: 200
+	Group 11 has custom PR threshold of 500
+	Individual 17 is allocated to group 11

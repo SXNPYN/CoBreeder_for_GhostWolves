@@ -5,7 +5,7 @@ import os
 
 pd.set_option("display.max_columns", None)
 
-NUM_INDIVIDUALS = 25  # Number of individuals to generate
+NUM_INDIVIDUALS = 50  # Number of individuals to generate
 MIN_ALLELES = 100  # Lower bound for ghost alleles (value included)
 MAX_ALLELES = 800  # Upper bound for ghost alleles (value included)
 MIN_PR = 100  # Lower bound for PR permitted between two different individuals (value included)
@@ -42,8 +42,11 @@ pr = pr.astype(int)
 print(f'\n{pr.head(10)}')
 
 # Save data.
-data_dir_path = "../data/randomly_generated_data"
+#data_dir_path = "../data/randomly_generated_data"
+data_dir_path = "../tests/test_set_C"
 os.makedirs(data_dir_path, exist_ok=True)
-individuals.to_csv(os.path.join(data_dir_path, "generated-individuals.csv"), index=False)
-pr.to_csv(os.path.join(data_dir_path, "generated-pr-scaled.csv"), index=False)
+#individuals.to_csv(os.path.join(data_dir_path, "generated-individuals.csv"), index=False)
+#pr.to_csv(os.path.join(data_dir_path, "generated-pr-scaled.csv"), index=False)
+individuals.to_csv(os.path.join(data_dir_path, "individuals.csv"), index=False)
+pr.to_csv(os.path.join(data_dir_path, "pr-scaled.csv"), index=False)
 print(f"\nRandom data generated in {data_dir_path}.")
