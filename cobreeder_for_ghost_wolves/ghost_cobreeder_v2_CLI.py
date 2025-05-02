@@ -594,6 +594,7 @@ def main(argv: Sequence[str]) -> None:
                                  'fall into the priority set. 0 to disable and use manual priority assignments only.')
 
     args = parser.parse_args()
+
     if ((args.obj_function == "MIN_PR_MAX_ALLELES_MAX_PRIO" or args.obj_function == "MAX_PRIO") and
             (args.prio_calc_threshold == 0)):
         print("Error: MIN_PR_MAX_ALLELES_MAX_PRIO requires priority calculations to be enabled.")

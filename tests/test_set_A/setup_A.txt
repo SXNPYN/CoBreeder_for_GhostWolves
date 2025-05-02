@@ -1,0 +1,7 @@
+	Real-world coyote dataset, adjusted to add manual values for Proven and Priority
+	14 individuals, 5 groups
+	3 priority individuals
+	No exclusions or disallowed pairings
+	Global PR threshold of 50
+	Group 1 has custom PR threshold of 100
+	No individuals allocated to specific groups
