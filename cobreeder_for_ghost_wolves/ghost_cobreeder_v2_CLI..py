@@ -303,11 +303,12 @@ def build_data(args):
                     custom_prs = [tuple(map(int, x.split('-'))) for x in custom_prs.strip().split(",")]
                     # Set custom PRs in dictionary
                     for i, j in custom_prs:
-                        assert i in list(range(args.num_pairs))  # Ensure group ID is valid
+                        if i not in list(range(args.num_pairs)):  # Ensure group ID is valid
+                            raise Exception
                         group_prs[i] = j
                     break
-                except (IndexError, ValueError, AssertionError):
-                    print("Invalid input. Please enter valid group IDs and scaled PR values.")
+                except (IndexError, ValueError, Exception):
+                    print("\nInvalid input. Please enter valid group IDs and scaled PR values.")
             else:
                 break
 

@@ -2,7 +2,7 @@
 
 ---
 
-This is the README file for version 1 (ghost-cobreeder-v1_CLI.py). Please see README.md for the updated version. 
+This is the README file for version 1 (`ghost_cobreeder_v1_CLI.py`). Please see README.md for the updated version. 
 
 This project builds upon the work completed by _Forshaw et al._, titled _Constraint Optimisation Approaches for 
 Designing Group-Living Captive Breeding Programmes_ [1]. The tool produced (_CoBreeder_) was designed with a focus on 
@@ -70,7 +70,7 @@ the following arguments, in the order introduced:
 
 ### EXAMPLE:
 
-- `poetry run python ghost_wolf_cobreeder/ghost-cobreeder-v1.py run data/individuals.csv data/pr-scaled.csv 
+- `poetry run python ghost_wolf_cobreeder/ghost_cobreeder_v1.py run data/individuals.csv data/pr-scaled.csv 
 data/groups.csv MIN_PR_MAX_ALLELES ghost_experiment 1 1 0 0 ALL 4`
   - The name of the run is "ghost_experiment". This string will be displayed alongside results.
   - The solver will maximise the number of ghost alleles and minimise pairwise relatedness between individuals in each 

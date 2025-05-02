@@ -3,7 +3,7 @@
 ---
 
 These usage guidelines pertain to the **Graphical User Interface** (GUI) offered by _CoBreeder for Ghost Wolves_. To 
-use the **Command Line Interface** instead, please see `README.md` and `ghost-cobreeder-v2_CLI.py` in the project 
+use the **Command Line Interface** instead, please see `README.md` and `ghost_cobreeder_v2_CLI.py` in the project 
 directory.
 
 
