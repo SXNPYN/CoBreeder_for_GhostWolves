@@ -3,11 +3,11 @@
 ---
 
 These usage guidelines pertain to the **Command Line Interface** (CLI) offered by _CoBreeder for Ghost Wolves_. 
-Please use the script `ghost-cobreeder-v2_CLI.py` when using the CLI.
+Please use the script `ghost_cobreeder_v2_CLI.py` when using the CLI.
 
 _CoBreeder for Ghost Wolves_ also offers a **Graphical User Interface** (GUI). This will be more accessible to users
-that are not too familiar with the terminal. To use the GUI, please run the script `ghost-cobreeder-v2_GUI.py`. This
-script will use an adjusted version of the CLI for its logic (`ghost-cobreeder-v2_for_GUI.py`), but you should not need
+that are not too familiar with the terminal. To use the GUI, please run the script `ghost_cobreeder_v2_GUI.py`. This
+script will use an adjusted version of the CLI for its logic (`ghost_cobreeder_v2_for_GUI.py`), but you should not need
 to interact with this file.
 GUI usage guidelines can be accessed from within the GUI itself but are also found in `README-V2_GUI.md`.
 
@@ -80,7 +80,7 @@ the following arguments, in the order introduced:
 
 ### Example:
 
-- `poetry run python ghost_wolf_cobreeder/ghost-cobreeder-v2_CLI.py run data/individuals.csv data/pr-scaled.csv 5
+- `poetry run python ghost_wolf_cobreeder/ghost_cobreeder_v2_CLI.py run data/individuals.csv data/pr-scaled.csv 5
 CUSTOM_PR MIN_PR_MAX_ALLELES ghost_experiment 1 1 0 10 ALL 4`
   - 5 pairings will be allocated. 
   - The user will be prompted to enter any custom PR thresholds for specific groups. 

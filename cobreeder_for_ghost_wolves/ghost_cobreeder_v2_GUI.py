@@ -144,7 +144,7 @@ def threading_func():
             weight_alleles, weight_pr, weight_prio = weights.get().split(",")
 
             arguments = [
-                sys.executable, "ghost-cobreeder-v2_for_GUI.py", "run",
+                sys.executable, "ghost_cobreeder_v2_for_GUI.py", "run",
                 individuals_file.get(),
                 pairwise_relatedness_file.get(),
                 num_pairs.get(),
