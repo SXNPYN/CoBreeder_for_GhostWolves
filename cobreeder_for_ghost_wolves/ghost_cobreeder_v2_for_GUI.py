@@ -456,7 +456,7 @@ def solve_model(args):
     for g in all_individuals:
         if individual_must_be_allocated[g]:
             # Priority individuals must be allocated to exactly one group.
-            print("Individual %s must be allocated." % g)
+            print("%s (ID: %s) must be allocated." % (names[g], g))
             model.Add(sum(seats[(t, g)] for t in all_groups) == 1)
         else:
             # Non-priority individuals may or may not be allocated.
