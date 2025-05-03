@@ -5,7 +5,7 @@ import os
 
 pd.set_option("display.max_columns", None)
 
-NUM_INDIVIDUALS = 50  # Number of individuals to generate
+NUM_INDIVIDUALS = 25  # Number of individuals to generate
 MIN_ALLELES = 100  # Lower bound for ghost alleles (value included)
 MAX_ALLELES = 800  # Upper bound for ghost alleles (value included)
 MIN_PR = 100  # Lower bound for PR permitted between two different individuals (value included)
