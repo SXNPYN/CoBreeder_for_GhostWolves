@@ -8,4 +8,4 @@
 	Individual 15 is allocated to group 0
 
 poetry run python cobreeder_for_ghost_wolves/ghost_cobreeder_v2_CLI.py run tests/test_set_B/individuals.csv tests/test_set_B/pr-scaled.csv 10 CUSTOM_PR MIN_AV_PR test-B-manual 1 1 0 200 EX 0
-poetry run python cobreeder_for_ghost_wolves/ghost_cobreeder_v2_CLI.py run tests/test_set_A/individuals.csv tests/test_set_A/pr-scaled.csv 10 CUSTOM_PR MIN_AV_PR test-B-priocalcs 1 1 0 200 EX 4
+poetry run python cobreeder_for_ghost_wolves/ghost_cobreeder_v2_CLI.py run tests/test_set_B/individuals.csv tests/test_set_B/pr-scaled.csv 10 CUSTOM_PR MIN_AV_PR test-B-priocalcs 1 1 0 200 EX 4
