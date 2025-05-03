@@ -532,7 +532,7 @@ def solve_model(args):
     print("\nInitial group allocations:")
     for g in range(len(allocate_first_group)):
         if allocate_first_group[g] != -1:
-            print("\tIndividual %i is allocated to group %i" % (g, allocate_first_group[g]))
+            print("\t%s (ID: %s) is allocated to group %i" % (names[g], g, allocate_first_group[g]))
             model.Add(seats[(allocate_first_group[g], g)] == 1)
 
     # --------------------------------------------- SOLVE MODEL --------------------------------------------- #
