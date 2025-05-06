@@ -394,7 +394,7 @@ def solve_model(args):
         if connections[g1][g2] > 0
     )
     # Average PR across all pairs in the solution.
-    av_pair_pr = model.NewIntVar(0, 100000000, "av_pair_pr")
+    av_pair_pr = model.NewIntVar(0, 2000, "av_pair_pr")
     model.Add(total_pr == av_pair_pr * num_groups)  # av_pair_pr = total_pr / num_groups
 
     # Sum of ghost alleles across the solution.
@@ -404,7 +404,7 @@ def solve_model(args):
         for t in range(num_groups)
     )
     # Average number of alleles across all pairs in the solution.
-    av_pair_alleles = model.NewIntVar(0, 100000000, "av_pair_alleles")
+    av_pair_alleles = model.NewIntVar(0, 2000, "av_pair_alleles")
     model.Add(total_alleles == av_pair_alleles * num_groups)
 
     # Sum of priority values across the solution.
@@ -414,7 +414,7 @@ def solve_model(args):
         for t in range(num_groups)
     )
     # Average sum of priority values across all pairs in the solution.
-    av_pair_priority = model.NewIntVar(0, 100000000, "av_pair_priority")
+    av_pair_priority = model.NewIntVar(0, 2000, "av_pair_priority")
     model.Add(total_priority == av_pair_priority * num_groups)
 
     # Single-objective optimisation
@@ -542,9 +542,11 @@ def solve_model(args):
     solution_printer = GhostCobreederPrinter(seats, names, num_groups, num_individuals, paramstring, unique_id)
 
     solver.parameters.max_time_in_seconds = 1800
-    # solver.parameters.log_search_progress = True
-    # solver.parameters.num_workers = 1
-    # solver.parameters.fix_variables_to_their_hinted_value = True
+    solver.parameters.num_workers = 8
+    solver.parameters.log_search_progress = True
+    #solver.parameters.cp_model_presolve = False
+    #solver.parameters.symmetry_level = 0
+    #solver.parameters.linearization_level = 0
 
     status = solver.Solve(model, solution_printer)
 
