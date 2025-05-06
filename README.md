@@ -9,7 +9,7 @@ _CoBreeder for Ghost Wolves_ also offers a **Graphical User Interface** (GUI). T
 that are not too familiar with the terminal. To use the GUI, please run the script `ghost_cobreeder_v2_GUI.py`. This
 script will use an adjusted version of the CLI for its logic (`ghost_cobreeder_v2_for_GUI.py`), but you should not need
 to interact with this file.
-GUI usage guidelines can be accessed from within the GUI itself but are also found in `README-V2_GUI.md`.
+GUI usage guidelines can be accessed from within the GUI itself but are also found in `README-GUI.md`.
 
 ## <u>Context</u>
 
