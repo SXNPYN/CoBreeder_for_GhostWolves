@@ -512,7 +512,6 @@ def solve_model(args):
                     if connections[g1][g2] < args.global_pr_threshold
                 ) < 1
             )
-
     for g1 in range(num_individuals - 1):
         for g2 in range(g1 + 1, num_individuals):
             for t in all_groups:
@@ -526,7 +525,9 @@ def solve_model(args):
                 model.AddImplication(same_group[(g1, g2, t)], seats[(t, g1)])
                 model.AddImplication(same_group[(g1, g2, t)], seats[(t, g2)])
 
-            model.Add(sum(same_group[(g1, g2, t)] for t in all_groups) == colocated[(g1, g2)])
+            if (objective_function == GhostCobreederObjectiveFunction.MIN_PR_MAX_ALLELES) or \
+                    (objective_function == GhostCobreederObjectiveFunction.MIN_AV_PR):
+                model.Add(sum(same_group[(g1, g2, t)] for t in all_groups) == colocated[(g1, g2)])
 
     # Breaking symmetry. First individual is placed in the first group.
     print("\nInitial group allocations:")
@@ -544,9 +545,6 @@ def solve_model(args):
     solver.parameters.max_time_in_seconds = 1800
     solver.parameters.num_workers = 8
     solver.parameters.log_search_progress = True
-    #solver.parameters.cp_model_presolve = False
-    #solver.parameters.symmetry_level = 0
-    #solver.parameters.linearization_level = 0
 
     status = solver.Solve(model, solution_printer)
 

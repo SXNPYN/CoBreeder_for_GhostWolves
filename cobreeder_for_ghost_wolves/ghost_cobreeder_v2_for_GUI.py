@@ -370,7 +370,7 @@ def solve_model(args):
         if connections[g1][g2] > 0
     )
     # Average PR across all pairs in the solution.
-    av_pair_pr = model.NewIntVar(0, 100000000, "av_pair_pr")
+    av_pair_pr = model.NewIntVar(0, 2000, "av_pair_pr")
     model.Add(total_pr == av_pair_pr * num_groups)  # av_pair_pr = total_pr / num_groups
 
     # Sum of ghost alleles across the solution.
@@ -380,7 +380,7 @@ def solve_model(args):
         for t in range(num_groups)
     )
     # Average number of alleles across all pairs in the solution.
-    av_pair_alleles = model.NewIntVar(0, 100000000, "av_pair_alleles")
+    av_pair_alleles = model.NewIntVar(0, 2000, "av_pair_alleles")
     model.Add(total_alleles == av_pair_alleles * num_groups)
 
     # Sum of priority values across the solution.
@@ -390,7 +390,7 @@ def solve_model(args):
         for t in range(num_groups)
     )
     # Average sum of priority values across all pairs in the solution.
-    av_pair_priority = model.NewIntVar(0, 100000000, "av_pair_priority")
+    av_pair_priority = model.NewIntVar(0, 2000, "av_pair_priority")
     model.Add(total_priority == av_pair_priority * num_groups)
 
     # Single-objective optimisation
@@ -502,7 +502,9 @@ def solve_model(args):
                 model.AddImplication(same_group[(g1, g2, t)], seats[(t, g1)])
                 model.AddImplication(same_group[(g1, g2, t)], seats[(t, g2)])
 
-            model.Add(sum(same_group[(g1, g2, t)] for t in all_groups) == colocated[(g1, g2)])
+            if (objective_function == GhostCobreederObjectiveFunction.MIN_PR_MAX_ALLELES) or \
+                    (objective_function == GhostCobreederObjectiveFunction.MIN_AV_PR):
+                model.Add(sum(same_group[(g1, g2, t)] for t in all_groups) == colocated[(g1, g2)])
 
     # Breaking symmetry. First individual is placed in the first group.
     print("\nInitial group allocations:")
