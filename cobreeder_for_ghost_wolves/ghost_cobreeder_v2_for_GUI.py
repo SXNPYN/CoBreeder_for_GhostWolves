@@ -405,25 +405,28 @@ def solve_model(args):
     elif (objective_function == GhostCobreederObjectiveFunction.MIN_PR_MAX_ALLELES) or \
          (objective_function == GhostCobreederObjectiveFunction.MIN_PR_MAX_ALLELES_MAX_PRIO):
 
+        upper_bounds = 100_000
+        scale = 100
+
         # Calculate PR and sum of alleles/priority values for an ideal pair
         ideal_pair_pr = max([pr for col in connections for pr in col])  # Uses best PR in matrix as ideal value.
         ideal_pair_alleles = max(individual_allele_count.values()) * 2  # Uses best alleles as ideal value.
         ideal_pair_priority = 100 * 2  # Max priority for an individual is 100, hence max across a pair is 200.
 
         # PR
-        scaled_pr_difference = model.NewIntVar(0, 100000000, "scaled_pr_difference")
-        model.Add(scaled_pr_difference == (100 * ideal_pair_pr) - (100 * av_pair_pr))
-        percent_deviation_pr = model.NewIntVar(0, 100000000, "percent_deviation_pr")
+        scaled_pr_difference = model.NewIntVar(0, upper_bounds, "scaled_pr_difference")
+        model.Add(scaled_pr_difference == (scale * ideal_pair_pr) - (scale * av_pair_pr))
+        percent_deviation_pr = model.NewIntVar(0, upper_bounds, "percent_deviation_pr")
         model.Add(scaled_pr_difference == percent_deviation_pr * ideal_pair_pr)
-        weighted_pr = model.NewIntVar(0, 100000000, "weighted_pr")
+        weighted_pr = model.NewIntVar(0, upper_bounds, "weighted_pr")
         model.AddMultiplicationEquality(weighted_pr, [percent_deviation_pr, args.weight_pr])
 
         # Alleles
-        scaled_allele_difference = model.NewIntVar(0, 100000000, "scaled_allele_difference")
-        model.Add(scaled_allele_difference == (100 * ideal_pair_alleles) - (100 * av_pair_alleles))
-        percent_deviation_alleles = model.NewIntVar(0, 100000000, "percent_deviation_alleles")
+        scaled_allele_difference = model.NewIntVar(0, upper_bounds, "scaled_allele_difference")
+        model.Add(scaled_allele_difference == (scale * ideal_pair_alleles) - (scale * av_pair_alleles))
+        percent_deviation_alleles = model.NewIntVar(0, upper_bounds, "percent_deviation_alleles")
         model.Add(scaled_allele_difference == percent_deviation_alleles * ideal_pair_alleles)
-        weighted_alleles = model.NewIntVar(0, 100000000, "weighted_alleles")
+        weighted_alleles = model.NewIntVar(0, upper_bounds, "weighted_alleles")
         model.AddMultiplicationEquality(weighted_alleles, [percent_deviation_alleles, args.weight_alleles])
 
         if objective_function == GhostCobreederObjectiveFunction.MIN_PR_MAX_ALLELES:
@@ -432,22 +435,22 @@ def solve_model(args):
             # model.Add(deviation >= weighted_alleles)
             # model.Minimize(deviation)
 
-            combined_pr_alleles = model.NewIntVar(0, 1000000000, "combined_pr_alleles")
+            combined_pr_alleles = model.NewIntVar(0, upper_bounds, "combined_pr_alleles")
             model.Add(combined_pr_alleles == weighted_pr + weighted_alleles)
             model.Minimize(combined_pr_alleles)
 
         elif objective_function == GhostCobreederObjectiveFunction.MIN_PR_MAX_ALLELES_MAX_PRIO:
 
             # Priority
-            scaled_priority_difference = model.NewIntVar(0, 100000000, "scaled_priority_difference")
-            model.Add(scaled_priority_difference == (100 * ideal_pair_priority) - (100 * av_pair_priority))
-            percent_deviation_priority = model.NewIntVar(0, 100000000, "percent_deviation_priority")
+            scaled_priority_difference = model.NewIntVar(0, upper_bounds, "scaled_priority_difference")
+            model.Add(scaled_priority_difference == (scale * ideal_pair_priority) - (scale * av_pair_priority))
+            percent_deviation_priority = model.NewIntVar(0, upper_bounds, "percent_deviation_priority")
             model.Add(scaled_priority_difference == percent_deviation_priority * ideal_pair_priority)
-            weighted_priority = model.NewIntVar(0, 100000000, "weighted_priority")
+            weighted_priority = model.NewIntVar(0, upper_bounds, "weighted_priority")
             model.AddMultiplicationEquality(weighted_priority, [percent_deviation_priority,
                                                                 args.weight_prio])
 
-            combined_pr_alleles_prio = model.NewIntVar(0, 1000000000, "combined_pr_alleles_prio")
+            combined_pr_alleles_prio = model.NewIntVar(0, upper_bounds, "combined_pr_alleles_prio")
             model.Add(combined_pr_alleles_prio == weighted_pr + weighted_alleles + weighted_priority)
             model.Minimize(combined_pr_alleles_prio)
 
@@ -520,9 +523,8 @@ def solve_model(args):
     solution_printer = GhostCobreederPrinter(seats, names, num_groups, num_individuals, paramstring, unique_id)
 
     solver.parameters.max_time_in_seconds = 1800
+    solver.parameters.num_workers = 8
     # solver.parameters.log_search_progress = True
-    # solver.parameters.num_workers = 1
-    # solver.parameters.fix_variables_to_their_hinted_value = True
 
     status = solver.Solve(model, solution_printer)
 
