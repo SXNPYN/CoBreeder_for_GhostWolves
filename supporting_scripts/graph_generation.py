@@ -8,15 +8,17 @@ sns.set_theme(context='paper', style='whitegrid', palette='Spectral')
 
 # Graph visualising how the percentage of individuals allocated affects average time to first solution
 df = pd.read_csv("../results/5-1_averages.csv", na_values='NaN')
+df = df.dropna(subset='avg_across_x_runs')
+df['avg_across_x_runs'] = df['avg_across_x_runs'].astype(int)
 ax = sns.lineplot(data=df, x="percent_allocated", y="av_time_to_first_solution_s",
-                  hue='avg_across_x_runs', color='b', palette='Spectral', marker='D')
+                  hue='avg_across_x_runs', palette='Spectral', marker='D')
 ax.set(xlabel='Percentage of individuals allocated to pairings', ylabel='Average time to identify first feasible '
                                                                         'solution /s')
 ax.xaxis.set_major_formatter(ticker.PercentFormatter())
 ax.xaxis.set_major_locator(ticker.MultipleLocator(10))
 ax.yaxis.set_major_locator(ticker.MultipleLocator(20))
 plt.xlim(0, 100)
-ax.axhline(y=60, color='g', linestyle='--')  # 1 min mark
-plt.legend(title="Number of runs averaged across")
+ax.axhline(y=60, color='gray', linestyle='--')  # 1 min mark
+ax.legend(title="Runs averaged")
 figure = ax.get_figure()
 figure.savefig("../results/percentage_allocated_graph.svg")
