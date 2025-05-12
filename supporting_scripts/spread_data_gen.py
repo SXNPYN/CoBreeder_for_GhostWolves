@@ -1,13 +1,23 @@
 import pandas as pd
 import random
+import matplotlib.ticker as ticker
 import numpy as np
 import os
+import seaborn as sns
 
 pd.set_option("display.max_columns", None)
 NUM_INDIVIDUALS = 25
-VALUES = [i for i in range(1, 1001) if i % 40 == 0]
+# VALUES = [i for i in range(1, 1001) if i % 40 == 0] # Evenly distributed
+VALUES = [1, 222, 278, 315, 345, 370, 392, 412, 431, 449, 467, 484, 500, 517, 534, 552, 570,
+          589, 609, 631, 656, 686, 723, 779, 1000]  # Normal distribution
 random.shuffle(VALUES)
 random_matrix = np.random.randint(1, 1000, size=(NUM_INDIVIDUALS, NUM_INDIVIDUALS))
+
+ax = sns.histplot(data=VALUES, bins=25, color='steelblue', kde=True)
+ax.set(xlabel='Values')
+ax.yaxis.set_major_locator(ticker.MultipleLocator(1))
+figure = ax.get_figure()
+figure.savefig("../results/normal_distribution.svg")
 
 
 def generate_data(scale):
@@ -37,8 +47,8 @@ def generate_data(scale):
     # Save data.
     data_dir_path = "../data/dissertation_5.1/spread_investigations"
     os.makedirs(data_dir_path, exist_ok=True)
-    individuals.to_csv(os.path.join(data_dir_path, f"individuals_{scale}.csv"), index=False)
-    pr.to_csv(os.path.join(data_dir_path, f"pr-scaled_{scale}.csv"), index=False)
+    individuals.to_csv(os.path.join(data_dir_path, f"norm_dist_individuals_{scale}.csv"), index=False)
+    pr.to_csv(os.path.join(data_dir_path, f"norm_dist_pr-scaled_{scale}.csv"), index=False)
     print(f"\nRandom data generated in {data_dir_path}.")
 
 
