@@ -244,6 +244,7 @@ def build_data(args):
     print("OBJECTIVE FUNCTION: %i" % objective_function)
     print("NUMBER OF PAIRINGS TO ALLOCATE: %i" % args.num_pairs)
     print("USING PAIRWISE RELATEDNESS FILE [%s]" % args.pairwise_relatedness_file)
+    print("USING INDIVIDUALS FILE [%s]" % args.individuals_file)
 
     if args.disallow:
         try:
