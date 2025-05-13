@@ -11,6 +11,8 @@ MAX_ALLELES = 800  # Upper bound for ghost alleles (value included)
 MIN_PR = 100  # Lower bound for PR permitted between two different individuals (value included)
 MAX_PR = 800  # Upper bound for PR permitted between two different individuals (value included)
 
+# TODO - Edit to generate normally distributed data instead of random
+
 
 # Generate individuals.
 individuals = pd.DataFrame(columns=["Name", "Male", "Female", "AssignToGroup", "Alleles", "Proven", "Priority"])
