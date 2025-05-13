@@ -7,7 +7,9 @@ sns.set_theme(context='paper', style='whitegrid', palette='Spectral')
 
 
 def generate_graph(graph):
+
     if graph == '5.1':
+
         df = pd.read_csv("../results/5-1_averages.csv", na_values='INFEASIBLE')
         df = df.dropna(subset='avg_across_x_runs')
         df['avg_across_x_runs'] = df['avg_across_x_runs'].astype(int)
@@ -26,6 +28,7 @@ def generate_graph(graph):
         plt.close()
 
     if graph == '5.2_even':
+
         df = pd.read_csv("../results/5-2_spread_averages.csv", na_values='INFEASIBLE')
         df = df[df['distribution'] == 'even']
 
@@ -42,7 +45,7 @@ def generate_graph(graph):
         ax = sns.lineplot(data=df, x="spread", y="av_time_to_first_sol_s", hue='percent_allocated', marker='D')
         ax.set(xlabel='Range (ghost alleles and pairwise relatedness)', ylabel='Average time to first solution /s')
         plt.xlim(0, 1050)
-        plt.ylim(0, 1.5)
+        plt.ylim(0, 1.1)
         ax.legend(title="% Allocated")
         figure = ax.get_figure()
         figure.savefig("../results/time_first_even_dist.svg")
@@ -58,6 +61,7 @@ def generate_graph(graph):
         plt.close()
 
     if graph == '5.2_normal':
+
         df = pd.read_csv("../results/5-2_spread_averages.csv", na_values='INFEASIBLE')
         df = df[df['distribution'] == 'normal']
 
@@ -74,7 +78,7 @@ def generate_graph(graph):
         ax = sns.lineplot(data=df, x="spread", y="av_time_to_first_sol_s", hue='percent_allocated', marker='D')
         ax.set(xlabel='Range (ghost alleles and pairwise relatedness)', ylabel='Average time to first solution /s')
         plt.xlim(0, 1050)
-        plt.ylim(0, 1.5)
+        plt.ylim(0,)
         ax.legend(title="% Allocated")
         figure = ax.get_figure()
         figure.savefig("../results/time_first_normal_dist.svg")
@@ -83,13 +87,46 @@ def generate_graph(graph):
         ax = sns.lineplot(data=df, x="spread", y="av_time_to_best_sol_s", hue='percent_allocated', marker='D')
         ax.set(xlabel='Range (ghost alleles and pairwise relatedness)', ylabel='Average time to best solution /s')
         plt.xlim(0, 1050)
-        plt.ylim(0, 20)
+        #plt.ylim(0, 20)
         ax.legend(title="% Allocated")
         figure = ax.get_figure()
         figure.savefig("../results/time_best_normal_dist.svg")
         plt.close()
 
+    if graph == '5.2_both':
+
+        df = pd.read_csv("../results/5-2_spread_averages.csv", na_values='INFEASIBLE')
+        df = df[df['percent_allocated'] == 26.7]
+
+        ax = sns.lineplot(data=df, x="spread", y="av_num_solutions", hue='distribution', marker='D')
+        ax.set(xlabel='Range (ghost alleles and pairwise relatedness)',
+               ylabel='Average number of solutions across 5 runs')
+        ax.yaxis.set_major_locator(ticker.MultipleLocator(1))
+        ax.legend(title="Distribution")
+        plt.xlim(0, 1050)
+        figure = ax.get_figure()
+        figure.savefig("../results/num_sols_dist_comparison.svg")
+        plt.close()
+
+        ax = sns.lineplot(data=df, x="spread", y="av_time_to_first_sol_s", hue='distribution', marker='D')
+        ax.set(xlabel='Range (ghost alleles and pairwise relatedness)', ylabel='Average time to first solution /s')
+        plt.xlim(0, 1050)
+        plt.ylim(0, 1)
+        ax.legend(title="Distribution")
+        figure = ax.get_figure()
+        figure.savefig("../results/time_first_dist_comparison.svg")
+        plt.close()
+
+        ax = sns.lineplot(data=df, x="spread", y="av_time_to_best_sol_s", hue='distribution', marker='D')
+        ax.set(xlabel='Range (ghost alleles and pairwise relatedness)', ylabel='Average time to best solution /s')
+        plt.xlim(0, 1050)
+        ax.legend(title="Distribution")
+        figure = ax.get_figure()
+        figure.savefig("../results/time_best_dist_comparison.svg")
+        plt.close()
+
 
 # generate_graph('5.1')
 # generate_graph('5.2_even')
-generate_graph('5.2_normal')
+# generate_graph('5.2_normal')
+generate_graph('5.2_both')
