@@ -100,8 +100,9 @@ individuals and the pairwise relatedness between them. Please ensure that these 
 relatedness between two individuals is unknown, marking these cells with 0 will ensure that the individuals are not 
 paired together. 
 
-Note that data can be randomly generated for testing purposes using the script in `tests/data-generation-v2.py`, 
-specifying number of individuals and lower/upper bounds for PR and ghost alleles. 
+Note that data can be randomly generated for testing purposes using the script in 
+`supporting_scripts/data-generation-v2.py`. This script will generate two CSV files (a set of individuals and a PR
+matrix) as well as two histograms showing the distribution of alleles and PR values for this dataset. 
 
 ### Individuals Specification File:
 

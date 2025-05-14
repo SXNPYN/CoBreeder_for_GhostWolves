@@ -22,7 +22,7 @@ ax = sns.histplot(data=alleles, bins=num_individuals, color='steelblue', kde=Tru
 ax.set(xlabel='Alleles')
 ax.yaxis.set_major_locator(ticker.MultipleLocator(1))
 figure = ax.get_figure()
-figure.savefig("allele_distribution.svg")
+figure.savefig("../data/randomly_generated_data/allele_distribution.svg")
 plt.close()
 
 # Generate PR values
@@ -32,7 +32,7 @@ print(f"Standard deviation (PR): {np.std(random_matrix)}")
 ax = sns.histplot(data=random_matrix.flatten(), bins=num_individuals, color='steelblue', kde=True)
 ax.set(xlabel='Pairwise Relatedness')
 figure = ax.get_figure()
-figure.savefig("pr_distribution.svg")
+figure.savefig("../data/randomly_generated_data/pr_distribution.svg")
 
 # Individuals DataFrame.
 individuals = pd.DataFrame(columns=["Name", "Male", "Female", "AssignToGroup", "Alleles", "Proven", "Priority"])
