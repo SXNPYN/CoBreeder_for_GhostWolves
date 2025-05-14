@@ -1,9 +1,0 @@
-Group,Ind_1_Name,Ind_2_Name,Ind_1_ID,Ind_2_ID,Ind_1_Alleles,Ind_2_Alleles,Pairwise_Relatedness,Priority_Sum
-0,Ind_19_F,Ind_21_M,19,21,411,850,549,N/A
-1,Ind_5_M,Ind_17_F,5,17,293,484,586,N/A
-2,Ind_11_M,Ind_18_F,11,18,396,236,743,N/A
-3,Ind_4_M,Ind_16_F,4,16,662,453,796,N/A
-4,Ind_0_F,Ind_24_M,0,24,469,439,478,N/A
-5,Ind_2_M,Ind_15_F,2,15,557,366,687,N/A
-6,Ind_9_F,Ind_10_M,9,10,614,333,561,N/A
-7,Ind_8_M,Ind_23_F,8,23,536,517,376,N/A

@@ -1,0 +1,9 @@
+MIN_AV_PR:
+poetry run python cobreeder_for_ghost_wolves/ghost_cobreeder_v2_CLI.py run data/section_4.4/individuals.csv data/section_4.4/pr-scaled-fixed.csv 3 DEFAULT_PR MIN_AV_PR test-single_pr 1 1 0 0 ALL 0
+
+MAX_TOTAL_ALLELES:
+poetry run python cobreeder_for_ghost_wolves/ghost_cobreeder_v2_CLI.py run data/section_4.4/individuals-fixed-alleles.csv data/section_4.4/pr-scaled.csv 3 DEFAULT_PR MAX_TOTAL_ALLELES test-single_alleles 1 1 0 0 ALL 0
+
+MAX_TOTAL_PRIO:
+poetry run python cobreeder_for_ghost_wolves/ghost_cobreeder_v2_CLI.py run data/section_4.4/individuals-prio.csv data/section_4.4/pr-scaled.csv 3 DEFAULT_PR MAX_TOTAL_PRIO test-single_prio 1 1 0 0 ALL 1
+prio weight = 0.5

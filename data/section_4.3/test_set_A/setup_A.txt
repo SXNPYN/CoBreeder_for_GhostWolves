@@ -1,0 +1,10 @@
+	Real-world coyote dataset (14 individuals), adjusted to add values for Proven and Priority
+	Groups: 4
+	Priority individuals: 3
+	No exclusions or disallowed pairings
+	Global PR threshold: 50
+o	Group 1 has custom PR threshold of 100
+	No individuals allocated to specific groups
+
+poetry run python cobreeder_for_ghost_wolves/ghost_cobreeder_v2_CLI.py run data/section_4.3/test_set_A/individuals.csv data/section_4.3/test_set_A/pr-scaled.csv 4 CUSTOM_PR MIN_PR_MAX_ALLELES test-A-manual 1 1 0 50 ALL 0
+poetry run python cobreeder_for_ghost_wolves/ghost_cobreeder_v2_CLI.py run data/section_4.3/test_set_A/individuals.csv data/section_4.3/test_set_A/pr-scaled.csv 4 CUSTOM_PR MIN_PR_MAX_ALLELES test-A-priocalcs 1 1 0 50 ALL 3
