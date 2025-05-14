@@ -100,11 +100,10 @@ def save_solution_csv(args, connections, individual_allele_count, individual_pri
         i += 1
 
     # Create results directory if it doesn't exist and save CSV
-    results_dir_path = os.path.join(os.getcwd(), "results")
-    os.makedirs(results_dir_path, exist_ok=True)
+    os.makedirs('results', exist_ok=True)
     out_file = f"best_solution_{args.unique_run_id}.csv"
-    solution_data.to_csv(os.path.join(results_dir_path, out_file), index=False)
-    print("\nSolution saved to results/%s.\n\n\n" % out_file)
+    solution_data.to_csv(os.path.join('results', out_file), index=False)
+    print("Solution saved to results/%s." % out_file)
 
 
 def calculate_priority(args, individuals, pr):
