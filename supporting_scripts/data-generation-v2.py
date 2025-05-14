@@ -1,42 +1,61 @@
-import pandas as pd
-import random
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import numpy as np
 import os
+import pandas as pd
+import random
+import seaborn as sns
 
 pd.set_option("display.max_columns", None)
 
-NUM_INDIVIDUALS = 50  # Number of individuals to generate
-MIN_ALLELES = 100  # Lower bound for ghost alleles (value included)
-MAX_ALLELES = 800  # Upper bound for ghost alleles (value included)
-MIN_PR = 100  # Lower bound for PR permitted between two different individuals (value included)
-MAX_PR = 800  # Upper bound for PR permitted between two different individuals (value included)
+num_individuals = 50  # Number of individuals to generate
+mean_alleles = 500
+standard_deviation_alleles = mean_alleles/3
+mean_pr = 500
+standard_deviation_pr = mean_pr/3
 
-# TODO - Edit to generate normally distributed data instead of random
+# Generate alleles
+alleles = abs((np.random.normal(mean_alleles, standard_deviation_alleles, num_individuals)).astype(int))
+print(f"Mean (alleles): {np.mean(alleles)}")
+print(f"Standard deviation (alleles): {np.std(alleles)}")
+ax = sns.histplot(data=alleles, bins=num_individuals, color='steelblue', kde=True)
+ax.set(xlabel='Alleles')
+ax.yaxis.set_major_locator(ticker.MultipleLocator(1))
+figure = ax.get_figure()
+figure.savefig("allele_distribution.svg")
+plt.close()
 
+# Generate PR values
+random_matrix = abs(np.random.normal(mean_pr, standard_deviation_pr,
+                                     size=(num_individuals, num_individuals)).astype(int))
+print(f"Standard deviation (PR): {np.std(random_matrix)}")
+ax = sns.histplot(data=random_matrix.flatten(), bins=num_individuals, color='steelblue', kde=True)
+ax.set(xlabel='Pairwise Relatedness')
+figure = ax.get_figure()
+figure.savefig("pr_distribution.svg")
 
-# Generate individuals.
+# Individuals DataFrame.
 individuals = pd.DataFrame(columns=["Name", "Male", "Female", "AssignToGroup", "Alleles", "Proven", "Priority"])
-individuals['Male'] = [random.choice([0, 1]) for _ in range(NUM_INDIVIDUALS)]
+individuals['Alleles'] = alleles
+individuals['Male'] = [random.choice([0, 1]) for _ in range(num_individuals)]
 individuals['Female'] = [1 - x for x in individuals['Male']]
-for i in range(NUM_INDIVIDUALS):
+for i in range(num_individuals):
     if individuals.loc[i]['Male'] == 1:
         individuals.loc[i, 'Name'] = f"Ind_{i}_M"
     else:
         individuals.loc[i, 'Name'] = f"Ind_{i}_F"
 if (random.choice([0, 1])) == 1:
-    assign_col = [-1] * NUM_INDIVIDUALS
+    assign_col = [-1] * num_individuals
 else:
-    assign_col = [-1] * (NUM_INDIVIDUALS - 1) + [1]
+    assign_col = [-1] * (num_individuals - 1) + [1]
     random.shuffle(assign_col)
 individuals['AssignToGroup'] = assign_col
-individuals['Alleles'] = [random.randint(MIN_ALLELES, MAX_ALLELES) for _ in range(NUM_INDIVIDUALS)]
-individuals['Proven'] = [random.choice([0, 1]) for _ in range(NUM_INDIVIDUALS)]
+individuals['Proven'] = [random.choice([0, 1]) for _ in range(num_individuals)]
 individuals['Priority'] = 0
 print("DATA PREVIEW:")
 print(f'\n{individuals.head(10)}')
 
-# Generate PR matrix.
-random_matrix = np.random.randint(MIN_PR, MAX_PR, size=(NUM_INDIVIDUALS, NUM_INDIVIDUALS))
+# PR matrix
 random_matrix = (random_matrix + random_matrix.T) / 2
 np.fill_diagonal(random_matrix, 0)
 pr = pd.DataFrame(random_matrix, columns=individuals['Name'])

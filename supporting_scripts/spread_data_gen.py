@@ -7,7 +7,7 @@ import seaborn as sns
 
 pd.set_option("display.max_columns", None)
 NUM_INDIVIDUALS = 25
-# VALUES = [i for i in range(1, 1001) if i % 40 == 0] # Evenly distributed
+# VALUES = [i for i in range(1, 1001) if i % 40 == 0] # Uniform distribution
 VALUES = [1, 222, 278, 315, 345, 370, 392, 412, 431, 449, 467, 484, 500, 517, 534, 552, 570,
           589, 609, 631, 656, 686, 723, 779, 1000]  # Normal distribution
 random.shuffle(VALUES)
