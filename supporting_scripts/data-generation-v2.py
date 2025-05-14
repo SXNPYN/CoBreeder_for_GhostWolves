@@ -8,7 +8,7 @@ import seaborn as sns
 
 pd.set_option("display.max_columns", None)
 
-num_individuals = 50  # Number of individuals to generate
+num_individuals = 45
 mean_alleles = 500
 standard_deviation_alleles = mean_alleles/3
 mean_pr = 500
