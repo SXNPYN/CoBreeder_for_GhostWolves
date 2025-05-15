@@ -5,6 +5,7 @@ import seaborn as sns
 import numpy as np
 
 sns.set_theme(context='paper', style='whitegrid', palette='Spectral')
+pd.set_option("display.max_columns", None)
 
 
 def generate_graph(graph):
@@ -173,7 +174,7 @@ def generate_graph(graph):
             else:
                 plt.ylim(40, 100)
             figure = ax.get_figure()
-            figure.savefig(f"../results/scalability_results/no_priority_inds/objective_value_{d}.svg")
+            figure.savefig(f"../results/scalability_results/objective_value_{d}.svg")
             plt.close()
 
     if graph == '5.3_scatter':
@@ -190,29 +191,76 @@ def generate_graph(graph):
         ax.yaxis.set_major_locator(ticker.MultipleLocator(100))
         plt.legend(title='Size of priority set')
         figure = ax.get_figure()
-        figure.savefig("../results/scalability_results/no_priority_inds/strip_plot.svg")
+        figure.savefig("../results/scalability_results/strip_plot.svg")
         plt.close()
 
         ax = sns.boxplot(data=df, x="dataset", y="time", hue="priority_set_size", width=.5,
-                         palette=['darkcyan', 'maroon'], medianprops={"color":"w"})
+                         palette=['darkcyan', 'maroon'], medianprops={"color": "w"})
         ax.set(xlabel='Dataset', ylabel='Time to best solution /s')
         ax.yaxis.set_major_locator(ticker.MultipleLocator(100))
         ax.legend(title="Size of priority set")
         figure = ax.get_figure()
-        figure.savefig("../results/scalability_results/no_priority_inds/box_plot.svg")
+        figure.savefig("../results/scalability_results/box_plot.svg")
         plt.close()
 
     if graph == '5.3_av_optimality':
 
-        pass
+        for i in [0, 2]:
+            df = calculate_averages(i)
+            df = df.replace({"synthetic_30_normal_dist": "30 individuals (synthetic)",
+                             "synthetic_45_normal_dist": "45 individuals (synthetic)",
+                             "synthetic_60_normal_dist": "60 individuals (synthetic)"})
+            ax = sns.lineplot(data=df, x="time", y="mean_percent_above_optimal", hue='dataset',
+                              palette="Set1")
+            ax.set(xlabel='Elapsed real time /s', ylabel='Mean percentage above optimal value',
+                   title=f'(Run averages, {i} priority individuals)\n')
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(200))
+            ax.yaxis.set_major_locator(ticker.MultipleLocator(10))
+            ax.yaxis.set_major_formatter(ticker.PercentFormatter())
+            plt.legend(title='Dataset')
+            plt.xlim(-30, 1750)
+            plt.ylim(-3, 120)
+            figure = ax.get_figure()
+            figure.savefig(f"../results/scalability_results/av_optimality_{i}_prio.svg")
+            plt.close()
 
-    if graph == '5.3_prio_set':
 
-        df = pd.read_csv("../results/scalability_results/5-3_scalability_runs.csv")
-        no_priority = df[df['priority_set_size'] == 0]
-        priority = df[df['priority_set_size'] == 2]
+def calculate_averages(priority):
 
-        pass
+    data = pd.read_csv("../results/scalability_results/5-3_scalability_runs.csv")
+    data = data.replace(np.inf, 999)
+    data = data[data['priority_set_size'] == priority]
+    datasets = data['dataset'].unique()
+    time_bins = [t for t in range(0, 1800)]
+    processed_averages = pd.DataFrame(columns=['dataset', 'time', 'mean_percent_above_optimal'])
+
+    for d in datasets:
+        filtered_df = data[data['dataset'] == d].sort_values('time', ascending=True).reset_index(drop=True)
+        r1_best, r2_best, r3_best, r4_best, r5_best = 999, 999, 999, 999, 999
+        current_index = 0
+
+        for t in time_bins:
+            if t > filtered_df.loc[current_index, 'time']:
+                run = filtered_df.loc[current_index, 'run']
+                if run == 1:
+                    r1_best = filtered_df.loc[current_index, 'percent_above_optimal']
+                elif run == 2:
+                    r2_best = filtered_df.loc[current_index, 'percent_above_optimal']
+                elif run == 3:
+                    r3_best = filtered_df.loc[current_index, 'percent_above_optimal']
+                elif run == 4:
+                    r4_best = filtered_df.loc[current_index, 'percent_above_optimal']
+                elif run == 5:
+                    r5_best = filtered_df.loc[current_index, 'percent_above_optimal']
+
+                if current_index + 1 < len(filtered_df):
+                    current_index += 1
+
+            mean_val = np.mean([r1_best, r2_best, r3_best, r4_best, r5_best])
+            row = [d, t, mean_val]
+            processed_averages.loc[processed_averages.shape[0]] = row
+
+    return processed_averages
 
 
 # generate_graph('5.1_percent_allocated')
@@ -222,4 +270,3 @@ def generate_graph(graph):
 # generate_graph('5.3_objective_values')
 # generate_graph('5.3_scatter')
 generate_graph('5.3_av_optimality')
-generate_graph('5.3_prio_set')
