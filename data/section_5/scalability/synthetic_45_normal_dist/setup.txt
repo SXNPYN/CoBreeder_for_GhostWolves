@@ -1,0 +1,4 @@
+poetry run python cobreeder_for_ghost_wolves/ghost_cobreeder_v2_CLI.py run data/section_5/scalability/synthetic_45_normal_dist/individuals.csv data/section_5/scalability/synthetic_45_normal_dist/pr-scaled.csv 5 DEFAULT_PR MIN_PR_MAX_ALLELES scalability 1 1 0 0 ALL 0
+
+poetry run python cobreeder_for_ghost_wolves/ghost_cobreeder_v2_CLI.py run data/section_5/scalability/synthetic_45_normal_dist/individuals.csv data/section_5/scalability/synthetic_45_normal_dist/pr-scaled.csv 5 DEFAULT_PR MIN_PR_MAX_ALLELES scalability 1 1 0 0 ALL 2
+
