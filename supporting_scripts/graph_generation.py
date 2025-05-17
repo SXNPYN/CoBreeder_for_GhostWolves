@@ -13,10 +13,10 @@ def generate_graph(graph):
     if graph == '5.1_percent_allocated':
 
         df = pd.read_csv("../results/percent_allocated/5-1_averages.csv", na_values='INFEASIBLE')
-        df = df.dropna(subset='runs_averaged')
-        df['runs_averaged'] = df['runs_averaged'].astype(int)
+        df = df.dropna(subset='avg_across_x_runs')
+        df['avg_across_x_runs'] = df['avg_across_x_runs'].astype(int)
         ax = sns.lineplot(data=df, x="percent_allocated", y="mean_time_to_first_solution_s",
-                          hue='runs_averaged', palette='Spectral', marker='D')
+                          hue='avg_across_x_runs', palette='Spectral', marker='D')
         ax.set(xlabel='Percentage of individuals allocated to pairings',
                ylabel='Mean time to identify first feasible solution /s')
         ax.xaxis.set_major_formatter(ticker.PercentFormatter())
@@ -29,9 +29,10 @@ def generate_graph(graph):
         figure.savefig("../results/percent_allocated/percentage_allocated_mean.svg")
         plt.close()
 
-        ax = sns.lineplot(data=df, x="percent_allocated", y="mean_time_to_first_solution_s", marker='D', label='Mean')
+        ax = sns.lineplot(data=df, x="percent_allocated", y="mean_time_to_first_solution_s", marker='D',
+                          label='Mean', color='crimson')
         sns.lineplot(data=df, x="percent_allocated", y="median_time_to_first_solution_s", marker='D',
-                     ax=ax, label='Median')
+                     ax=ax, label='Median', color='navy')
         ax.set(xlabel='Percentage of individuals allocated to pairings',
                ylabel='Time to identify first feasible solution /s')
         ax.xaxis.set_major_formatter(ticker.PercentFormatter())
@@ -118,6 +119,59 @@ def generate_graph(graph):
         ax.legend(title="% Allocated")
         figure = ax.get_figure()
         figure.savefig("../results/spread_and_distribution/time_best_normal_dist.svg")
+        plt.close()
+
+    if graph == '5.2_facetgrid':
+
+        df = pd.read_csv("../results/spread_and_distribution/5-2_spread_averages.csv",
+                         na_values='INFEASIBLE')
+
+        grid = sns.FacetGrid(df, col="distribution", hue='percent_allocated', palette='icefire')
+        grid.map_dataframe(sns.lineplot, x="spread", y="mean_time_to_best_sol_s", marker='D')
+        plt.xlim(0, 1000)
+        plt.ylim(0,)
+        grid.axes[0, 0].set_xlabel('Range (ghost alleles and PR)')
+        grid.axes[0, 1].set_xlabel('Range (ghost alleles and PR)')
+        grid.axes[0, 0].set_ylabel('Mean time to best solution /s')
+        grid.axes[0, 1].set_ylabel('Mean time to best solution /s')
+        grid.axes[0, 0].set_title('Uniform distribution')
+        grid.axes[0, 1].set_title('Normal distribution')
+        plt.subplots_adjust(wspace=0.2)
+        grid.add_legend(title='% Allocated')
+        figure = grid.fig.get_figure()
+        figure.savefig("../results/spread_and_distribution/time_best_sol_facetgrid.svg")
+        plt.close()
+
+        grid = sns.FacetGrid(df, col="distribution", hue='percent_allocated', palette='icefire')
+        grid.map_dataframe(sns.lineplot, x="spread", y="mean_time_to_first_sol_s", marker='D')
+        plt.xlim(0, 1000)
+        plt.ylim(0, )
+        grid.axes[0, 0].set_xlabel('Range (ghost alleles and PR)')
+        grid.axes[0, 1].set_xlabel('Range (ghost alleles and PR)')
+        grid.axes[0, 0].set_ylabel('Mean time to first solution /s')
+        grid.axes[0, 1].set_ylabel('Mean time to first solution /s')
+        grid.axes[0, 0].set_title('Uniform distribution')
+        grid.axes[0, 1].set_title('Normal distribution')
+        plt.subplots_adjust(wspace=0.2)
+        grid.add_legend(title='% Allocated')
+        figure = grid.fig.get_figure()
+        figure.savefig("../results/spread_and_distribution/time_first_sol_facetgrid.svg")
+        plt.close()
+
+        grid = sns.FacetGrid(df, col="distribution", hue='percent_allocated', palette='icefire')
+        grid.map_dataframe(sns.lineplot, x="spread", y="mean_num_solutions", marker='D')
+        plt.xlim(0, 1000)
+        plt.ylim(0, )
+        grid.axes[0, 0].set_xlabel('Range (ghost alleles and PR)')
+        grid.axes[0, 1].set_xlabel('Range (ghost alleles and PR)')
+        grid.axes[0, 0].set_ylabel('Mean number of solutions across 5 runs')
+        grid.axes[0, 1].set_ylabel('Mean number of solutions across 5 runs')
+        grid.axes[0, 0].set_title('Uniform distribution')
+        grid.axes[0, 1].set_title('Normal distribution')
+        plt.subplots_adjust(wspace=0.2)
+        grid.add_legend(title='% Allocated')
+        figure = grid.fig.get_figure()
+        figure.savefig("../results/spread_and_distribution/num_sols_facetgrid.svg")
         plt.close()
 
     if graph == '5.2_dist_comparison':
@@ -236,27 +290,18 @@ def calculate_averages(priority):
 
     for d in datasets:
         filtered_df = data[data['dataset'] == d].sort_values('time', ascending=True).reset_index(drop=True)
-        r1_best, r2_best, r3_best, r4_best, r5_best = 999, 999, 999, 999, 999
+        run_ids = [i for i in range(1, 6)]
+        obj_values = [999] * 5
+        current_best_run_values = dict(zip(run_ids, obj_values))
         current_index = 0
 
         for t in time_bins:
             if t > filtered_df.loc[current_index, 'time']:
                 run = filtered_df.loc[current_index, 'run']
-                if run == 1:
-                    r1_best = filtered_df.loc[current_index, 'percent_above_optimal']
-                elif run == 2:
-                    r2_best = filtered_df.loc[current_index, 'percent_above_optimal']
-                elif run == 3:
-                    r3_best = filtered_df.loc[current_index, 'percent_above_optimal']
-                elif run == 4:
-                    r4_best = filtered_df.loc[current_index, 'percent_above_optimal']
-                elif run == 5:
-                    r5_best = filtered_df.loc[current_index, 'percent_above_optimal']
-
+                current_best_run_values[run] = filtered_df.loc[current_index, 'percent_above_optimal']
                 if current_index + 1 < len(filtered_df):
                     current_index += 1
-
-            mean_val = np.mean([r1_best, r2_best, r3_best, r4_best, r5_best])
+            mean_val = np.mean(list(current_best_run_values.values()))
             row = [d, t, mean_val]
             processed_averages.loc[processed_averages.shape[0]] = row
 
@@ -266,7 +311,8 @@ def calculate_averages(priority):
 # generate_graph('5.1_percent_allocated')
 # generate_graph('5.2_uniform')
 # generate_graph('5.2_normal')
+# generate_graph('5.2_facetgrid')
 # generate_graph('5.2_dist_comparison')
 # generate_graph('5.3_objective_values')
 # generate_graph('5.3_scatter')
-generate_graph('5.3_av_optimality')
+# generate_graph('5.3_av_optimality')
