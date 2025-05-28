@@ -9,9 +9,9 @@ directory.
 
 ## <u>Context</u>
 
-This project builds upon the work completed by _Forshaw et al._, titled _Constraint Optimisation Approaches for 
-Designing Group-Living Captive Breeding Programmes_ [1]. The tool produced (_CoBreeder_) was designed with a focus on 
-the Galapagos tortoise which required single-objective optimisation to minimise pairwise relatedness when allocating 
+This project builds upon the work completed by _Forshaw et al._, titled "Constraint Optimisation Approaches for 
+Designing Group-Living Captive Breeding Programmes" [1]. The tool produced (_CoBreeder_) was designed with a focus on 
+the Galápagos tortoise which required single-objective optimisation to minimise pairwise relatedness when allocating 
 individuals to breeding groups. The aim of this project is to adapt and extend _CoBreeder_ to improve its suitability 
 for breeding coyotes with red wolf ancestry. This requires multi-objective optimisation, minimising genetic relatedness 
 and maximising the number of ghost alleles in each pairing. Additional functionality that could aid conservationists 
@@ -22,23 +22,23 @@ characteristics of the dataset.
 This initial adaptation focuses on assigning coyote pairings however this may not be entirely accurate to life as 
 coyotes, though sometimes solitary animals, often live in packs with a single breeding pair. Future versions of this 
 tool should take this into account, improving its flexibility. Secondly, the pairwise relatedness file currently 
-assumes that values are scaled and a larger value means that two individuals are less related. This can be developed 
-further to allow for users to specify more intuitive thresholds (e.g. third cousins). 
+assumes that values are scaled, with larger values indicating that two individuals are less related. This should be 
+developed further to allow users to specify more intuitive thresholds (e.g. third cousins). 
 
 
 ## <u>Fields</u> (not the grassy kind)
 
-Unfortunately, these fields aren't particularly biodiverse and must be filled with alphanumeric characters rather than 
+Unfortunately, these fields aren't at all biodiverse and must be filled with alphanumeric characters rather than 
 flora and fauna. Some fields are mandatory but others may be left blank. Each field is explained below:
 
 ##### Individuals Specification File
   - Path to the CSV file detailing the individuals. This can be directly pasted into the field, but it is recommended to
-    use the "Upload CSV" button to browse your local files and select from there. 
+    use the "Upload CSV" button to browse your local files and select it from there. 
   - Please see the "Expected File Formats" section for more details. 
 
 ##### Scaled Pairwise Relatedness File
   - Path to the CSV file containing the scaled pairwise relatedness matrix. This can be directly pasted into the field, 
-    but it is recommended to use the "Upload CSV" button to browse your local files and select from there. 
+    but it is recommended to use the "Upload CSV" button to browse your local files and select it from there. 
   - Please see the "Expected File Formats" section for more details. 
 
 ##### Number of Pairings
@@ -49,21 +49,21 @@ flora and fauna. Some fields are mandatory but others may be left blank. Each fi
     - `MIN_AV_PR` - Minimise the average pairwise relatedness across pairings.
     - `MAX_TOTAL_ALLELES` - Maximise the total number of ghost alleles in a solution.
     - `MAX_TOTAL_PRIO` - Maximise the total priority in a solution.
-    - `MIN_PR_MAX_ALLELES` - Minimise pairwise relatedness and maximise the number of ghost alleles in each pairing 
+    - `MIN_PR_MAX_ALLELES` - Minimise pairwise relatedness and maximise the number of ghost alleles in each pairing, 
     using the weights specified. 
     - `MIN_PR_MAX_ALLELES_MAX_PRIO` - Minimise pairwise relatedness, maximise the number of ghost alleles, and 
-    maximise priority in each pairing using the weights specified.
-  - Note that `MIN_PR_MAX_ALLELES_MAX_PRIO` and `MAX_PRIO` cannot be used if `prio_calc_threshold` is set to 0 as they
+    maximise priority in each pairing, using the weights specified.
+  - Note that `MIN_PR_MAX_ALLELES_MAX_PRIO` and `MAX_TOTAL_PRIO` cannot be used if `prio_calc_threshold` is set to 0 as they
     use dynamic priority calculations. 
 
 ##### Weight (Alleles,PR,Priority)
-  - List of integers specifying the relative weight to place on alleles, pairwise relatedness and priority values when 
+  - List of integers specifying the relative weight to place on alleles, pairwise relatedness, and priority values when 
     performing multi-objective optimisation.
   - You must specify these in this order, separated by commas. Do not use other separating characters.
     - **Example**: Allele weight = 3, PR weight = 2, Priority weight = 0 &#8594; `3,2,0`
 
 ##### Unique Run ID
-  - Unique string identifier for each run. Has no bearing on functionality but is useful to identify results when 
+  - Unique string identifier for each run. It has no bearing on functionality, but is useful to identify results when 
     running the program multiple times.
 
 ##### Global PR Threshold
@@ -103,24 +103,24 @@ flora and fauna. Some fields are mandatory but others may be left blank. Each fi
   - This is explained in more detail in the "Priority Calculations" section.
 
 ##### Save final solution to CSV?
-  - Selecting YES will save the best solution found to a CSV file in the `results` folder.
+  - Selecting "YES" will save the best solution found to a CSV file in the `results` folder.
 
 
 ## <u>Expected File Formats</u>
 
-Input files should be CSVs with the column names specified below. The program expects two files, detailing the 
-individuals and the pairwise relatedness between them. Please ensure that these files are complete. If the pairwise 
-relatedness between two individuals is unknown, marking these cells with 0 will ensure that the individuals are not 
-paired together. 
+The program expects input files to be in CSV format with the column names specified below. The program expects two 
+files, detailing the individuals and the pairwise relatedness between them. Please ensure that these files are complete. 
+If the pairwise relatedness between two individuals is unknown, marking these cells with 0 will ensure that the 
+individuals are not paired together. 
 
 Note that data can be randomly generated for testing purposes using the script in 
 `supporting_scripts/data-generation-v2.py`. This script will generate two CSV files (a set of individuals and a PR
-matrix) as well as two histograms showing the distribution of alleles and PR values for this dataset. 
+matrix) and two histograms showing the distribution of alleles and PR values for this dataset. 
 
 ### Individuals Specification File:
 
 ##### Name
-  - String describing name of the individual. May include various details such as sex and location.
+  - String describing the individual. May include various details such as sex and location.
 ##### Male & Female
   - Boolean columns taking values 0 or 1, where 1 indicates that the individual's sex matches the name of the column.
   - For any row, both columns cannot take the same value.
@@ -128,13 +128,13 @@ matrix) as well as two histograms showing the distribution of alleles and PR val
   - Specifies whether to assign this individual to a specific group.
   - This column should be -1 by default. If specifying a group, ensure that the value used matches a group ID.
 ##### Alleles
-  - A positive integer representing the number of ghost alleles that the individual has. 
+  - A positive integer representing the number of ghost alleles that each individual has. 
 ##### Proven
   - Boolean column taking values 0 or 1, where 1 indicates that the individual is proven.
 ##### Priority
-  - Boolean column taking values 0 or 1, where 1 indicates that the individual is a "priority individual".
-  - This column is used to manually specify priority individuals. 
-  - Note that if priority calculations are enabled, the values in this column will not be considered. 
+  - Boolean column taking values 0 or 1, where 1 indicates that the individual is a 'priority individual'.
+  - This column is used to manually specify priority individuals. Note that if priority calculations are enabled, the 
+    values in this column will not be considered. 
 
 **Example**:
 
@@ -148,17 +148,15 @@ matrix) as well as two histograms showing the distribution of alleles and PR val
 
 ### Scaled PR Specification File:
 
-This file represents the pairwise relatedness matrix and must include values for each individual in the individuals
-file. Note that the values in this file are scaled; 0 represents the same individual and is also used to specify
-banned pairings. A larger value indicates that the individuals are less related. This may not seem intuitive,
+This file represents the scaled pairwise relatedness matrix and must include values for each individual in the dataset.
+Note that the values in this file are scaled; 0 represents the same individual and is also used to specify
+banned pairings. A larger value indicates that two individuals are less related; this may not seem intuitive,
 but when minimising pairwise relatedness the program is actually maximising these values. 
 
 It is important that every individual specified in the individual specification file is included here, and that the 
-values are mirrored. There are two cells for each pairing, therefore if editing the PR between two different 
-individuals you will need to edit two cells.
-
-Note that you do not need to manually edit the file to exclude individuals or create disallowed pairings, this can be
-done whilst running the program. 
+values are mirrored. Remember that, if editing the PR between two different individuals, you will need to edit two 
+cells. Note, however, that you do not need to manually edit the file to exclude individuals or create disallowed 
+pairings; this can be done whilst running the program.
 
 **Example**: 
 
@@ -187,26 +185,24 @@ display the individuals file in table format to help you when referencing indice
   - To exclude individuals 2, 5, and 6 you will type: `2,5,6`
   - Again, order does not matter here, and this field can be left blank.
 
-**Note**: neither of these options edit the original files. Your original data will be left untouched and this will only
-apply to the current run.
+**Note**: neither of these options edit the original files. Your original data will be left untouched and settings will 
+only apply to the current run.
 
 ## <u>Priority Calculations</u>
 
-Previous tools allow breeding program managers to manually specify "priority individuals", individuals that have 
-desirable characteristics and must be included in solutions. This program allows for this but also builds upon this
-idea with dynamic priority calculations that allow individuals to be ranked by priority. Individuals are compared to
-their peers and assigned a priority score between 0 and 100, where 100 is the maximum priority value.
+_CoBreeder_ allowed for the manual specification of 'priority individuals', individuals with 
+desirable characteristics that must be included in solutions. This program retains this feature, but also offers 
+dynamic priority calculations that allow individuals to be ranked by priority. Individuals are compared to their peers 
+and assigned a priority score between 0 and 100, where 100 is the maximum priority value. The top x individuals are 
+selected to fall into the priority set, representing individuals that must be included in solutions, whilst the 
+priority scores are maximised in some objective functions.
 
-The top `x` individuals are selected to fall into the priority set, representing individuals that must be included in 
-solutions, whilst the more complex priority values can be used in some objective functions.
-
-Priority calculations consider various factors including whether individuals are proven and the number of mates and 
-ghost alleles that they have compared to their competitors. If priority calculations are enabled, you will need to 
-specify a weight for ghost alleles. This is a float between 0 and 1, where 1 represents completely ignoring 
-number of mates in favour of ghost alleles, and 0 means only considering number of mates and ignoring the number
-of ghost alleles. 0.5 will strike a balance between these. It is recommended to prioritise ghost alleles more heavily
-at the start and increase emphasis on the number of mates if there are unforeseen circumstances (e.g. individuals are
-proving hard to capture). This will result in more flexible solutions.
+Priority calculations consider factors such as whether individuals are proven, and the number of mates and ghost 
+alleles that they have compared to their peers. If priority calculations are enabled, you will be prompted to provide 
+a weight for ghost alleles. This is a float between 0 and 1, where 1 represents completely ignoring number of mates 
+in favour of ghost alleles. 0.5 will strike a balance between these. It is recommended to prioritise ghost alleles more 
+heavily at the start and increase emphasis on the number of mates if there are unforeseen circumstances (e.g. 
+individuals are proving hard to capture). This will result in more flexible solutions.
 
 ## <u>Outputs</u>
 
@@ -225,14 +221,14 @@ This file may look something like this:
 | 3     | Individual_27_F | Individual_42_M | 27       | 42       | 401           | 440           | 927                  | 73           |
 | ...   | ...             | ...             | ...      | ...      | ...           | ...           | ...                  | ...          |
 
-Each group is represented by a row, which contains information on the names, IDs, and number of ghost alleles of the 
-individuals in the pairing as well as their pairwise relatedness. The `Priority_Sum` column is the sum of the priority
-values of each individual and can reach a maximum of 200. Note that, if priority calculations are not enabled, the 
-cells in this column will be `N/A`.
+Each row represents a pairing, and contains information about the individuals such as name, ID, and number of ghost 
+alleles, as well as their pairwise relatedness. The `Priority_Sum` column is the sum of the priority scores of the 
+individuals, and can reach a maximum of 200. Note that, if priority calculations are not enabled, the 
+cells in this column will be "N/A".
 
 ---
 
 ## <u>References</u>
 
-[1] M. Forshaw et al., "Constraint Optimisation Approaches for Designing Group-Living Captive Breeding Programmes," 
-presented at 39th Ann. AAAI Conf. on Artificial Intelligence, Philadelphia, Pennsylvania, USA, 2025.
+[1] M. Forshaw _et al._, "Constraint Optimisation Approaches for Designing Group-Living Captive Breeding Programmes," 
+presented at _39th Ann. AAAI Conf. on Artificial Intelligence_, Philadelphia, Pennsylvania, USA, 2025.
